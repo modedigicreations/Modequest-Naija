@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { advance, dispatch, migrate, newGame, rollPower, spawnMessage, travelOptions } from "./engine";
-import { getPuzzle, runProgram, type Step } from "./puzzles";
+import { PUZZLES, getPuzzle, runProgram, type Step } from "./puzzles";
 import type { GameState, NewGameOptions } from "./types";
 import { MIN_PER_DAY, skillLevel } from "./util";
 
 const OPTS: NewGameOptions = {
+  city: "lagos",
   name: "Tester",
   pronoun: "they",
   appearance: { skin: 0, hair: 0, hairColor: 0, outfit: 0, accessory: 0 },
@@ -78,10 +79,10 @@ describe("needs and activities", () => {
 describe("travel", () => {
   it("charges fare and arrives after the trip", () => {
     let s = newGame(OPTS);
-    const opt = travelOptions(s, "amala_spot").find((o) => o.mode === "danfo")!;
+    const opt = travelOptions(s, "amala_spot").find((o) => o.mode === "bus")!;
     expect(opt.ok).toBe(true);
     const cash = s.cash;
-    s = ok(s, { type: "travel", to: "amala_spot", mode: "danfo" });
+    s = ok(s, { type: "travel", to: "amala_spot", mode: "bus" });
     expect(s.cash).toBe(cash - opt.fare);
     s = sim(s, opt.minutes + 1);
     expect(s.location).toBe("amala_spot");
@@ -196,10 +197,15 @@ describe("Code Lab puzzles are solvable", () => {
       { cmd: "F", times: 1 }, { cmd: "L", times: 1 }, { cmd: "F", times: 2 }, { cmd: "R", times: 1 }, { cmd: "F", times: 5 },
     ],
     p6: [{ cmd: "F", times: 4 }, { cmd: "R", times: 1 }, { cmd: "F", times: 2 }, { cmd: "R", times: 1 }, { cmd: "F", times: 4 }, { cmd: "L", times: 1 }, { cmd: "F", times: 2 }, { cmd: "L", times: 1 }, { cmd: "F", times: 4 }],
+    p7: [{ cmd: "F", times: 2 }, { cmd: "R", times: 1 }, { cmd: "F", times: 4 }, { cmd: "L", times: 1 }, { cmd: "F", times: 2 }, { cmd: "L", times: 1 }, { cmd: "F", times: 4 }],
+    p8: [{ cmd: "F", times: 5 }, { cmd: "F", times: 1 }, { cmd: "R", times: 1 }, { cmd: "F", times: 2 }, { cmd: "R", times: 1 }, { cmd: "F", times: 5 }, { cmd: "F", times: 1 }],
   };
   for (const [id, prog] of Object.entries(solutions)) {
     it(id, () => expect(runProgram(getPuzzle(id), prog).outcome).toBe("win"));
   }
+  it("covers every puzzle", () => {
+    expect(Object.keys(solutions).sort()).toEqual(PUZZLES.map((p) => p.id).sort());
+  });
   it("detects crashes", () => {
     expect(runProgram(getPuzzle("p2"), [{ cmd: "F", times: 3 }]).outcome).toBe("crash");
   });
@@ -211,5 +217,22 @@ describe("saves", () => {
     const back = migrate(JSON.parse(JSON.stringify(s)));
     expect(back).toEqual(s);
     expect(migrate({ nope: true })).toBeNull();
+  });
+});
+
+describe("scam replies", () => {
+  it("every scam template has at least one safe reply", async () => {
+    const { MESSAGE_TEMPLATES } = await import("./data/events");
+    for (const t of MESSAGE_TEMPLATES.filter((m) => m.kind === "scam")) {
+      const base = newGame(OPTS);
+      base.bank = 100000;
+      base.cash = 50000;
+      base.relationships.tunde = { friendship: 60, met: true, lastTalkDay: 1, adviceDay: -1, owes: 0 };
+      spawnMessage(base, t.id);
+      const msg = base.messages.find((m) => m.templateId === t.id);
+      if (!msg) continue;
+      const outcomes = msg.choices!.map((c) => dispatch(base, { type: "replyMessage", messageId: msg.id, choiceId: c.id }).state.stats.scamsAvoided);
+      expect(outcomes.some((n) => n > 0), t.id).toBe(true);
+    }
   });
 });

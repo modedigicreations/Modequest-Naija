@@ -9,6 +9,9 @@ import Phone, { type AppId } from "./Phone";
 import PlacePanel from "./PlacePanel";
 import Toasts from "./Toasts";
 import TopBar from "./TopBar";
+import { usePresenceSync } from "@/online/presence";
+import { claimGifts } from "@/online/social";
+import { useSession } from "@/online/session";
 
 export default function GameScreen() {
   const game = useGame((s) => s.game);
@@ -19,6 +22,17 @@ export default function GameScreen() {
   const unread = game?.messages.filter((m) => !m.read || (m.choices && !m.resolved)).length ?? 0;
 
   const openPhone = useCallback((app: AppId | "home" = "home") => setPhoneApp(app), []);
+  const online = useSession((s) => !!s.profile);
+
+  usePresenceSync();
+
+  // Collect gifts from other players now and every 2 minutes.
+  useEffect(() => {
+    if (!online) return;
+    void claimGifts();
+    const id = setInterval(() => void claimGifts(), 120_000);
+    return () => clearInterval(id);
+  }, [online]);
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {

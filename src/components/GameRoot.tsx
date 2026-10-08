@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useGame } from "@/game/store";
+import { useSession } from "@/online/session";
 import CharacterCreator from "./CharacterCreator";
 import GameScreen from "./GameScreen";
 import { useStoredTheme } from "./phone/Settings";
@@ -12,9 +13,11 @@ export default function GameRoot() {
   const init = useGame((s) => s.init);
   useStoredTheme();
 
+  const initSession = useSession((s) => s.init);
+
   useEffect(() => {
-    void init();
-  }, [init]);
+    void init().then(() => initSession());
+  }, [init, initSession]);
 
   // Real-time clock
   useEffect(() => {
@@ -26,7 +29,7 @@ export default function GameRoot() {
       last = now;
     }, 200);
     const save = () => useGame.getState().save();
-    const onVis = () => document.visibilityState === "hidden" && save();
+    const onVis = () => document.visibilityState === "hidden" && void useGame.getState().flushSave();
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("beforeunload", save);
     return () => {
@@ -40,7 +43,7 @@ export default function GameRoot() {
   if (screen === "loading") {
     return (
       <div className="min-h-dvh grid place-items-center">
-        <div className="font-display text-2xl font-extrabold anim-bob">🚌 Loading Lagos…</div>
+        <div className="font-display text-2xl font-extrabold anim-bob">🚌 Loading Naija…</div>
       </div>
     );
   }

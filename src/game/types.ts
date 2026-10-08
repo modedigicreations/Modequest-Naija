@@ -19,7 +19,7 @@ export type Needs = Record<NeedKey, number>;
 export type Skills = Record<SkillKey, number>; // stored as XP; level derived
 
 export type Weather = "sunny" | "cloudy" | "rain" | "storm";
-export type TransportMode = "walk" | "keke" | "danfo" | "brt" | "ride" | "car";
+export type TransportMode = "walk" | "keke" | "bus" | "brt" | "ride" | "car" | "coach" | "flight";
 export type WorkStyle = "steady" | "hustle" | "gist" | "easy";
 export type LogKind = "info" | "good" | "bad" | "money" | "learn";
 
@@ -43,6 +43,8 @@ export interface Player {
 export interface TravelState {
   from: string;
   to: string;
+  /** Set for trips between cities. */
+  toCity?: string;
   mode: TransportMode;
   start: number;
   end: number;
@@ -168,6 +170,8 @@ export interface GameState {
   skills: Skills;
   cash: number;
   bank: number;
+  /** City the player is currently in. Home city comes from homeId. */
+  city: string;
   location: string;
   travel: TravelState | null;
   activity: ActivityRun | null;
@@ -204,6 +208,7 @@ export interface GameState {
 }
 
 export interface NewGameOptions {
+  city: string;
   name: string;
   pronoun: Player["pronoun"];
   appearance: Appearance;
@@ -216,6 +221,7 @@ export interface NewGameOptions {
 export type Command =
   | { type: "setSpeed"; speed: GameState["speed"] }
   | { type: "travel"; to: string; mode: TransportMode }
+  | { type: "intercity"; to: string; mode: "coach" | "flight" }
   | { type: "startActivity"; activityId: string }
   | { type: "cancelActivity" }
   | { type: "startShift"; workStyle: WorkStyle; taskBonus: boolean }
@@ -237,7 +243,9 @@ export type Command =
   | { type: "resolveEvent"; choiceId: string }
   | { type: "replyMessage"; messageId: string; choiceId: string }
   | { type: "markMessagesRead" }
-  | { type: "completeLesson"; lessonId: string; score: number };
+  | { type: "completeLesson"; lessonId: string; score: number }
+  | { type: "sendGift"; to: string; amount: number }
+  | { type: "receiveGift"; from: string; amount: number; note?: string };
 
 export interface DispatchResult {
   state: GameState;

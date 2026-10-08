@@ -8,8 +8,10 @@ import { BankApp, BusinessApp, InvestApp } from "./phone/MoneyApps";
 import { ContactsApp, GoalsApp, HomesApp, JobsApp, ShopApp, SkillsApp } from "./phone/LifeApps";
 import MessagesApp from "./phone/Messages";
 import SettingsApp from "./phone/Settings";
+import { ClassApp, OnlineApp } from "./phone/OnlineApps";
+import { useSession } from "@/online/session";
 
-export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings";
+export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class";
 
 const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "messages", name: "Messages", emoji: "💬", color: "#0f9d58" },
@@ -26,9 +28,16 @@ const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "settings", name: "Settings", emoji: "⚙️", color: "#64748b" },
 ];
 
+const ONLINE_APPS: { id: AppId; name: string; emoji: string; color: string; studentOnly?: boolean }[] = [
+  { id: "online", name: "Online", emoji: "🌍", color: "#0891b2" },
+  { id: "class", name: "My Class", emoji: "🏫", color: "#16a34a", studentOnly: true },
+];
+
 export default function Phone({ app, setApp }: { app: AppId | "home" | null; setApp: (a: AppId | "home" | null) => void }) {
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
+  const profile = useSession((s) => s.profile);
+  const apps = [...APPS, ...(profile ? ONLINE_APPS.filter((a) => !a.studentOnly || profile.role === "student") : [])];
 
   useEffect(() => {
     if (!app) return;
@@ -39,7 +48,7 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
 
   if (!app) return null;
   const unread = game.messages.filter((m) => !m.read || (m.choices && !m.resolved)).length;
-  const current = APPS.find((a) => a.id === app);
+  const current = apps.find((a) => a.id === app);
 
   return (
     <div className="fixed inset-0 z-40 bg-black/40 lg:bg-transparent lg:pointer-events-none" onClick={() => setApp(null)}>
@@ -67,7 +76,7 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
         <div className="flex-1 overflow-y-auto scroll-thin p-3">
           {app === "home" && (
             <div className="grid grid-cols-4 gap-x-2 gap-y-4 pt-2">
-              {APPS.map((a) => (
+              {apps.map((a) => (
                 <button
                   key={a.id}
                   className="flex flex-col items-center gap-1"
@@ -99,6 +108,8 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
           {app === "goals" && <GoalsApp />}
           {app === "contacts" && <ContactsApp />}
           {app === "settings" && <SettingsApp onClose={() => setApp(null)} />}
+          {app === "online" && <OnlineApp />}
+          {app === "class" && <ClassApp onOpenLesson={() => setApp("academy")} />}
         </div>
       </div>
     </div>

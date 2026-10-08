@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ModeQuest: Lagos — warm Lagos palette: danfo yellow, Naija green, lagoon blue. */
+/* ModeQuest: Naija — warm palette: danfo yellow, Naija green, lagoon blue. */
 :root {
   --bg: #fff7e8;
   --bg-2: #fdecc8;
@@ -251,5 +251,23 @@ body {
   .anim-pop,
   .anim-up {
     animation: none;
+  }
+}
+
+/* Teacher login cards: print only the cards. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+  }
+  .no-print {
+    display: none !important;
   }
 }

@@ -1,11 +1,10 @@
-import { ACTIVITIES, type ActivityDef, getActivity } from "./data/activities";
+import { ACTIVITIES, type ActivityDef, getActivity, localActivity } from "./data/activities";
 import {
   BACKGROUNDS,
   BUSINESS_MAX_LEVEL,
   CERTIFICATES,
   DIVEST_FEE,
   GENERATOR_COST_PER_HOUR,
-  GROCERY_PRICE,
   INFLATION_WEEKLY,
   SAVINGS_WEEKLY_RATE,
   WORK_STYLES,
@@ -18,17 +17,22 @@ import {
 } from "./data/economy";
 import { EVENTS, MESSAGE_CHANCE_PER_HOUR, MESSAGE_TEMPLATES } from "./data/events";
 import { getLesson } from "./data/lessons";
-import { ADVICE, INTERACTIONS, type InteractionId, getNpc, npcsAt } from "./data/people";
+import { INTERACTIONS, type InteractionId, getNpc, npcsAt } from "./data/people";
 import {
-  BRIDGE_MINUTES,
   HOMES,
   type HomeDef,
   type LocationDef,
+  type PlaceKind,
   POWER_BANDS,
   TRANSPORT,
   WEATHER_INFO,
+  cityHome,
+  findKind,
+  getCity,
+  getHome,
   getLocation,
-  getTransport,
+  intercityRoute,
+  transportIn,
 } from "./data/world";
 import { ACHIEVEMENTS, dreamProgress } from "./goals";
 import {
@@ -82,7 +86,7 @@ import {
   weekdayOf,
 } from "./util";
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const START_MINUTE = 7 * 60; // Day 1, Monday, 7:00am
 
 // Base need decay per game hour.
@@ -123,10 +127,11 @@ export function newGame(o: NewGameOptions): GameState {
     skills,
     cash: bg.cash,
     bank: bg.bank,
+    city: getCity(o.city).id,
     location: "home",
     travel: null,
     activity: null,
-    homeId: bg.home,
+    homeId: cityHome(getCity(o.city).id, bg.homeTier).id,
     missedRent: 0,
     items: [...bg.items],
     groceries: 2,
@@ -171,16 +176,16 @@ export function newGame(o: NewGameOptions): GameState {
     fromName: "Mode Academy",
     templateId: "welcome",
     kind: "system",
-    text: `Welcome to Lagos, ${s.player.name}! 🌆 Open the Academy app for lessons that pay grants. Pro tip: never share your OTP or PIN with anyone.`,
+    text: `Welcome to ${getCity(s.city).name}, ${s.player.name}! 🌆 Open the Academy app for lessons that pay grants. Pro tip: never share your OTP or PIN with anyone.`,
   });
   pushMessage(s, {
     from: "mum",
     fromName: "Mummy ❤️",
     templateId: "mum",
     kind: "friend",
-    text: "My child, you have reached Lagos safely? Eat well, find a good job, and don't follow bad friends. Call me when you can.",
+    text: `My child, you have reached ${getCity(s.city).name} safely? Eat well, find a good job, and don't follow bad friends. Call me when you can.`,
   });
-  log(s, "info", `Day 1 in Lagos. Rent is due every Saturday. Prepaid until week ${bg.prepaidWeeks}.`);
+  log(s, "info", `Day 1 in ${getCity(s.city).name}. Rent is due every Saturday. Prepaid until week ${bg.prepaidWeeks}.`);
   return s;
 }
 
@@ -189,11 +194,14 @@ export function newGame(o: NewGameOptions): GameState {
 // ---------------------------------------------------------------------------
 
 function rollWeather(s: GameState): Weather {
-  const r = nextRandom(s);
-  if (r < 0.4) return "sunny";
-  if (r < 0.7) return "cloudy";
-  if (r < 0.92) return "rain";
-  return "storm";
+  const w = getCity(s.city).weather;
+  const total = w.sunny + w.cloudy + w.rain + w.storm;
+  let r = nextRandom(s) * total;
+  for (const k of ["sunny", "cloudy", "rain", "storm"] as Weather[]) {
+    r -= w[k];
+    if (r <= 0) return k;
+  }
+  return "sunny";
 }
 
 export function rollPower(s: GameState, band: HomeDef["band"]): boolean[] {
@@ -233,13 +241,23 @@ function rollDay(s: GameState) {
 // Location & time queries
 // ---------------------------------------------------------------------------
 
-export function placeOf(id: string, s: GameState): { name: string; x: number; y: number; side: "mainland" | "island"; emoji: string } {
+export function placeOf(id: string, s: GameState): { name: string; x: number; y: number; zone: string; emoji: string; city: string } {
   if (id === "home") {
-    const h = home(s);
-    return { name: `Home · ${h.area}`, x: h.x, y: h.y, side: h.side, emoji: "🏠" };
+    const h = getHome(s.homeId);
+    return { name: `Home · ${h.area}`, x: h.x, y: h.y, zone: h.zone, emoji: "🏠", city: h.city };
   }
   const l = getLocation(id)!;
-  return { name: l.name, x: l.x, y: l.y, side: l.side, emoji: l.emoji };
+  return { name: l.name, x: l.x, y: l.y, zone: l.zone, emoji: l.emoji, city: l.city };
+}
+
+/** City the player's home is in. */
+export const homeCity = (s: GameState) => getHome(s.homeId).city;
+export const atHomeCity = (s: GameState) => homeCity(s) === s.city;
+
+/** Kinds of the place the player is standing in ("home" for home). */
+export function kindsHere(s: GameState): (PlaceKind | "home")[] {
+  if (s.location === "home") return ["home"];
+  return getLocation(s.location)?.kinds ?? [];
 }
 
 export function isOpen(loc: LocationDef, t: number): boolean {
@@ -282,12 +300,14 @@ export function travelOptions(s: GameState, to: string): TravelOption[] {
   const a = placeOf(s.location, s);
   const b = placeOf(to, s);
   const dist = Math.hypot(a.x - b.x, a.y - b.y);
-  const cross = a.side !== b.side;
+  const cross = a.zone !== b.zone;
+  const crossMinutes = getCity(s.city).zoneCrossMinutes;
   const rush = isRushHour(s.time);
   const weather = WEATHER_INFO[s.world.weather].travel;
   const scarcity = dayOf(s.time) <= s.world.fuelScarcityUntilDay ? 1.5 : 1;
 
-  return TRANSPORT.map((t) => {
+  return TRANSPORT.filter((base) => transportIn(s.city, base.id).available).map((base) => {
+    const t = transportIn(s.city, base.id);
     let ok = true;
     let reason: string | undefined;
     if (t.requiresItem && !hasItem(s, t.requiresItem)) {
@@ -299,9 +319,12 @@ export function travelOptions(s: GameState, to: string): TravelOption[] {
     } else if (t.id === "keke" && cross) {
       ok = false;
       reason = "Keke can't cross the bridges";
+    } else if (b.city !== s.city) {
+      ok = false;
+      reason = "That's in another city";
     }
-    const trafficMult = t.traffic && rush ? 1.6 : 1;
-    const minutes = Math.round((t.wait + dist * t.minPerPx * trafficMult + (cross ? BRIDGE_MINUTES * (t.id === "walk" ? 2 : 1) : 0)) * weather);
+    const trafficMult = t.traffic && rush ? getCity(s.city).rushFactor : 1;
+    const minutes = Math.round((t.wait + dist * t.minPerPx * trafficMult + (cross ? crossMinutes * (t.id === "walk" ? 2 : 1) : 0)) * weather);
     let fare = (t.baseFare + t.farePerPx * dist) * s.world.priceIndex * scarcity;
     if (t.id === "ride" && rush) fare *= 1.5;
     fare = Math.round(fare / 50) * 50;
@@ -315,7 +338,7 @@ export function travelOptions(s: GameState, to: string): TravelOption[] {
 
 function arrive(s: GameState) {
   const tr = s.travel!;
-  const t = getTransport(tr.mode);
+  const t = transportIn(s.city, tr.mode);
   // Long treks cost more energy and hygiene than short hops.
   const a = placeOf(tr.from, s);
   const b = placeOf(tr.to, s);
@@ -324,6 +347,11 @@ function arrive(s: GameState) {
   if (t.fitnessXp) addSkillXp(s, "fitness", t.fitnessXp * scale);
   s.location = tr.to;
   s.travel = null;
+  if (tr.toCity && tr.toCity !== s.city) {
+    s.city = tr.toCity;
+    s.world.weather = rollWeather(s);
+    log(s, "good", `🧳 Welcome to ${getCity(s.city).name}, the ${getCity(s.city).nickname}!`);
+  }
   const name = placeOf(tr.to, s).name;
   if (tr.to !== "home" && !locationOpen(s, tr.to)) log(s, "info", `Arrived at ${name}, but it's closed right now.`);
   else log(s, "info", `Arrived at ${name}.`);
@@ -373,9 +401,10 @@ export function runEffects(s: GameState, run: ActivityRun): RunEffects {
     return { name: `Manage ${biz.name}`, emoji: biz.emoji, needs: { energy: -10, fun: -4 }, skills: { business: 12, [biz.skill]: 6 }, health: 0, sleep: false, bath: false, noBaseDecay: false, study: false };
   }
   const def = getActivity(run.activityId)!;
+  const local = localActivity(def, s.city);
   return {
-    name: def.name,
-    emoji: def.emoji,
+    name: local.name,
+    emoji: local.emoji,
     needs: def.needs ?? {},
     skills: def.skills ?? {},
     health: def.health ?? 0,
@@ -425,7 +454,8 @@ function courseCost(s: GameState, def: ActivityDef): number {
 }
 
 export function activitiesHere(s: GameState): ActivityView[] {
-  return ACTIVITIES.filter((a) => a.at.includes(s.location)).map((a) => activityView(s, a));
+  const kinds = kindsHere(s);
+  return ACTIVITIES.filter((a) => a.at.some((k) => kinds.includes(k))).map((a) => activityView(s, a));
 }
 
 function startRun(s: GameState, run: Omit<ActivityRun, "applied">) {
@@ -463,7 +493,7 @@ function completeActivity(s: GameState, cancelled: boolean) {
         }
         break;
       case "advice": {
-        const tips = ADVICE[a] ?? [];
+        const tips = npc.advice;
         const tip = tips[(dayOf(s.time) + a.length) % Math.max(1, tips.length)];
         rel.adviceDay = dayOf(s.time);
         addFriendship(s, a, 2);
@@ -597,6 +627,9 @@ function tryPromotion(s: GameState) {
   }
 }
 
+/** Where you report for a career in the current city. */
+export const workplaceFor = (s: GameState, kind: LocationDef["kinds"][number]) => findKind(s.city, kind);
+
 export interface ShiftStatus {
   canStart: boolean;
   reason: string;
@@ -619,7 +652,9 @@ export function shiftStatus(s: GameState): ShiftStatus {
   if (career.lastShiftDay === dayOf(s.time)) return { ...none, workday, startLabel, reason: "Already worked today" };
   if (m < start - 60) return { ...none, workday, startLabel, reason: `Shift starts at ${startLabel}` };
   if (m > start + 120) return { ...none, workday, startLabel, reason: "Too late — shift missed" };
-  if (s.location !== def.workplace) return { ...none, workday, startLabel, reason: `Go to ${getLocation(def.workplace)?.name}` };
+  const work = workplaceFor(s, def.workplace);
+  if (!work) return { ...none, workday, startLabel, reason: `No ${def.name} workplace in ${getCity(s.city).name}` };
+  if (s.location !== work.id) return { ...none, workday, startLabel, reason: `Go to ${work.name}` };
   if (isBusy(s)) return { ...none, workday, startLabel, reason: "You're busy" };
   return { canStart: true, late: m > start + 15, workday, startLabel, reason: m > start + 15 ? "You're late!" : "Ready to work" };
 }
@@ -655,7 +690,7 @@ function tickMinute(s: GameState) {
   if (run && fx) {
     const duration = run.end - run.start;
     const f = 1 / duration;
-    const sleepQ = home(s).sleepQuality + (hasItem(s, "good_bed") ? 0.15 : 0);
+    const sleepQ = s.location === "home" ? home(s).sleepQuality + (hasItem(s, "good_bed") ? 0.15 : 0) : 0.95;
     for (const k of NEED_KEYS) {
       let d = fx.needs[k] ?? 0;
       if (!d) continue;
@@ -708,7 +743,7 @@ function tickMinute(s: GameState) {
 function collapse(s: GameState) {
   s.activity = null;
   s.travel = null;
-  s.location = "hospital";
+  s.location = findKind(s.city, "hospital")?.id ?? s.location;
   const bill = price(s, 25000, false);
   forceCharge(s, bill, "Hospital emergency care");
   for (const k of NEED_KEYS) s.needs[k] = Math.max(s.needs[k], 50);
@@ -717,7 +752,7 @@ function collapse(s: GameState) {
   s.pendingEvent = {
     eventId: "__collapse",
     t: s.time,
-    outcome: `You collapsed from exhaustion and woke up at General Hospital. Bill: ${formatNaira(bill)}. Look after your needs: eat, sleep, bathe, rest and see friends.`,
+    outcome: `You collapsed from exhaustion and woke up at the hospital. Bill: ${formatNaira(bill)}. Look after your needs: eat, sleep, bathe, rest and see friends.`,
   };
 }
 
@@ -744,7 +779,7 @@ function hourly(s: GameState) {
   }
   if (!s.flags.dreamDone && dreamProgress(s).done) {
     s.flags.dreamDone = s.time;
-    log(s, "good", "🌟 You achieved your lifetime dream! You're a Lagos legend.");
+    log(s, "good", "🌟 You achieved your lifetime dream! You're a Naija legend.");
   }
 }
 
@@ -841,11 +876,12 @@ function payRent(s: GameState) {
   }
   s.missedRent += 1;
   if (s.missedRent >= 2) {
-    s.homeId = "uncle_couch";
+    const couch = cityHome(homeCity(s), "couch");
+    s.homeId = couch.id;
     s.missedRent = 0;
     s.stats.evictions += 1;
     s.world.power = rollPower(s, "D");
-    log(s, "bad", "🚪 EVICTED for unpaid rent. You've moved to Uncle Segun's couch in Mushin.");
+    log(s, "bad", `🚪 EVICTED for unpaid rent. You've moved to ${couch.name} in ${couch.area}.`);
   } else {
     log(s, "bad", `⚠️ You couldn't pay rent (${formatNaira(rent)}). Landlord says pay next Saturday or leave.`);
   }
@@ -992,9 +1028,25 @@ function apply(s: GameState, cmd: Command): string | void {
       return;
     }
 
+    case "intercity": {
+      if (isBusy(s)) return "Finish what you're doing first.";
+      if (cmd.to === s.city) return "You're already in this city.";
+      const needKind = cmd.mode === "coach" ? "motor_park" : "airport";
+      if (!kindsHere(s).includes(needKind)) return cmd.mode === "coach" ? "Go to a motor park to board a bus." : "Go to the airport to fly.";
+      if (!locationOpen(s, s.location)) return "It's closed right now.";
+      const arrival = findKind(cmd.to, needKind);
+      if (!arrival) return "No route there yet.";
+      const route = intercityRoute(s.city, cmd.to, cmd.mode);
+      const fare = price(s, route.fare, false);
+      if (!charge(s, fare, `${cmd.mode === "coach" ? "Bus" : "Flight"} to ${getCity(cmd.to).name}`)) return `You need ${formatNaira(fare)} for this trip.`;
+      s.travel = { from: s.location, to: arrival.id, mode: cmd.mode, start: s.time, end: s.time + route.minutes, toCity: cmd.to };
+      log(s, "info", `${cmd.mode === "coach" ? "🚌" : "✈️"} Off to ${getCity(cmd.to).name}!`);
+      return;
+    }
+
     case "startActivity": {
       const def = getActivity(cmd.activityId);
-      if (!def || !def.at.includes(s.location)) return "Not available here.";
+      if (!def || !def.at.some((k) => kindsHere(s).includes(k))) return "Not available here.";
       const v = activityView(s, def);
       if (!v.ok) return v.reason;
       if (v.cost && !charge(s, v.cost, def.name)) return "Can't afford it.";
@@ -1033,7 +1085,7 @@ function apply(s: GameState, cmd: Command): string | void {
       if (s.activity?.activityId.startsWith("shift:")) return "Finish your current shift first.";
       s.career = { careerId: def.id, level: 0, performance: 50, shiftsAtLevel: 0, missedStreak: 0, lastShiftDay: -1 };
       s.flags.careerStartT = s.time;
-      log(s, "good", `You're hired as ${first.title}! Shifts: ${def.start}:00 for ${def.hours}h at ${getLocation(def.workplace)?.name}.`);
+      log(s, "good", `You're hired as ${first.title}! Shifts: ${def.start}:00 for ${def.hours}h at ${workplaceFor(s, def.workplace)?.name ?? "your workplace"}.`);
       return;
     }
 
@@ -1067,7 +1119,7 @@ function apply(s: GameState, cmd: Command): string | void {
       const item = getItem(cmd.itemId);
       if (!item) return "Unknown item.";
       if (hasItem(s, item.id)) return "You already own this.";
-      const atVillage = s.location === "computer_village" && locationOpen(s, s.location) && item.gadget;
+      const atVillage = kindsHere(s).includes("gadget_market") && locationOpen(s, s.location) && item.gadget;
       const cost = price(s, item.price * (atVillage ? 0.8 : 1));
       if (!charge(s, cost, item.name)) return "Can't afford it.";
       s.items.push(item.id);
@@ -1079,7 +1131,7 @@ function apply(s: GameState, cmd: Command): string | void {
     }
 
     case "buyGroceries": {
-      const unit = GROCERY_PRICE[s.location];
+      const unit = s.location === "home" ? undefined : getLocation(s.location)?.groceryPrice;
       if (!unit) return "No foodstuff sold here.";
       if (!locationOpen(s, s.location)) return "The market is closed.";
       const space = groceryCapacity(s) - s.groceries;
@@ -1097,6 +1149,7 @@ function apply(s: GameState, cmd: Command): string | void {
       if (!h || h.hidden) return "Not available.";
       if (h.id === s.homeId) return "You already live here.";
       if (h.studentOnly && !s.flags.student) return "Students only.";
+      if (h.city !== s.city) return `Travel to ${getCity(h.city).name} to rent there.`;
       if (s.activity) return "Finish what you're doing first.";
       const upfront = price(s, h.weeklyRent, false) * h.moveInWeeks;
       if (!charge(s, upfront, `Move-in: ${h.name}`)) return `Need ${formatNaira(upfront)} upfront (rent + agency & caution fees).`;
@@ -1247,6 +1300,25 @@ function apply(s: GameState, cmd: Command): string | void {
       for (const m of s.messages) m.read = true;
       return;
 
+    case "sendGift": {
+      const amt = Math.floor(cmd.amount);
+      if (!(amt >= 100)) return "Minimum gift is ₦100.";
+      if (bankFrozen(s)) return "Your account is frozen.";
+      if (s.bank < amt) return "Gifts are sent from your bank balance.";
+      s.bank -= amt;
+      s.transactions.push({ t: s.time, amount: -amt, label: `Gift to ${cmd.to}`, account: "bank" });
+      log(s, "money", `🎁 You sent ${formatNaira(amt)} to ${cmd.to}.`);
+      return;
+    }
+
+    case "receiveGift": {
+      const amt = Math.floor(cmd.amount);
+      if (!(amt > 0)) return "Invalid gift.";
+      earn(s, amt, `Gift from ${cmd.from}`, "bank");
+      log(s, "money", `🎁 ${cmd.from} sent you ${formatNaira(amt)}${cmd.note ? `: "${cmd.note}"` : ""}`);
+      return;
+    }
+
     case "completeLesson": {
       const lesson = getLesson(cmd.lessonId);
       if (!lesson) return "Unknown lesson.";
@@ -1289,7 +1361,12 @@ export function migrate(raw: unknown): GameState | null {
   const s = raw as GameState;
   if (typeof s.version !== "number" || !s.player || !s.needs) return null;
   if (s.version > SAVE_VERSION) return null;
-  // v1 is current; future migrations go here.
+  if (s.version < 2) {
+    // v2: multiple cities. All v1 saves were in Lagos; "danfo" became "bus".
+    s.city = "lagos";
+    if (s.travel && (s.travel.mode as string) === "danfo") s.travel.mode = "bus";
+    s.version = 2;
+  }
   return s;
 }
 

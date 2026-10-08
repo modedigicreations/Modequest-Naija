@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { advance, dispatch, newGame, shiftStatus } from "./engine";
+import { advance, dispatch, newGame, shiftStatus, travelOptions } from "./engine";
 import { getCareer } from "./data/economy";
 import { EVENTS } from "./data/events";
+import { CITIES, findKind } from "./data/world";
 import type { Command, GameState } from "./types";
-import { hourOf, minuteOfDay, weekdayOf } from "./util";
+import { hourOf, minuteOfDay } from "./util";
 
 /**
  * Balance smoke test: a sensible bot plays a few weeks. It should be able to
@@ -35,7 +36,10 @@ function resolve(s: GameState): GameState {
 
 function goTo(s: GameState, to: string): GameState {
   if (s.location === to) return s;
-  s = try_(s, { type: "travel", to, mode: "brt" });
+  const opts = travelOptions(s, to).filter((o) => o.ok);
+  const mode = (opts.find((o) => o.mode === "brt") ?? opts.find((o) => o.mode === "bus") ?? opts[0])?.mode;
+  if (!mode) return s;
+  s = try_(s, { type: "travel", to, mode });
   return untilFree(s);
 }
 
@@ -72,7 +76,7 @@ function playDay(s: GameState, workplace: string): GameState {
       } else s = advance(s, 15);
       continue;
     }
-    if (h >= 22 || h < 6 || s.needs.energy < 25) {
+    if (h >= 22 || (h < 5 && s.needs.energy < 70) || s.needs.energy < 25) {
       s = goTo(s, "home");
       s = untilFree(try_(s, { type: "startActivity", activityId: "sleep" }));
       continue;
@@ -81,7 +85,7 @@ function playDay(s: GameState, workplace: string): GameState {
       if (s.location !== "home") s = goTo(s, "home");
       if (s.groceries > 0) s = untilFree(try_(s, { type: "startActivity", activityId: "snack" }));
       else {
-        s = goTo(s, "amala_spot");
+        s = goTo(s, findKind(s.city, "buka")!.id);
         s = untilFree(try_(s, { type: "startActivity", activityId: "amala" }));
       }
       continue;
@@ -100,26 +104,31 @@ function playDay(s: GameState, workplace: string): GameState {
 }
 
 describe("balance", () => {
-  it("a diligent market apprentice survives 4 weeks and saves a little", () => {
-    let s = newGame({
-      name: "Bot",
-      pronoun: "they",
-      appearance: { skin: 0, hair: 0, hairColor: 0, outfit: 0, accessory: 0 },
-      background: "hustler",
-      traits: ["hardworking", "thrifty"],
-      dream: "smart_money",
-      seed: 2024,
-    });
-    s = try_(s, { type: "applyJob", careerId: "trade" });
-    for (let d = 0; d < 28; d++) s = playDay(s, "balogun");
+  for (const city of CITIES) {
+    it(`a diligent market apprentice in ${city.name} survives 4 weeks and saves a little`, () => {
+      let s = newGame({
+        city: city.id,
+        name: "Bot",
+        pronoun: "they",
+        appearance: { skin: 0, hair: 0, hairColor: 0, outfit: 0, accessory: 0 },
+        background: "hustler",
+        traits: ["hardworking", "thrifty"],
+        dream: "smart_money",
+        seed: 2024,
+      });
+      s = try_(s, { type: "applyJob", careerId: "trade" });
+      const work = findKind(city.id, "market")!.id;
+      for (let d = 0; d < 28; d++) {
+        s = playDay(s, work);
+      }
 
-    const money = s.cash + s.bank;
-    // Useful when tuning the economy:
-    if (process.env.BALANCE_LOG) console.log({ money, shifts: s.stats.shiftsWorked, level: s.career?.level, hosp: s.stats.hospitalVisits, evictions: s.stats.evictions, weekday: weekdayOf(s.time) });
-    expect(s.stats.evictions).toBe(0);
-    expect(s.stats.hospitalVisits).toBeLessThanOrEqual(1);
-    expect(s.stats.shiftsWorked).toBeGreaterThanOrEqual(18);
-    expect(money).toBeGreaterThan(12000);
-    expect(money).toBeLessThan(400000);
-  });
+      const money = s.cash + s.bank;
+      if (process.env.BALANCE_LOG) console.log(city.id, { money, shifts: s.stats.shiftsWorked, level: s.career?.level, hosp: s.stats.hospitalVisits, evictions: s.stats.evictions });
+      expect(s.stats.evictions).toBe(0);
+      expect(s.stats.hospitalVisits).toBeLessThanOrEqual(1);
+      expect(s.stats.shiftsWorked).toBeGreaterThanOrEqual(18);
+      expect(money).toBeGreaterThan(12000);
+      expect(money).toBeLessThan(400000);
+    });
+  }
 });

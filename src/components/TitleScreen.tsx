@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 import { importSave } from "@/game/persistence";
+import { getCity } from "@/game/data/world";
 import { useGame } from "@/game/store";
 import { dayOf, formatNaira } from "@/game/util";
 import Avatar from "./Avatar";
+import AccountPanel from "./online/AccountPanel";
 import { Modal } from "./ui";
 
 const FEATURES = [
-  ["🗺️", "Real Lagos", "Yaba, Balogun, Lekki, UNILAG and more — with go-slow and NEPA."],
-  ["💼", "6 careers", "Tech, food, media, trade, banking, logistics. Shifts and promotions."],
+  ["🗺️", "4 real cities", "Lagos, Abuja, Port Harcourt and Enugu — each with its own map, food, people and go-slow."],
+  ["💼", "9 careers", "Tech, food, media, trade, banking, logistics, health, civil service, oil & gas."],
   ["🎣", "Beat the scams", "Phishing DMs, Ponzi schemes, fake alerts — learn to spot them."],
   ["📈", "Grow money", "Save, invest, run businesses — and watch inflation bite."],
   ["🎓", "Mode Academy", "Lessons and coding puzzles that pay real in-game grants."],
-  ["🤝🏾", "Make padis", "12 Lagosians with their own schedules, advice and drama."],
+  ["🤝🏾", "Make padis", "Locals in every city with their own schedules, advice and drama."],
 ];
 
 export default function TitleScreen() {
@@ -39,10 +41,10 @@ export default function TitleScreen() {
             <h1 className="font-display font-extrabold text-[44px] sm:text-[64px] leading-[0.95] tracking-tight">
               ModeQuest:
               <br />
-              <span className="inline-block bg-[var(--ink)] text-[var(--danfo)] px-3 rounded-2xl mt-2 -rotate-1">Lagos</span>
+              <span className="inline-block bg-[var(--ink)] text-[var(--danfo)] px-3 rounded-2xl mt-2 -rotate-1">Naija</span>
             </h1>
             <p className="mt-5 text-lg text-[var(--ink-2)] max-w-md">
-              Live your Lagos story. Hustle, learn, dodge scams, beat NEPA and build your empire — one danfo ride at a time.
+              Live your Naija story. Hustle, learn, dodge scams, beat NEPA and build your empire — from Lagos to Abuja, Port Harcourt to Enugu.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md">
@@ -64,6 +66,9 @@ export default function TitleScreen() {
             <button className="mt-3 text-sm font-semibold text-[var(--muted)] underline" onClick={() => setImportOpen(true)}>
               Import a save code
             </button>
+            <div className="mt-6 max-w-md">
+              <AccountPanel />
+            </div>
           </div>
 
           <div className="card p-5 sm:p-6 anim-pop" style={{ boxShadow: "var(--shadow)" }}>
@@ -76,7 +81,7 @@ export default function TitleScreen() {
                   <div className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">Saved life</div>
                   <div className="font-display text-2xl font-extrabold">{game.player.name}</div>
                   <div className="text-sm text-[var(--ink-2)]">
-                    Day {dayOf(game.time)} · {formatNaira(game.cash + game.bank)}
+                    {getCity(game.city).name} · Day {dayOf(game.time)} · {formatNaira(game.cash + game.bank)}
                   </div>
                 </div>
               </div>
@@ -94,7 +99,7 @@ export default function TitleScreen() {
         </div>
 
         <p className="mt-14 text-xs text-[var(--muted)] max-w-xl">
-          ModeQuest is a learning game. All naira is in-game money and has no real value. Places are inspired by real Lagos; all characters and businesses are fictional.
+          ModeQuest is a learning game. All naira is in-game money and has no real value. Places are inspired by real Nigerian cities; all characters and businesses are fictional.
         </p>
       </div>
 

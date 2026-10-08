@@ -24,6 +24,8 @@ export const PUZZLES: Puzzle[] = [
   { id: "p4", grid: ["S.c.", "###.", "G.c."], startDir: 1, maxSteps: 5 },
   { id: "p5", grid: ["S.#....", ".##.##.", "....#c.", "##.##.#", "G.....#"], startDir: 2, maxSteps: 16 },
   { id: "p6", grid: ["S...c", "####.", "c...c", ".####", "c...G"], startDir: 1, maxSteps: 9 },
+  { id: "p7", grid: ["S..#G", "##.#.", "##c#.", "##.#.", "##.c."], startDir: 1, maxSteps: 7 },
+  { id: "p8", grid: ["S.....c", "######.", "G.c...."], startDir: 1, maxSteps: 7 },
 ];
 
 export interface Frame {

@@ -1,6 +1,7 @@
 import { CAREERS, getCareer } from "./data/economy";
 import { debtTotal, investmentsTotal, level, netWorth } from "./helpers";
 import { LESSONS } from "./data/lessons";
+import { getHome } from "./data/world";
 import type { GameState } from "./types";
 
 export interface AchievementDef {
@@ -29,7 +30,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "debt_free", name: "Debt Free", emoji: "🕊️", blurb: "Pay off a loan completely.", check: (s) => (s.flags.loansRepaid ?? 0) >= 1 },
   { id: "half_million", name: "Half a Milli", emoji: "💰", blurb: "Reach ₦500,000 net worth.", check: (s) => netWorth(s) >= 500000 },
   { id: "millionaire", name: "Millionaire", emoji: "🤑", blurb: "Reach ₦1,000,000 net worth.", check: (s) => netWorth(s) >= 1000000 },
-  { id: "week4", name: "Lagos Survivor", emoji: "🗓️", blurb: "Survive 4 weeks in Lagos.", check: (s) => s.time >= 28 * 1440 },
+  { id: "week4", name: "City Survivor", emoji: "🗓️", blurb: "Survive 4 weeks on your own.", check: (s) => s.time >= 28 * 1440 },
   { id: "fit", name: "Fit Fam", emoji: "💪🏾", blurb: "Reach Fitness level 5.", check: (s) => level(s, "fitness") >= 5 },
 ];
 
@@ -48,9 +49,9 @@ export function dreamProgress(s: GameState): DreamProgress {
     }
     case "lekki_landlord": {
       const nw = netWorth(s);
-      const lekki = s.homeId === "lekki_flat" || s.homeId === "banana_island";
+      const lekki = ["luxury", "penthouse"].includes(getHome(s.homeId).tier);
       const p = Math.min(1, Math.max(0, nw) / 10_000_000) * (lekki ? 1 : 0.9);
-      return { progress: p, detail: `Net worth ₦${Math.max(0, nw).toLocaleString()} / ₦10M · ${lekki ? "Lives on the Island ✅" : "Needs a Lekki/Banana Island home"}`, done: nw >= 10_000_000 && lekki };
+      return { progress: p, detail: `Net worth ₦${Math.max(0, nw).toLocaleString()} / ₦10M · ${lekki ? "Lives in luxury ✅" : "Needs a luxury home"}`, done: nw >= 10_000_000 && lekki };
     }
     case "yaba_unicorn": {
       const st = s.businesses.find((b) => b.id === "tech_startup");

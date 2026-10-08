@@ -15,9 +15,9 @@ const body = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "ModeQuest: Lagos",
+  title: "ModeQuest: Naija",
   description:
-    "Live your Lagos story — hustle, learn and level up. A free life-sim that teaches money smarts, scam awareness and coding. By Mode Digital Creations.",
+    "Live your Naija story in Lagos, Abuja, Port Harcourt or Enugu — hustle, learn and level up. A free life-sim that teaches money smarts, scam awareness and coding. By Mode Digital Creations.",
   applicationName: "ModeQuest",
 };
 

@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { activitiesHere, isOpen, placeOf, shiftStatus } from "@/game/engine";
-import { GROCERY_PRICE, getCareer } from "@/game/data/economy";
+import { activitiesHere, isOpen, kindsHere, placeOf, shiftStatus, workplaceFor } from "@/game/engine";
+import { getCareer } from "@/game/data/economy";
+import { localActivity } from "@/game/data/activities";
 import { INTERACTIONS, type InteractionId, npcsAt } from "@/game/data/people";
-import { getLocation, getTransport } from "@/game/data/world";
+import { CITIES, getCity, getLocation, intercityRoute, transportIn } from "@/game/data/world";
 import { friendshipTier, groceryCapacity, home, price } from "@/game/helpers";
 import { useGame } from "@/game/store";
 import type { NeedKey } from "@/game/types";
 import { WEEKDAYS_LONG, formatClock, formatDuration, formatHour, formatNaira, hourOf, weekOf, weekdayOf } from "@/game/util";
 import type { AppId } from "./Phone";
 import ShiftModal from "./ShiftModal";
+import PlayersHere from "./online/PlayersHere";
 import { NEED_INFO } from "./TopBar";
 import { Meter, SectionTitle } from "./ui";
 
@@ -22,14 +24,15 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
   const [shiftOpen, setShiftOpen] = useState(false);
 
   if (game.travel) {
-    const t = getTransport(game.travel.mode);
+    const t = transportIn(game.city, game.travel.mode);
+    const dest = game.travel.toCity && game.travel.toCity !== game.city ? getCity(game.travel.toCity).name : placeOf(game.travel.to, game).name;
     return (
       <div className="flex-1 overflow-y-auto scroll-thin p-4">
         <div className="card p-5 text-center">
           <div className="text-5xl anim-bob">{t.emoji}</div>
           <h2 className="font-display text-xl font-extrabold mt-2">On the road</h2>
           <p className="text-sm text-[var(--ink-2)] mt-1">
-            {t.name} to <b>{placeOf(game.travel.to, game).name}</b>. Arriving {formatClock(game.travel.end)}.
+            {t.name} to <b>{dest}</b>. Arriving {formatClock(game.travel.end)}.
           </p>
           <p className="text-xs text-[var(--muted)] mt-3">{t.blurb}</p>
           <button className="btn btn-ghost btn-sm mt-4" onClick={onOpenMap}>
@@ -49,7 +52,9 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
   const people = isHome ? [] : npcsAt(game.location, weekdayOf(game.time), hourOf(game.time));
   const career = game.career ? getCareer(game.career.careerId) : null;
   const shift = shiftStatus(game);
-  const groceryUnit = GROCERY_PRICE[game.location];
+  const groceryUnit = loc?.groceryPrice;
+  const kinds = kindsHere(game);
+  const workplace = career ? workplaceFor(game, career.workplace) : undefined;
   const h = home(game);
   const rentDue = h.weeklyRent > 0 && (game.flags.rentPaidThroughWeek ?? 0) < weekOf(game.time);
 
@@ -92,7 +97,7 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
           <SectionTitle right={<span className="chip">{career.emoji} {career.name}</span>}>💼 Work</SectionTitle>
           <div className="text-sm">
             <b>{career.levels[game.career!.level].title}</b> · {career.days.map((d) => WEEKDAYS_LONG[d].slice(0, 3)).join(", ")} · {career.start}:00 for {career.hours}h at{" "}
-            {getLocation(career.workplace)?.name}
+            {workplace?.name ?? `(no workplace in ${getCity(game.city).name})`}
           </div>
           <div className="mt-2">
             <Meter value={game.career!.performance} label="Performance" emoji="📊" />
@@ -128,13 +133,14 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
           </div>
         </div>
       )}
-      {game.location === "computer_village" && (
+      {(kinds.includes("motor_park") || kinds.includes("airport")) && <IntercityCard mode={kinds.includes("airport") ? "flight" : "coach"} open={open} />}
+      {kinds.includes("gadget_market") && (
         <button className="card p-4 w-full text-left" onClick={() => onOpenPhone("shop")}>
           <div className="font-bold">📱 Gadgets are 20% cheaper here</div>
           <div className="text-xs text-[var(--ink-2)] mt-1">Open the Shop app while you&apos;re here. But beware fakes — your Business skill helps you spot them.</div>
         </button>
       )}
-      {game.location === "bank_hq" && (
+      {kinds.includes("bank") && (
         <button className="card p-4 w-full text-left" onClick={() => onOpenPhone("bank")}>
           <div className="font-bold">🏦 Banking hall</div>
           <div className="text-xs text-[var(--ink-2)] mt-1">Manage savings and loans in your Bank app — available anywhere.</div>
@@ -148,7 +154,9 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
           <p className="text-sm text-[var(--muted)]">Nothing to do here.</p>
         ) : (
           <div className="grid gap-2">
-            {acts.map(({ def, cost, ok, reason, progress }) => (
+            {acts.map(({ def, cost, ok, reason, progress }) => {
+              const lc = localActivity(def, game.city);
+              return (
               <button
                 key={def.id}
                 disabled={!ok}
@@ -156,10 +164,10 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
                 className="text-left rounded-2xl border-[1.5px] border-[var(--line)] bg-[var(--card-2)] p-3 disabled:opacity-55 hover:border-[var(--danfo)] transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{def.emoji}</span>
+                  <span className="text-2xl">{lc.emoji}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-sm">{def.name}</span>
+                      <span className="font-bold text-sm">{lc.name}</span>
                       <span className="text-xs font-semibold text-[var(--ink-2)] shrink-0">
                         {formatDuration(def.duration)}
                         {cost ? ` · ${formatNaira(cost)}` : ""}
@@ -184,7 +192,8 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
                   </div>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -240,6 +249,7 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
         </div>
       )}
 
+      <PlayersHere />
       <Feed />
       {shiftOpen && <ShiftModal onClose={() => setShiftOpen(false)} />}
     </div>
@@ -251,7 +261,7 @@ function Feed() {
   const recent = log.slice(-8).reverse();
   return (
     <div className="card p-4">
-      <SectionTitle>📰 Your Lagos feed</SectionTitle>
+      <SectionTitle>📰 Your feed</SectionTitle>
       <ul className="space-y-1.5">
         {recent.map((e) => (
           <li key={e.id} className="text-[13px] flex gap-2">
@@ -262,6 +272,41 @@ function Feed() {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function IntercityCard({ mode, open }: { mode: "coach" | "flight"; open: boolean }) {
+  const game = useGame((s) => s.game)!;
+  const dispatch = useGame((s) => s.dispatch);
+  const others = CITIES.filter((c) => c.id !== game.city);
+  return (
+    <div className="card p-4">
+      <SectionTitle>{mode === "coach" ? "🚌 Travel by road" : "✈️ Book a flight"}</SectionTitle>
+      <p className="text-xs text-[var(--ink-2)] mb-3">
+        {mode === "coach" ? "Cheap but long. You arrive tired at the other city's motor park." : "Fast but expensive. Arrive at the other city's airport."} Your home and job stay where they are.
+      </p>
+      <div className="grid gap-2">
+        {others.map((c) => {
+          const r = intercityRoute(game.city, c.id, mode);
+          const fare = price(game, r.fare, false);
+          return (
+            <button
+              key={c.id}
+              disabled={!open || !!game.activity}
+              className="btn btn-ghost justify-between w-full py-2"
+              onClick={() => confirm(`Travel to ${c.name} for ${formatNaira(fare)}? It takes about ${formatDuration(r.minutes)}.`) && dispatch({ type: "intercity", to: c.id, mode })}
+            >
+              <span>
+                {c.emoji} {c.name}
+              </span>
+              <span className="text-xs font-semibold text-[var(--ink-2)]">
+                {formatDuration(r.minutes)} · {formatNaira(fare)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

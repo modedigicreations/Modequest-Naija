@@ -1,4 +1,5 @@
 import type { SkillKey } from "../types";
+import type { HomeTier, PlaceKind } from "./worldTypes";
 
 // ---------------------------------------------------------------------------
 // Items you can buy for your home or yourself.
@@ -9,7 +10,7 @@ export interface ItemDef {
   name: string;
   emoji: string;
   price: number;
-  gadget?: boolean; // cheaper at Computer Village, but fakes exist
+  gadget?: boolean; // cheaper at gadget markets, but fakes exist
   blurb: string;
 }
 
@@ -25,12 +26,6 @@ export const ITEMS: ItemDef[] = [
   { id: "ring_light", name: "Ring light & mic", emoji: "💡", price: 30000, blurb: "+30% creativity from skits." },
   { id: "car", name: "Used Toyota Corolla", emoji: "🚗", price: 3500000, blurb: "Drive yourself. Fuel money still dey." },
 ];
-
-export const GROCERY_PRICE: Record<string, number> = {
-  mushin_market: 900,
-  ikeja_mall: 1400,
-  balogun: 1100,
-};
 
 export const GENERATOR_COST_PER_HOUR = 700;
 
@@ -50,7 +45,7 @@ export interface CareerDef {
   id: string;
   name: string;
   emoji: string;
-  workplace: string;
+  workplace: PlaceKind;
   skill: SkillKey;
   days: number[]; // weekdays
   start: number; // hour
@@ -62,7 +57,7 @@ export interface CareerDef {
 export const CAREERS: CareerDef[] = [
   {
     id: "tech", name: "Tech", emoji: "💻", workplace: "tech_hub", skill: "coding", days: [0, 1, 2, 3, 4], start: 9, hours: 8,
-    blurb: "Build apps for Lagos startups. Slow start, highest ceiling.",
+    blurb: "Build apps for Nigerian startups. Slow start, highest ceiling.",
     levels: [
       { title: "Intern Developer", pay: 6000, skill: 0 },
       { title: "Junior Developer", pay: 14000, skill: 2 },
@@ -72,7 +67,7 @@ export const CAREERS: CareerDef[] = [
     ],
   },
   {
-    id: "food", name: "Food", emoji: "🍲", workplace: "amala_spot", skill: "cooking", days: [1, 2, 3, 4, 5, 6], start: 8, hours: 7,
+    id: "food", name: "Food", emoji: "🍲", workplace: "buka", skill: "cooking", days: [1, 2, 3, 4, 5, 6], start: 8, hours: 7,
     blurb: "From washing plates at the buka to running a food brand.",
     levels: [
       { title: "Kitchen Helper", pay: 4500, skill: 0 },
@@ -94,8 +89,8 @@ export const CAREERS: CareerDef[] = [
     ],
   },
   {
-    id: "trade", name: "Trade", emoji: "🏬", workplace: "balogun", skill: "business", days: [0, 1, 2, 3, 4, 5], start: 8, hours: 8,
-    blurb: "Learn the market from the inside. Balogun made many millionaires.",
+    id: "trade", name: "Trade", emoji: "🏬", workplace: "market", skill: "business", days: [0, 1, 2, 3, 4, 5], start: 8, hours: 8,
+    blurb: "Learn the market from the inside. Nigerian markets have made many millionaires.",
     levels: [
       { title: "Market Apprentice", pay: 5000, skill: 0 },
       { title: "Sales Rep", pay: 9000, skill: 2 },
@@ -105,8 +100,8 @@ export const CAREERS: CareerDef[] = [
     ],
   },
   {
-    id: "finance", name: "Banking", emoji: "🏦", workplace: "bank_hq", skill: "finance", days: [0, 1, 2, 3, 4], start: 8, hours: 8,
-    blurb: "Suits and spreadsheets on Victoria Island. Needs money smarts.",
+    id: "finance", name: "Banking", emoji: "🏦", workplace: "bank", skill: "finance", days: [0, 1, 2, 3, 4], start: 8, hours: 8,
+    blurb: "Suits and spreadsheets. Needs money smarts.",
     levels: [
       { title: "Teller Trainee", pay: 7000, skill: 1 },
       { title: "Customer Officer", pay: 13000, skill: 3, cert: "finance_cert" },
@@ -116,14 +111,47 @@ export const CAREERS: CareerDef[] = [
     ],
   },
   {
-    id: "logistics", name: "Logistics", emoji: "🛵", workplace: "computer_village", skill: "fitness", days: [0, 1, 2, 3, 4, 5], start: 9, hours: 7,
-    blurb: "Deliver gadgets across Lagos, then run the fleet.",
+    id: "logistics", name: "Logistics", emoji: "🛵", workplace: "gadget_market", skill: "fitness", days: [0, 1, 2, 3, 4, 5], start: 9, hours: 7,
+    blurb: "Deliver gadgets across the city, then run the fleet.",
     levels: [
       { title: "Dispatch Rider", pay: 5500, skill: 1 },
       { title: "Senior Rider", pay: 9000, skill: 3 },
       { title: "Dispatch Supervisor", pay: 15000, skill: 3, extra: ["business", 3] },
       { title: "Logistics Manager", pay: 28000, skill: 4, extra: ["business", 5] },
       { title: "Fleet Owner", pay: 56000, skill: 4, extra: ["business", 7] },
+    ],
+  },
+  {
+    id: "civil", name: "Civil Service", emoji: "🏛️", workplace: "ministry", skill: "finance", days: [0, 1, 2, 3, 4], start: 8, hours: 8,
+    blurb: "Serve the public from the Federal Secretariat. Steady pay, steady climb. Abuja only.",
+    levels: [
+      { title: "Clerical Officer", pay: 6500, skill: 1 },
+      { title: "Executive Officer", pay: 12000, skill: 3, cert: "civil_cert" },
+      { title: "Senior Executive Officer", pay: 21000, skill: 5 },
+      { title: "Assistant Director", pay: 38000, skill: 6, extra: ["charisma", 5] },
+      { title: "Director", pay: 70000, skill: 8, extra: ["charisma", 6] },
+    ],
+  },
+  {
+    id: "energy", name: "Oil & Gas", emoji: "🛢️", workplace: "industrial", skill: "fitness", days: [0, 1, 2, 3, 4], start: 7, hours: 9,
+    blurb: "Field work, workshops and big pay — if you're safety-certified. Port Harcourt only.",
+    levels: [
+      { title: "Site Helper", pay: 7000, skill: 1 },
+      { title: "Field Technician", pay: 16000, skill: 3, cert: "hse_cert" },
+      { title: "Senior Technician", pay: 30000, skill: 4, extra: ["coding", 3] },
+      { title: "Operations Supervisor", pay: 52000, skill: 5, extra: ["business", 5] },
+      { title: "Operations Manager", pay: 95000, skill: 6, extra: ["business", 7] },
+    ],
+  },
+  {
+    id: "health", name: "Health", emoji: "🩺", workplace: "hospital", skill: "charisma", days: [0, 2, 4, 5], start: 7, hours: 10,
+    blurb: "Care for patients. Long shifts, real impact. Available in every city.",
+    levels: [
+      { title: "Ward Assistant", pay: 6000, skill: 0 },
+      { title: "Nursing Assistant", pay: 13000, skill: 2, cert: "nursing_cert" },
+      { title: "Staff Nurse", pay: 22000, skill: 4 },
+      { title: "Senior Nurse", pay: 36000, skill: 6, extra: ["finance", 3] },
+      { title: "Matron / Ward Manager", pay: 60000, skill: 8, extra: ["business", 4] },
     ],
   },
 ];
@@ -140,6 +168,9 @@ export const CERTIFICATES: Record<string, string> = {
   business_diploma: "Business Diploma",
   finance_cert: "Finance Certificate",
   creative_cert: "Media Arts Certificate",
+  hse_cert: "HSE Safety Certificate",
+  civil_cert: "Civil Service Exam Pass",
+  nursing_cert: "Nursing Assistant Certificate",
 };
 
 // ---------------------------------------------------------------------------
@@ -152,7 +183,7 @@ export interface BackgroundDef {
   emoji: string;
   cash: number;
   bank: number;
-  home: string;
+  homeTier: HomeTier;
   prepaidWeeks: number;
   skills: Partial<Record<SkillKey, number>>;
   items: string[];
@@ -162,10 +193,10 @@ export interface BackgroundDef {
 }
 
 export const BACKGROUNDS: BackgroundDef[] = [
-  { id: "ajebutter", name: "Ajebutter", emoji: "🧈", cash: 20000, bank: 180000, home: "surulere_flat", prepaidWeeks: 4, skills: { charisma: 40 }, items: ["tv"], blurb: "Comfortable family, nice flat, money in the bank. But can you hustle?" },
-  { id: "hustler", name: "Street Hustler", emoji: "💪🏾", cash: 12000, bank: 0, home: "mushin_room", prepaidWeeks: 2, skills: { business: 100, fitness: 40 }, items: [], blurb: "Grew up selling in traffic. Small money, big street sense." },
-  { id: "scholar", name: "Scholarship Kid", emoji: "🎓", cash: 8000, bank: 35000, home: "unilag_hostel", prepaidWeeks: 4, skills: { coding: 40, finance: 40 }, items: [], student: true, blurb: "Brilliant, broke, and living in the UNILAG hostel. Courses cost 30% less." },
-  { id: "lapo", name: "Microloan Starter", emoji: "🏧", cash: 10000, bank: 60000, home: "yaba_selfcon", prepaidWeeks: 2, skills: {}, items: [], loan: "lapo", blurb: "Started with a ₦60k microloan. Nice Yaba room, but the repayments are coming." },
+  { id: "ajebutter", name: "Ajebutter", emoji: "🧈", cash: 20000, bank: 180000, homeTier: "flat", prepaidWeeks: 4, skills: { charisma: 40 }, items: ["tv"], blurb: "Comfortable family, nice flat, money in the bank. But can you hustle?" },
+  { id: "hustler", name: "Street Hustler", emoji: "💪🏾", cash: 12000, bank: 0, homeTier: "room", prepaidWeeks: 2, skills: { business: 100, fitness: 40 }, items: [], blurb: "Grew up selling in traffic. Small money, big street sense." },
+  { id: "scholar", name: "Scholarship Kid", emoji: "🎓", cash: 8000, bank: 35000, homeTier: "hostel", prepaidWeeks: 4, skills: { coding: 40, finance: 40 }, items: [], student: true, blurb: "Brilliant, broke, and living in a university hostel. Courses cost 30% less." },
+  { id: "lapo", name: "Microloan Starter", emoji: "🏧", cash: 10000, bank: 60000, homeTier: "selfcon", prepaidWeeks: 2, skills: {}, items: [], loan: "lapo", blurb: "Started with a ₦60k microloan. A decent self-contain, but the repayments are coming." },
 ];
 
 export interface TraitDef {
@@ -196,15 +227,15 @@ export interface DreamDef {
 
 export const DREAMS: DreamDef[] = [
   { id: "oga_top", name: "Oga at the Top", emoji: "👔", blurb: "Reach the top level of any career." },
-  { id: "lekki_landlord", name: "Lekki Landlord", emoji: "🏡", blurb: "₦10M net worth and a home in Lekki or Banana Island." },
-  { id: "yaba_unicorn", name: "Yaba Unicorn", emoji: "🦄", blurb: "Grow your own Tech Startup to level 4." },
-  { id: "padi", name: "Everybody's Padi", emoji: "🤝🏾", blurb: "Have 5 best friends in Lagos." },
+  { id: "lekki_landlord", name: "Big Landlord", emoji: "🏡", blurb: "₦10M net worth and a luxury home in any city." },
+  { id: "yaba_unicorn", name: "Naija Unicorn", emoji: "🦄", blurb: "Grow your own Tech Startup to level 4." },
+  { id: "padi", name: "Everybody's Padi", emoji: "🤝🏾", blurb: "Have 5 best friends across Nigeria." },
   { id: "smart_money", name: "Smart Money", emoji: "📈", blurb: "₦2M in savings & investments, no debt, never scammed." },
   { id: "naija_star", name: "Naija Star", emoji: "⭐", blurb: "Max creativity and become Creative Director or higher." },
 ];
 
 // ---------------------------------------------------------------------------
-// Businesses (the ModeQuest tycoon, Lagos edition).
+// Businesses (the ModeQuest tycoon, Naija edition).
 // ---------------------------------------------------------------------------
 
 export interface BusinessDef {
@@ -223,7 +254,7 @@ export const BUSINESSES: BusinessDef[] = [
   { id: "pos", name: "POS Stand", emoji: "🏧", price: 150000, weekly: 13000, skill: "business", volatility: 0.25, blurb: "Cash withdrawals for the neighbourhood. Steady, small." },
   { id: "mama_put", name: "Mama Put Stall", emoji: "🍛", price: 250000, weekly: 22000, skill: "cooking", volatility: 0.3, blurb: "Rice and stew for workers. Better food, more customers." },
   { id: "salon", name: "Barbing & Braids Salon", emoji: "💈", price: 380000, weekly: 32000, skill: "creativity", volatility: 0.3, blurb: "Fresh cuts and knotless braids. Creative stylists win." },
-  { id: "phone_shop", name: "Phone Accessories Shop", emoji: "🔌", price: 450000, weekly: 40000, skill: "business", volatility: 0.35, blurb: "Chargers, cases and screen guards at Computer Village." },
+  { id: "phone_shop", name: "Phone Accessories Shop", emoji: "🔌", price: 450000, weekly: 40000, skill: "business", volatility: 0.35, blurb: "Chargers, cases and screen guards at the gadget market." },
   { id: "laundry", name: "Laundry Service", emoji: "🧺", price: 700000, weekly: 58000, skill: "business", volatility: 0.25, requires: ["business", 3], blurb: "Pick-up and delivery. Power costs bite during outages." },
   { id: "tech_startup", name: "Tech Startup", emoji: "🦄", price: 600000, weekly: 26000, skill: "coding", volatility: 0.9, requires: ["coding", 5], blurb: "High risk, high reward. Level 4 = unicorn territory." },
   { id: "solar_co", name: "Solar Installation Co.", emoji: "🔆", price: 1800000, weekly: 160000, skill: "business", volatility: 0.3, requires: ["business", 5], blurb: "Everyone wants light. You sell it." },

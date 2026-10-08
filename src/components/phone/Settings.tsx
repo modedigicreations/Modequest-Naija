@@ -132,7 +132,7 @@ export default function SettingsApp({ onClose }: { onClose: () => void }) {
       </div>
 
       <p className="text-[11px] text-center text-[var(--muted)] pb-2">
-        ModeQuest: Lagos · Made in Nigeria by Mode Digital Creations
+        ModeQuest: Naija · Made in Nigeria by Mode Digital Creations
         <br />
         Learn · Build · Earn
       </p>

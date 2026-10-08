@@ -9,14 +9,20 @@ export interface SaveAdapter {
   load(): Promise<GameState | null>;
   save(state: GameState): Promise<void>;
   clear(): Promise<void>;
+  /** Push anything buffered (cloud adapters). */
+  flush?(): Promise<void>;
 }
 
-const KEY = "modequest:save";
+/** Guest saves use the base key; signed-in players get their own key so a
+ *  shared school computer never mixes two students' games. */
+export const GUEST_SAVE_KEY = "modequest:save";
 
 export class LocalSaveAdapter implements SaveAdapter {
+  constructor(private key: string = GUEST_SAVE_KEY) {}
+
   async load(): Promise<GameState | null> {
     try {
-      const raw = localStorage.getItem(KEY);
+      const raw = localStorage.getItem(this.key);
       return raw ? migrate(JSON.parse(raw)) : null;
     } catch {
       return null;
@@ -25,7 +31,7 @@ export class LocalSaveAdapter implements SaveAdapter {
 
   async save(state: GameState): Promise<void> {
     try {
-      localStorage.setItem(KEY, JSON.stringify(state));
+      localStorage.setItem(this.key, JSON.stringify(state));
     } catch {
       // Storage full or blocked (private mode). The game keeps running.
     }
@@ -33,7 +39,7 @@ export class LocalSaveAdapter implements SaveAdapter {
 
   async clear(): Promise<void> {
     try {
-      localStorage.removeItem(KEY);
+      localStorage.removeItem(this.key);
     } catch {
       // ignore
     }

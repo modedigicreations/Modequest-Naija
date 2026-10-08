@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { BACKGROUNDS, DREAMS, TRAITS } from "@/game/data/economy";
-import { getHome } from "@/game/data/world";
+import { CITIES, cityHome, getCity } from "@/game/data/world";
 import { useGame } from "@/game/store";
 import type { Appearance, Player } from "@/game/types";
 import { formatNaira } from "@/game/util";
 import Avatar, { ACCESSORIES, HAIR_COLORS, HAIR_STYLES, OUTFITS, SKIN_TONES } from "./Avatar";
+import NigeriaMap from "./NigeriaMap";
 
-const STEPS = ["You", "Start", "Traits", "Dream"] as const;
+const STEPS = ["City", "You", "Start", "Traits", "Dream"] as const;
 
 function Swatches({ colors, value, onChange, label }: { colors: string[]; value: number; onChange: (i: number) => void; label: string }) {
   return (
@@ -51,6 +52,7 @@ function Pills({ items, value, onChange, label }: { items: string[]; value: numb
 export default function CharacterCreator() {
   const { startNew, setScreen } = useGame();
   const [step, setStep] = useState(0);
+  const [city, setCity] = useState("lagos");
   const [name, setName] = useState("");
   const [pronoun, setPronoun] = useState<Player["pronoun"]>("they");
   const [a, setA] = useState<Appearance>({ skin: 1, hair: 1, hairColor: 0, outfit: 0, accessory: 0 });
@@ -59,7 +61,7 @@ export default function CharacterCreator() {
   const [dream, setDream] = useState("smart_money");
 
   const set = (k: keyof Appearance) => (v: number) => setA((p) => ({ ...p, [k]: v }));
-  const canNext = step === 0 ? name.trim().length >= 2 : step === 2 ? traits.length === 2 : true;
+  const canNext = step === 1 ? name.trim().length >= 2 : step === 3 ? traits.length === 2 : true;
 
   const randomize = () =>
     setA({
@@ -85,6 +87,33 @@ export default function CharacterCreator() {
       </div>
 
       {step === 0 && (
+        <section className="anim-up">
+          <h1 className="font-display text-3xl font-extrabold">Where does your story start?</h1>
+          <p className="text-[var(--ink-2)] mt-1 mb-4">Pick a home city. You can travel or move to another city later.</p>
+          <div className="grid md:grid-cols-[1fr_1.1fr] gap-4 items-start">
+            <div className="card p-3" style={{ background: "var(--lagoon)" }}>
+              <NigeriaMap className="w-full" selected={city} onSelect={setCity} />
+            </div>
+            <div className="grid gap-2">
+              {CITIES.map((c) => (
+                <button key={c.id} onClick={() => setCity(c.id)} className={`card p-4 text-left border-2 ${city === c.id ? "border-[var(--danfo)] bg-[var(--bg-2)]" : ""}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{c.emoji}</span>
+                    <div>
+                      <div className="font-display font-bold text-lg leading-tight">
+                        {c.name} <span className="text-xs font-semibold text-[var(--muted)]">· {c.nickname}</span>
+                      </div>
+                      <div className="text-sm text-[var(--ink-2)]">{c.blurb}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {step === 1 && (
         <section className="grid sm:grid-cols-[200px_1fr] gap-6 anim-up">
           <div className="card p-4 flex flex-col items-center gap-3 sm:sticky sm:top-4 h-fit">
             <div className="rounded-3xl bg-[var(--bg-2)] p-2">
@@ -110,13 +139,13 @@ export default function CharacterCreator() {
         </section>
       )}
 
-      {step === 1 && (
+      {step === 2 && (
         <section className="anim-up">
-          <h1 className="font-display text-3xl font-extrabold">How does your Lagos story start?</h1>
+          <h1 className="font-display text-3xl font-extrabold">How does your {getCity(city).name} story start?</h1>
           <p className="text-[var(--ink-2)] mt-1 mb-4">Everyone starts somewhere. Each start has its own advantages and challenges.</p>
           <div className="grid sm:grid-cols-2 gap-3">
             {BACKGROUNDS.map((b) => {
-              const h = getHome(b.home);
+              const h = cityHome(city, b.homeTier);
               const active = background === b.id;
               return (
                 <button
@@ -140,7 +169,7 @@ export default function CharacterCreator() {
         </section>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <section className="anim-up">
           <h1 className="font-display text-3xl font-extrabold">Pick 2 traits</h1>
           <p className="text-[var(--ink-2)] mt-1 mb-4">Traits shape how you play. Choose {2 - traits.length} more.</p>
@@ -163,7 +192,7 @@ export default function CharacterCreator() {
         </section>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <section className="anim-up">
           <h1 className="font-display text-3xl font-extrabold">What&apos;s your big dream?</h1>
           <p className="text-[var(--ink-2)] mt-1 mb-4">Your lifetime goal. You can win in many ways, but this is yours.</p>
@@ -180,13 +209,13 @@ export default function CharacterCreator() {
       )}
 
       <div className="sticky bottom-0 pt-6 pb-4 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)] to-transparent mt-6">
-        {step < 3 ? (
+        {step < 4 ? (
           <button className="btn btn-primary w-full py-3.5 text-base" disabled={!canNext} onClick={() => setStep(step + 1)}>
             Next →
           </button>
         ) : (
-          <button className="btn btn-green w-full py-3.5 text-base" onClick={() => startNew({ name, pronoun, appearance: a, background, traits, dream })}>
-            🚌 Enter Lagos
+          <button className="btn btn-green w-full py-3.5 text-base" onClick={() => startNew({ city, name, pronoun, appearance: a, background, traits, dream })}>
+            🚌 Enter {getCity(city).name}
           </button>
         )}
       </div>

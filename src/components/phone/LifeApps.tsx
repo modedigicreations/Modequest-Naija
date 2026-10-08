@@ -2,8 +2,8 @@
 
 import { CAREERS, CERTIFICATES, DREAMS, ITEMS } from "@/game/data/economy";
 import { NPCS } from "@/game/data/people";
-import { HOMES, POWER_BANDS, getLocation } from "@/game/data/world";
-import { promotionBlockers } from "@/game/engine";
+import { HOMES, POWER_BANDS, getCity, getLocation } from "@/game/data/world";
+import { kindsHere, promotionBlockers, workplaceFor } from "@/game/engine";
 import { ACHIEVEMENTS, dreamProgress } from "@/game/goals";
 import { friendshipTier, level, price, SKILL_NAMES, wageMultiplier } from "@/game/helpers";
 import { useGame } from "@/game/store";
@@ -25,7 +25,7 @@ export function JobsApp() {
             {cur.emoji} {cur.levels[game.career.level].title}
           </div>
           <div className="text-sm text-[var(--ink-2)]">
-            {formatNaira(cur.levels[game.career.level].pay * wageMultiplier(game))}/shift · {cur.days.map((d) => WEEKDAYS[d]).join(" ")} · {cur.start}:00, {cur.hours}h · {getLocation(cur.workplace)?.name}
+            {formatNaira(cur.levels[game.career.level].pay * wageMultiplier(game))}/shift · {cur.days.map((d) => WEEKDAYS[d]).join(" ")} · {cur.start}:00, {cur.hours}h · {workplaceFor(game, cur.workplace)?.name ?? `no workplace in ${getCity(game.city).name}`}
           </div>
           <div className="mt-3">
             <Meter value={game.career.performance} label="Performance" emoji="📊" />
@@ -39,10 +39,11 @@ export function JobsApp() {
           </button>
         </div>
       )}
-      <SectionTitle>Careers in Lagos</SectionTitle>
+      <SectionTitle>Careers in {getCity(game.city).name}</SectionTitle>
       {CAREERS.map((c) => {
         const first = c.levels[0];
-        const eligible = level(game, c.skill) >= first.skill;
+        const where = workplaceFor(game, c.workplace);
+        const eligible = level(game, c.skill) >= first.skill && !!where;
         const mine = game.career?.careerId === c.id;
         return (
           <div key={c.id} className="card p-4">
@@ -56,7 +57,7 @@ export function JobsApp() {
               {mine ? <span className="chip chip-good">Your job</span> : null}
             </div>
             <div className="text-[11px] text-[var(--muted)] mt-2">
-              {c.days.map((d) => WEEKDAYS[d]).join(" ")} · {c.start}:00 ({c.hours}h) · {getLocation(c.workplace)?.name} · Skill: {SKILL_NAMES[c.skill]}
+              {c.days.map((d) => WEEKDAYS[d]).join(" ")} · {c.start}:00 ({c.hours}h) · {where?.name ?? `Not available in ${getCity(game.city).name}`} · Skill: {SKILL_NAMES[c.skill]}
             </div>
             <ol className="mt-2 text-xs space-y-0.5">
               {c.levels.map((l, i) => (
@@ -71,7 +72,7 @@ export function JobsApp() {
             </ol>
             {!mine && (
               <button className="btn btn-primary btn-sm mt-3" disabled={!eligible} onClick={() => (!game.career || confirm("Switch jobs? You'll start from level 1.")) && dispatch({ type: "applyJob", careerId: c.id })}>
-                {eligible ? `Apply as ${first.title}` : `Needs ${SKILL_NAMES[c.skill]} ${first.skill}`}
+                {!where ? `Not in ${getCity(game.city).name}` : eligible ? `Apply as ${first.title}` : `Needs ${SKILL_NAMES[c.skill]} ${first.skill}`}
               </button>
             )}
           </div>
@@ -84,11 +85,11 @@ export function JobsApp() {
 export function ShopApp() {
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
-  const atVillage = game.location === "computer_village";
+  const atVillage = kindsHere(game).includes("gadget_market");
   return (
     <div className="space-y-2">
       <p className="text-xs text-[var(--ink-2)] px-1">
-        Delivered to your home. {atVillage ? "📍 You're at Computer Village: gadgets 20% off (watch for fakes!)." : "Gadgets are 20% cheaper in person at Computer Village."}
+        Delivered to your home. {atVillage ? "📍 You're at a gadget market: gadgets 20% off (watch for fakes!)." : "Gadgets are 20% cheaper in person at a gadget market."}
       </p>
       {ITEMS.map((it) => {
         const owned = game.items.includes(it.id);
@@ -120,7 +121,11 @@ export function HomesApp() {
   return (
     <div className="space-y-2">
       <p className="text-xs text-[var(--ink-2)] px-1">Moving costs {4} weeks upfront (2 weeks rent + agency & caution fees). Better areas get more hours of NEPA light.</p>
-      {HOMES.filter((h) => !h.hidden || h.id === game.homeId).map((h) => {
+      <p className="text-xs font-bold px-1">
+        {getCity(game.city).emoji} Homes in {getCity(game.city).name}
+        {HOMES.find((h) => h.id === game.homeId)?.city !== game.city ? ` · you live in ${getCity(HOMES.find((h) => h.id === game.homeId)!.city).name}` : ""}
+      </p>
+      {HOMES.filter((h) => h.city === game.city && (!h.hidden || h.id === game.homeId)).map((h) => {
         const mine = h.id === game.homeId;
         const pb = POWER_BANDS[h.band];
         const rent = price(game, h.weeklyRent, false);
@@ -207,7 +212,7 @@ export function GoalsApp() {
         <div className="h-3 rounded-full bg-black/15 mt-3 overflow-hidden">
           <div className="h-full bg-[#1d1530] rounded-full" style={{ width: `${dp.progress * 100}%` }} />
         </div>
-        <div className="text-xs mt-2 font-semibold">{dp.done ? "🌟 ACHIEVED! You're a Lagos legend." : dp.detail}</div>
+        <div className="text-xs mt-2 font-semibold">{dp.done ? "🌟 ACHIEVED! You're a Naija legend." : dp.detail}</div>
       </div>
       <div className="card p-4">
         <SectionTitle right={<span className="chip">{game.achievements.length}/{ACHIEVEMENTS.length}</span>}>🏅 Achievements</SectionTitle>
@@ -246,7 +251,7 @@ export function ContactsApp() {
   const unmet = NPCS.length - met.length;
   return (
     <div className="space-y-2">
-      {met.length === 0 && <Empty>You haven&apos;t met anyone yet. Visit places around Lagos — people keep regular schedules.</Empty>}
+      {met.length === 0 && <Empty>You haven&apos;t met anyone yet. Visit places around town — people keep regular schedules.</Empty>}
       {met.map((n) => {
         const r = game.relationships[n.id];
         const usual = [...new Set(n.schedule.map((s) => getLocation(s.at)?.name))].join(", ");
@@ -260,7 +265,7 @@ export function ContactsApp() {
                   <span className="text-xs font-semibold text-[var(--ink-2)]">{friendshipTier(r.friendship)}</span>
                 </div>
                 <div className="text-[11px] text-[var(--muted)]">
-                  {n.role} · Usually at {usual}
+                  {n.role} · {getCity(n.city).name} · Usually at {usual}
                 </div>
                 <div className="mt-1.5">
                   <Meter compact value={r.friendship} label={`Friendship with ${n.name}`} color="var(--purple)" />
@@ -271,7 +276,7 @@ export function ContactsApp() {
           </div>
         );
       })}
-      {unmet > 0 && <p className="text-xs text-[var(--muted)] text-center pt-2">{unmet} more Lagosians to meet…</p>}
+      {unmet > 0 && <p className="text-xs text-[var(--muted)] text-center pt-2">{unmet} more people to meet across Nigeria…</p>}
     </div>
   );
 }

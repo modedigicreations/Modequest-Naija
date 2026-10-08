@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LESSONS, type Lesson } from "@/game/data/lessons";
 import { type Cmd, type Frame, type Step, getPuzzle, parsePuzzle, runProgram } from "@/game/puzzles";
 import { useGame } from "@/game/store";
+import { useSession } from "@/online/session";
 import { formatNaira } from "@/game/util";
 import { SectionTitle } from "../ui";
 
@@ -11,6 +12,7 @@ const TOPICS = ["Money", "Safety", "Business", "Coding"] as const;
 
 export default function Academy() {
   const game = useGame((s) => s.game)!;
+  const assigned = useSession((s) => new Set(s.assignments.map((a) => a.lesson_id)));
   const [open, setOpen] = useState<Lesson | null>(null);
 
   if (open) return <LessonPlayer lesson={open} onExit={() => setOpen(null)} />;
@@ -39,7 +41,9 @@ export default function Academy() {
                 <button key={l.id} className="card p-3 flex items-center gap-3 text-left" onClick={() => setOpen(l)}>
                   <span className="text-2xl w-10 h-10 rounded-xl bg-[var(--card-2)] grid place-items-center">{l.emoji}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-bold text-sm">{l.title}</span>
+                    <span className="block font-bold text-sm">
+                      {l.title} {assigned.has(l.id) && <span className="chip chip-info">📋 Assigned</span>}
+                    </span>
                     <span className="block text-[11px] text-[var(--ink-2)]">{ok ? `Best ${score}% · replay for XP` : `Grant ${formatNaira(l.grant)} · +${l.xp} XP`}</span>
                   </span>
                   {ok ? <span className="chip chip-good">✓</span> : score !== undefined ? <span className="chip chip-bad">{score}%</span> : <span className="chip">New</span>}

@@ -11,8 +11,9 @@ import {
   price,
 } from "../helpers";
 import type { GameState, Message } from "../types";
-import { chance, formatNaira, hourOf, pick, randInt, weekOf } from "../util";
+import { chance, formatNaira, hourOf, pick, randInt, weekOf, weekdayOf } from "../util";
 import { getNpc, NPCS } from "./people";
+import { findKind, getLocation } from "./world";
 
 type Data = Record<string, number | string>;
 
@@ -243,6 +244,70 @@ export const MESSAGE_TEMPLATES: MessageTemplate[] = [
     ],
   },
 
+  {
+    id: "scholarship_fee",
+    kind: "scam",
+    weight: 2,
+    fromName: () => "Federal Scholarship Board",
+    makeData: (s) => ({ fee: price(s, 12000, false) }),
+    text: (_s, d) =>
+      `Congratulations! You have been SELECTED for the 2026 Federal Youth Scholarship (₦600,000). Pay ${formatNaira(+d.fee)} processing fee to account 3012345678 (Mrs. Grace Okon) within 48 hours to confirm.`,
+    choices: [
+      {
+        id: "pay",
+        label: "Pay the processing fee",
+        resolve: (s, d) => {
+          if (!charge(s, +d.fee, "'Scholarship processing fee'")) return "You couldn't afford it. Lucky — real scholarships never ask for fees paid to personal accounts.";
+          return fell(s, `${formatNaira(+d.fee)} gone. Real scholarships don't charge 'processing fees', and never into a personal account like 'Mrs. Grace Okon'.`);
+        },
+      },
+      { id: "verify", label: "Check the official scholarship website", resolve: (s) => avoided(s, "No such scholarship was listed. Government programmes are announced on official .gov.ng websites, and they don't charge fees into personal accounts.") },
+    ],
+  },
+  {
+    id: "nin_update",
+    kind: "scam",
+    weight: 2,
+    fromName: () => "NIMC-Update",
+    text: () =>
+      "Your NIN will be DEACTIVATED today. Your SIM will be blocked. Re-validate now: http://nimc-ng-verify.top and enter your NIN, date of birth and BVN.",
+    choices: [
+      {
+        id: "enter",
+        label: "Enter NIN, birthday and BVN",
+        resolve: (s) => {
+          const lost = Math.round(Math.max(0, s.bank) * 0.5);
+          if (!bankFrozen(s) && lost > 0) {
+            s.bank -= lost;
+            s.transactions.push({ t: s.time, amount: -lost, label: "Identity theft loss", account: "bank" });
+          }
+          return fell(s, `With your NIN, birthday and BVN, scammers opened a loan in your name and drained ${formatNaira(lost)}. NIMC doesn't send links like '.top' sites. Verify NIN only through official NIMC offices or apps.`);
+        },
+      },
+      { id: "ignore", label: "Ignore — that's not an official site", resolve: (s) => avoided(s, "'.top' isn't a government domain, and threats of instant blocking are a pressure tactic. Your identity numbers are keys to your money.") },
+    ],
+  },
+  {
+    id: "betting_tips",
+    kind: "scam",
+    weight: 2,
+    fromName: () => "SureOdds VIP ⚽",
+    makeData: (s) => ({ fee: price(s, 10000, false) }),
+    text: (_s, d) =>
+      `🔥 100% SURE FIXED MATCHES this weekend! Pay ${formatNaira(+d.fee)} for VIP access and win ₦500,000 guaranteed. Our members are cashing out daily!`,
+    choices: [
+      {
+        id: "pay",
+        label: "Pay for VIP fixed odds",
+        resolve: (s, d) => {
+          if (!charge(s, +d.fee, "'VIP betting tips'")) return "No money to pay — good. 'Fixed matches' sold online are always scams.";
+          return fell(s, `${formatNaira(+d.fee)} lost and the 'sure odds' lost too. Nobody sells guaranteed wins — if they had them, they wouldn't need your money. Betting is designed so the house wins.`);
+        },
+      },
+      { id: "ignore", label: "Block — no such thing as sure odds", resolve: (s) => avoided(s, "Guaranteed betting wins don't exist. These groups profit from 'VIP fees', not football.") },
+    ],
+  },
+
   // ----------------------------- Friends -----------------------------
   {
     id: "borrow",
@@ -308,10 +373,10 @@ export const MESSAGE_TEMPLATES: MessageTemplate[] = [
     kind: "opportunity",
     weight: 1,
     condition: (s) => level(s, "coding") >= 3,
-    fromName: () => "Yaba Tech Hub",
+    fromName: (s) => findKind(s.city, "tech_hub")?.name ?? "Tech Hub",
     makeData: (s) => ({ prize: price(s, 150000, false) }),
     text: (_s, d) =>
-      `🏆 Weekend Hackathon! Build a solution for Lagos traffic in 24hrs. Prize: ${formatNaira(+d.prize)}. Registration is free. Your coding level will decide your chances.`,
+      `🏆 Weekend Hackathon! Build a solution for city traffic in 24hrs. Prize: ${formatNaira(+d.prize)}. Registration is free. Your coding level will decide your chances.`,
     choices: [
       {
         id: "join",
@@ -355,10 +420,10 @@ export const EVENTS: EventDef[] = [
     title: "Pickpocket!",
     emoji: "🫳🏾",
     chance: 0.25,
-    condition: (s) => s.location === "balogun" && !s.travel && s.cash > 15000,
+    condition: (s) => !s.travel && (getLocation(s.location)?.kinds.includes("market") ?? false) && s.cash > 15000,
     makeData: (s) => ({ lost: Math.round(s.cash * (0.3 + 0.3 * (randInt(s, 0, 10) / 10))) }),
     text: (_s, d) =>
-      `In the Balogun crowd, someone slipped a hand into your pocket. ${formatNaira(+d.lost)} cash is gone.`,
+      `In the market crowd, someone slipped a hand into your pocket. ${formatNaira(+d.lost)} cash is gone.`,
     choices: [
       {
         id: "ok",
@@ -469,7 +534,7 @@ export const EVENTS: EventDef[] = [
     condition: (s) => s.world.weather === "storm" && !s.travel && s.location !== "home",
     text: () => "Heavy rain has flooded the road. Your shoes and clothes are soaked.",
     choices: [
-      { id: "ok", label: "Wade through", resolve: (s) => { addNeeds(s, { hygiene: -30, fun: -10 }); return "Lagos and flooding — on storm days, travel takes much longer. Plan ahead."; } },
+      { id: "ok", label: "Wade through", resolve: (s) => { addNeeds(s, { hygiene: -30, fun: -10 }); return "Nigerian cities and flooding — on storm days, travel takes much longer. Plan ahead."; } },
     ],
   },
   {
@@ -492,6 +557,67 @@ export const EVENTS: EventDef[] = [
         },
       },
       { id: "text", label: "Send a birthday message", resolve: (s, d) => { addFriendship(s, String(d.npc), 3); return "They appreciated it."; } },
+    ],
+  },
+  {
+    id: "harmattan",
+    title: "Harmattan haze",
+    emoji: "🌫️",
+    chance: 0.02,
+    condition: (s) => (s.city === "abuja" || s.city === "enugu") && !s.travel && s.location !== "home",
+    text: () => "Dry, dusty harmattan wind is blowing from the Sahara. Your lips are cracking and the air is hazy.",
+    choices: [
+      { id: "mask", label: "Buy a face mask & lip balm (₦800)", resolve: (s) => { if (charge(s, price(s, 800), "Mask & lip balm")) { addNeeds(s, { hygiene: -5 }); return "Protected. Harmattan dust can trigger asthma and catarrh — cover up and drink water."; } addNeeds(s, { hygiene: -15 }); s.health = Math.max(0, s.health - 5); return "Couldn't afford it. The dust got to you a bit."; } },
+      { id: "ignore", label: "Ignore it", resolve: (s) => { addNeeds(s, { hygiene: -15 }); s.health = Math.max(0, s.health - 5); return "You're dusty and coughing. In harmattan season, cover your nose and stay hydrated."; } },
+    ],
+  },
+  {
+    id: "soot",
+    title: "Black soot",
+    emoji: "🖤",
+    chance: 0.015,
+    condition: (s) => s.city === "portharcourt" && !s.travel,
+    text: () => "You wipe your face and the tissue comes away black. Soot from illegal oil refining ('kpofire') is in the air again.",
+    choices: [
+      { id: "ok", label: "Wash up and stay indoors more", resolve: (s) => { addNeeds(s, { hygiene: -20 }); s.health = Math.max(0, s.health - 4); addSkillXp(s, "finance", 3); return "Air pollution affects lungs and health. Environmental choices — like illegal refining — have real costs for everyone. A check-up is wise if you're coughing."; } },
+    ],
+  },
+  {
+    id: "masquerade",
+    title: "Masquerade festival!",
+    emoji: "🎭",
+    chance: 0.03,
+    condition: (s) => s.city === "enugu" && weekdayOf(s.time) >= 5 && hourOf(s.time) >= 11 && hourOf(s.time) <= 17 && !s.travel && !s.activity && s.location !== "home",
+    text: () => "Drums! A colourful mmanwu masquerade procession is passing through the street.",
+    choices: [
+      { id: "watch", label: "Watch and dance along", resolve: (s) => { addNeeds(s, { fun: 30, social: 20, energy: -8 }); addSkillXp(s, "creativity", 10); return "Culture is alive! Masquerades carry centuries of Igbo history and art."; } },
+      { id: "skip", label: "Keep moving", resolve: () => "Maybe next time." },
+    ],
+  },
+  {
+    id: "owambe",
+    title: "Owambe invitation",
+    emoji: "👗",
+    chance: 0.01,
+    condition: (s) => s.city === "lagos" && !s.travel && weekdayOf(s.time) <= 4,
+    makeData: (s) => ({ asoebi: price(s, 25000) }),
+    text: (_s, d) => `Your cousin's wedding is this Saturday. The family asks everyone to buy the aso-ebi fabric for ${formatNaira(+d.asoebi)}.`,
+    choices: [
+      { id: "buy", label: "Buy the aso-ebi", resolve: (s, d) => { if (!charge(s, +d.asoebi, "Aso-ebi fabric")) return "You couldn't afford it — and that's okay. Family will understand."; addNeeds(s, { social: 30, fun: 25 }); return "You'll look great! But that was a WANT, not a need. Budget for family events so they don't wreck your rent."; } },
+      { id: "plain", label: "Attend in your best clothes instead", resolve: (s) => { addNeeds(s, { social: 18, fun: 18 }); addSkillXp(s, "finance", 6); return "You still showed up and celebrated. Love isn't measured in fabric. Smart budgeting!"; } },
+    ],
+  },
+  {
+    id: "exam_leak",
+    title: "'Expo' for sale",
+    emoji: "📄",
+    chance: 0.01,
+    condition: (s) => !!s.flags.student && !s.travel,
+    makeData: (s) => ({ cost: price(s, 8000) }),
+    text: (_s, d) => `Someone in your class is selling 'leaked' exam answers for ${formatNaira(+d.cost)}. "Everybody is buying," they say.`,
+    choices: [
+      { id: "refuse", label: "Refuse and study properly", resolve: (s) => { addSkillXp(s, "finance", 6); addSkillXp(s, "charisma", 6); s.flags.integrity = (s.flags.integrity ?? 0) + 1; return "Good choice. The 'expo' was fake anyway, and exam malpractice can get you expelled. Real skills last."; } },
+      { id: "buy", label: "Buy the answers", resolve: (s, d) => { if (!charge(s, +d.cost, "'Exam expo'")) return "You couldn't afford it — lucky escape."; s.stats.scamsFallen += 1; addNeeds(s, { fun: -20 }); return "The answers were fake, you wasted money, and you were nearly caught. Exam malpractice can mean expulsion and a criminal record."; } },
     ],
   },
 ];

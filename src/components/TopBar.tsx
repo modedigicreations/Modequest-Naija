@@ -1,6 +1,6 @@
 "use client";
 
-import { WEATHER_INFO } from "@/game/data/world";
+import { WEATHER_INFO, getCity } from "@/game/data/world";
 import { careerTitle } from "@/game/goals";
 import { gridPowerOn, homePower, mood, moodLabel } from "@/game/helpers";
 import { useGame } from "@/game/store";
@@ -40,6 +40,9 @@ export default function TopBar({ onPhone, unread }: { onPhone: () => void; unrea
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-display font-extrabold text-[17px] leading-none">
               {WEEKDAYS[weekdayOf(game.time)]} {formatClock(game.time)}
+            </span>
+            <span className="chip font-bold">
+              {getCity(game.city).emoji} {getCity(game.city).name}
             </span>
             <span className="chip">Day {dayOf(game.time)} · Wk {weekOf(game.time)}</span>
             <span className="chip" title={`Weather: ${w.label}`}>

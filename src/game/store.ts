@@ -38,6 +38,9 @@ interface GameStore {
   tick(realMs: number): void;
   hold(key: string, on: boolean): void;
   save(): void;
+  flushSave(): Promise<void>;
+  /** Switch where saves live (guest ⇄ signed-in account) and reload. */
+  switchAdapter(adapter: SaveAdapter): Promise<void>;
   wipe(): Promise<void>;
   showFlash(text: string): void;
 }
@@ -113,6 +116,18 @@ export const useGame = create<GameStore>((set, get) => ({
     if (!g) return;
     set({ lastSave: Date.now() });
     void get().adapter.save(g);
+  },
+
+  async flushSave() {
+    const { game, adapter } = get();
+    if (game) await adapter.save(game);
+    await adapter.flush?.();
+  },
+
+  async switchAdapter(adapter) {
+    await get().flushSave();
+    const saved = await adapter.load();
+    set({ adapter, game: saved, hasSave: !!saved, screen: "title", carry: 0 });
   },
 
   async wipe() {

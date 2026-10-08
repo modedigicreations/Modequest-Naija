@@ -1,7 +1,7 @@
 "use client";
 
 import { placeOf, runEffects } from "@/game/engine";
-import { getTransport } from "@/game/data/world";
+import { getCity, transportIn } from "@/game/data/world";
 import { useGame } from "@/game/store";
 import { formatClock, formatDuration } from "@/game/util";
 
@@ -17,7 +17,7 @@ export default function BusyBar() {
   const progress = Math.min(1, (game.time - start) / Math.max(1, end - start));
   const title = run
     ? `${runEffects(game, run).emoji} ${runEffects(game, run).name}`
-    : `${getTransport(tr!.mode).emoji} ${getTransport(tr!.mode).name} to ${placeOf(tr!.to, game).name}`;
+    : `${transportIn(game.city, tr!.mode).emoji} ${transportIn(game.city, tr!.mode).name} to ${tr!.toCity && tr!.toCity !== game.city ? getCity(tr!.toCity).name : placeOf(tr!.to, game).name}`;
 
   return (
     <div className="border-t border-[var(--line)] bg-[var(--card)] px-3 sm:px-4 py-2.5 anim-up">

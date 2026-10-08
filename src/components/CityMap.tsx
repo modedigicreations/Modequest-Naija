@@ -1,25 +1,58 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { isOpen, placeOf, travelOptions } from "@/game/engine";
+import { atHomeCity, isOpen, placeOf, travelOptions, workplaceFor } from "@/game/engine";
 import { getCareer } from "@/game/data/economy";
 import { npcsAt } from "@/game/data/people";
-import { LOCATIONS, getLocation } from "@/game/data/world";
+import { type MapShape, getCity, getLocation, LOCATIONS } from "@/game/data/world";
 import { useGame } from "@/game/store";
-import { formatDuration, formatHour, formatNaira, hourOf, weekdayOf } from "@/game/util";
+import { formatClock, formatDuration, formatHour, formatNaira, hourOf, weekdayOf } from "@/game/util";
 import Avatar from "./Avatar";
+import NigeriaMap from "./NigeriaMap";
+import { usePresence } from "@/online/presence";
 
-const AREA_LABELS: [string, number, number][] = [
-  ["IKEJA", 330, 70],
-  ["MUSHIN", 190, 250],
-  ["YABA", 540, 372],
-  ["SURULERE", 290, 470],
-  ["AKOKA", 560, 290],
-  ["LAGOS ISLAND", 520, 596],
-  ["IKOYI", 628, 446],
-  ["VICTORIA ISLAND", 742, 622],
-  ["LEKKI", 900, 580],
-];
+const FILL: Record<MapShape["fill"], string> = {
+  land: "var(--land)",
+  land2: "var(--land-2)",
+  lagoon: "var(--lagoon)",
+  ocean: "var(--ocean)",
+  hill: "color-mix(in oklab, var(--land-2) 70%, #7a5c3a 30%)",
+  green: "color-mix(in oklab, var(--land) 55%, #3fae5a 45%)",
+};
+
+/** Roads for cities without hand-drawn ones: link each place to its 2 nearest neighbours. */
+function autoRoads(points: { x: number; y: number }[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  points.forEach((p, i) => {
+    const near = points
+      .map((q, j) => ({ j, d: Math.hypot(p.x - q.x, p.y - q.y) }))
+      .filter((n) => n.j !== i)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 2);
+    for (const { j } of near) {
+      const key = [i, j].sort((a, b) => a - b).join("-");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const q = points[j];
+      // Slight curve so roads look drawn, not ruled.
+      const mx = (p.x + q.x) / 2 + (q.y - p.y) * 0.08;
+      const my = (p.y + q.y) / 2 - (q.x - p.x) * 0.08;
+      out.push(`M${p.x} ${p.y} Q${mx.toFixed(0)} ${my.toFixed(0)} ${q.x} ${q.y}`);
+    }
+  });
+  return out;
+}
+
+function shortName(name: string) {
+  if (name.length <= 20) return name;
+  let out = "";
+  for (const w of name.split(" ")) {
+    if ((out + " " + w).trim().length > 18) break;
+    out = (out + " " + w).trim();
+  }
+  return out || name.slice(0, 18);
+}
 
 function hoursLabel(open: number, close: number) {
   if (open === close) return "Open 24/7";
@@ -29,7 +62,9 @@ function hoursLabel(open: number, close: number) {
 export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => void; active: boolean }) {
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
-  const [selected, setSelected] = useState<string | null>(null);
+  const onlinePlayers = usePresence((s) => s.players);
+  // Selection is remembered per city, so it clears itself when you change city.
+  const [picked, setPicked] = useState<{ city: string; id: string } | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [wide, setWide] = useState(false);
 
@@ -41,19 +76,24 @@ export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => 
     return () => mq.removeEventListener("change", fn);
   }, []);
 
+  const city = getCity(game.city);
+  const selected = picked?.city === game.city ? picked.id : null;
+  const setSelected = (id: string | null) => setPicked(id ? { city: game.city, id } : null);
   const wd = weekdayOf(game.time);
   const hr = hourOf(game.time);
+  const showHome = atHomeCity(game);
   const homeP = placeOf("home", game);
+  const intercity = game.travel?.toCity && game.travel.toCity !== game.city ? game.travel : null;
+  const travelProgress = game.travel ? Math.min(1, (game.time - game.travel.start) / Math.max(1, game.travel.end - game.travel.start)) : 0;
 
-  // Player marker position (interpolated while travelling)
+  // Player marker position (interpolated while travelling inside the city)
   let px: number;
   let py: number;
-  if (game.travel) {
+  if (game.travel && !intercity) {
     const a = placeOf(game.travel.from, game);
     const b = placeOf(game.travel.to, game);
-    const f = Math.min(1, (game.time - game.travel.start) / Math.max(1, game.travel.end - game.travel.start));
-    px = a.x + (b.x - a.x) * f;
-    py = a.y + (b.y - a.y) * f;
+    px = a.x + (b.x - a.x) * travelProgress;
+    py = a.y + (b.y - a.y) * travelProgress;
   } else {
     const p = placeOf(game.location, game);
     px = p.x;
@@ -64,7 +104,7 @@ export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => 
   const selLoc = selected && selected !== "home" ? getLocation(selected) : null;
   const options = selected && selected !== game.location && !game.travel ? travelOptions(game, selected) : [];
   const people = selected ? npcsAt(selected, wd, hr) : [];
-
+  const workId = game.career ? workplaceFor(game, getCareer(game.career.careerId)!.workplace)?.id : undefined;
   const night = hr < 6 || hr >= 19;
 
   // On phones the map scrolls sideways; start centred on the player.
@@ -74,7 +114,22 @@ export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => 
     const scale = el.scrollHeight / 700;
     el.scrollLeft = px * scale - el.clientWidth / 2;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wide, active, game.location]);
+  }, [wide, active, game.location, game.city]);
+
+
+  if (intercity) {
+    return (
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-4 gap-3" style={{ background: "var(--lagoon)" }}>
+        <NigeriaMap className="w-full max-w-[560px] max-h-[70%]" highlight={game.city} travel={{ from: game.city, to: intercity.toCity!, progress: travelProgress }} />
+        <div className="card px-4 py-2 text-sm font-semibold">
+          {intercity.mode === "flight" ? "✈️ Flying" : "🚌 On the road"} to {getCity(intercity.toCity!).name} · arriving {formatClock(intercity.end)}
+        </div>
+      </div>
+    );
+  }
+
+  const places = LOCATIONS.filter((l) => l.city === city.id);
+  const roads = city.map.roads.length ? city.map.roads : autoRoads(showHome ? [...places, homeP] : places);
 
   return (
     <div className="relative flex-1 min-h-0 flex flex-col">
@@ -84,93 +139,74 @@ export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => 
           className={wide ? "w-full h-full select-none" : "h-full w-auto max-w-none aspect-[10/7] min-h-[420px] select-none"}
           preserveAspectRatio={wide ? "xMidYMid slice" : "xMidYMid meet"}
           role="img"
-          aria-label="Map of Lagos"
+          aria-label={`Map of ${city.name}`}
         >
           <defs>
             <pattern id="waves" width="40" height="20" patternUnits="userSpaceOnUse">
               <path d="M0 10 Q10 4 20 10 T40 10" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" />
             </pattern>
           </defs>
-          {/* Water */}
-          <rect width="1000" height="700" fill="var(--lagoon)" />
-          <rect y="560" width="1000" height="140" fill="var(--ocean)" />
-          <rect width="1000" height="700" fill="url(#waves)" />
-          {/* Mainland */}
-          <path
-            d="M0 0 H600 C592 110 612 200 602 262 C592 330 566 380 532 418 C505 448 480 500 440 520 C380 548 300 562 200 572 C120 578 60 585 0 590 Z"
-            fill="var(--land)"
-            stroke="var(--land-2)"
-            strokeWidth="6"
-          />
-          {/* Island strip: Lagos Island, Ikoyi, VI, Lekki */}
-          <path
-            d="M478 522 C520 486 598 470 640 440 C690 402 760 420 800 470 C850 500 920 492 1000 482 V652 C900 644 800 642 700 627 C620 614 560 604 502 592 C468 572 468 540 478 522 Z"
-            fill="var(--land)"
-            stroke="var(--land-2)"
-            strokeWidth="6"
-          />
-          {/* Banana Island */}
-          <ellipse cx="724" cy="392" rx="34" ry="20" fill="var(--land)" stroke="var(--land-2)" strokeWidth="5" />
-          {/* Roads */}
+          <rect width="1000" height="700" fill={city.map.base === "lagoon" ? "var(--lagoon)" : "var(--land)"} />
+          {city.map.base === "lagoon" && <rect width="1000" height="700" fill="url(#waves)" />}
+          {city.map.shapes.map((sh, i) => (
+            <path key={i} d={sh.d} fill={FILL[sh.fill]} stroke={sh.fill === "land" ? "var(--land-2)" : "none"} strokeWidth={sh.fill === "land" ? 6 : 0} />
+          ))}
+          {city.map.shapes.some((sh) => sh.fill === "lagoon" || sh.fill === "ocean") && city.map.base === "land" && (
+            <g>
+              {city.map.shapes
+                .filter((sh) => sh.fill === "lagoon" || sh.fill === "ocean")
+                .map((sh, i) => (
+                  <path key={i} d={sh.d} fill="url(#waves)" />
+                ))}
+            </g>
+          )}
           <g fill="none" stroke="var(--road)" strokeWidth="7" strokeLinecap="round" opacity="0.9">
-            <path d="M300 128 C320 200 280 260 250 282 C300 330 330 360 330 392" />
-            <path d="M378 102 C420 180 450 240 482 290 C480 330 470 400 452 478" />
-            <path d="M250 282 C330 300 400 300 482 290 C500 285 525 260 545 238" />
-            <path d="M330 392 C360 410 380 425 392 430 C420 450 440 470 452 478" />
-            <path d="M526 540 C590 515 620 490 692 452 C700 500 740 540 770 552 C810 560 850 540 880 528" />
-            <path d="M612 500 C610 530 630 550 652 566" />
-            <path d="M770 552 C800 580 820 600 836 612" />
+            {roads.map((d, i) => (
+              <path key={i} d={d} />
+            ))}
           </g>
-          {/* Bridges */}
-          <g fill="none" strokeLinecap="round">
-            <path d="M598 168 C650 260 620 400 562 492" stroke="var(--road)" strokeWidth="9" />
-            <path d="M598 168 C650 260 620 400 562 492" stroke="var(--ink-2)" strokeWidth="1.5" strokeDasharray="6 8" opacity="0.5" />
-            <path d="M452 478 C470 495 490 505 520 520" stroke="var(--road)" strokeWidth="9" />
-            <path d="M692 452 C700 430 712 410 720 398" stroke="var(--road)" strokeWidth="7" />
-          </g>
-          <text x="640" y="300" fontSize="13" fontWeight="700" fill="var(--ink-2)" opacity="0.5" transform="rotate(-68 640 300)">
-            THIRD MAINLAND BRIDGE
-          </text>
-          <text x="690" y="250" fontSize="20" fontWeight="800" fill="rgba(255,255,255,0.75)" letterSpacing="4">
-            LAGOS LAGOON
-          </text>
-          <text x="640" y="684" fontSize="18" fontWeight="800" fill="rgba(255,255,255,0.75)" letterSpacing="4">
-            ATLANTIC OCEAN
-          </text>
-          {AREA_LABELS.map(([t, x, y]) => (
-            <text key={t} x={x} y={y} fontSize="13" fontWeight="800" letterSpacing="2.5" fill="var(--ink)" opacity="0.28" textAnchor="middle">
-              {t}
+          {city.map.bridges?.map((d, i) => (
+            <g key={i} fill="none" strokeLinecap="round">
+              <path d={d} stroke="var(--road)" strokeWidth="9" />
+              <path d={d} stroke="var(--ink-2)" strokeWidth="1.5" strokeDasharray="6 8" opacity="0.5" />
+            </g>
+          ))}
+          {city.map.labels.map((l) => (
+            <text
+              key={l.text}
+              x={l.x}
+              y={l.y}
+              fontSize={l.kind === "water" ? 20 : 13}
+              fontWeight="800"
+              letterSpacing={l.kind === "water" ? 4 : 2.5}
+              fill={l.kind === "water" ? "rgba(255,255,255,0.8)" : "var(--ink)"}
+              opacity={l.kind === "area" ? 0.28 : l.kind === "feature" ? 0.5 : 1}
+              textAnchor="middle"
+              transform={l.rotate ? `rotate(${l.rotate} ${l.x} ${l.y})` : undefined}
+            >
+              {l.text}
             </text>
           ))}
 
-          {/* Travel route */}
           {game.travel && (
-            <line
-              x1={placeOf(game.travel.from, game).x}
-              y1={placeOf(game.travel.from, game).y}
-              x2={placeOf(game.travel.to, game).x}
-              y2={placeOf(game.travel.to, game).y}
-              stroke="var(--danfo)"
-              strokeWidth="5"
-              strokeDasharray="10 8"
-              strokeLinecap="round"
-            />
+            <line x1={placeOf(game.travel.from, game).x} y1={placeOf(game.travel.from, game).y} x2={placeOf(game.travel.to, game).x} y2={placeOf(game.travel.to, game).y} stroke="var(--danfo)" strokeWidth="5" strokeDasharray="10 8" strokeLinecap="round" />
           )}
 
-          {/* Home */}
-          <g className="cursor-pointer" onClick={() => setSelected("home")}>
-            <circle cx={homeP.x} cy={homeP.y} r="22" fill="var(--green)" stroke="#fff" strokeWidth="4" />
-            <text x={homeP.x} y={homeP.y + 7} fontSize="20" textAnchor="middle">
-              🏠
-            </text>
-          </g>
+          {showHome && (
+            <g className="cursor-pointer" onClick={() => setSelected("home")}>
+              <circle cx={homeP.x} cy={homeP.y} r="22" fill="var(--green)" stroke="#fff" strokeWidth="4" />
+              <text x={homeP.x} y={homeP.y + 7} fontSize="20" textAnchor="middle">
+                🏠
+              </text>
+            </g>
+          )}
 
-          {/* Places */}
-          {LOCATIONS.map((l) => {
+          {places.map((l) => {
             const open = isOpen(l, game.time);
             const here = npcsAt(l.id, wd, hr);
             const friends = here.filter((n) => (game.relationships[n.id]?.friendship ?? 0) >= 50).length;
-            const isWork = !!game.career && getCareer(game.career.careerId)?.workplace === l.id;
+            const isWork = l.id === workId;
+            const realHere = onlinePlayers.filter((p) => p.location === l.id).length;
             return (
               <g key={l.id} className="cursor-pointer" onClick={() => setSelected(l.id)} opacity={open ? 1 : 0.55}>
                 {selected === l.id && <circle cx={l.x} cy={l.y} r="28" fill="none" stroke="var(--ink)" strokeWidth="3" />}
@@ -186,14 +222,21 @@ export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => 
                     </text>
                   </g>
                 )}
+                {realHere > 0 && (
+                  <g>
+                    <circle cx={l.x - 16} cy={l.y - 16} r="10" fill="var(--danfo)" stroke="#fff" strokeWidth="2" />
+                    <text x={l.x - 16} y={l.y - 12} fontSize="11" fontWeight="800" textAnchor="middle" fill="var(--danfo-ink)">
+                      {realHere}
+                    </text>
+                  </g>
+                )}
                 <text x={l.x} y={l.y + 36} fontSize="12" fontWeight="700" textAnchor="middle" fill="var(--ink)" stroke="var(--land)" strokeWidth="4" paintOrder="stroke">
-                  {l.name.length > 18 ? l.name.split(" ").slice(0, 2).join(" ") : l.name}
+                  {shortName(l.name)}
                 </text>
               </g>
             );
           })}
 
-          {/* Player */}
           <g transform={`translate(${px - 18} ${py - 58})`} className="pointer-events-none">
             {!game.travel && <circle cx="18" cy="58" r="20" fill="var(--danfo)" className="pulse-ring" />}
             <g className="anim-bob">
@@ -208,15 +251,16 @@ export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => 
         </svg>
       </div>
 
-      {/* Legend */}
       <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap pointer-events-none">
+        <span className="chip bg-[var(--card)] font-bold">
+          {city.emoji} {city.name}
+        </span>
         <span className="chip bg-[var(--card)]">Tap a place to travel</span>
         <span className="chip bg-[var(--card)]">
           <span className="w-2.5 h-2.5 rounded-full bg-[var(--purple)] inline-block" /> people
         </span>
       </div>
 
-      {/* Selection sheet */}
       {selected && sel && (
         <div className="absolute inset-x-2 bottom-2 sm:left-auto sm:right-3 sm:bottom-3 sm:w-[380px] card p-4 anim-up max-h-[75%] overflow-y-auto scroll-thin" style={{ boxShadow: "var(--shadow)" }}>
           <div className="flex items-start justify-between gap-3">
@@ -270,9 +314,7 @@ export default function CityMap({ onArrivePlan, active }: { onArrivePlan: () => 
                   <span>
                     {o.emoji} {o.name}
                   </span>
-                  <span className="text-xs font-semibold text-[var(--ink-2)]">
-                    {o.ok ? `${formatDuration(o.minutes)} · ${o.fare ? formatNaira(o.fare) : "Free"}` : o.reason}
-                  </span>
+                  <span className="text-xs font-semibold text-[var(--ink-2)]">{o.ok ? `${formatDuration(o.minutes)} · ${o.fare ? formatNaira(o.fare) : "Free"}` : o.reason}</span>
                 </button>
               ))}
               {game.activity && <p className="text-xs text-[var(--coral)]">Finish or stop your current activity first.</p>}

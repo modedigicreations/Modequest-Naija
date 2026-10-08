@@ -38,7 +38,7 @@ export const LESSONS: Lesson[] = [
     intro: [
       "A budget is a plan for your money before you spend it.",
       "A simple rule: 50% on NEEDS (rent, food, transport), 30% on WANTS (fun, new clothes), 20% on SAVINGS and paying debt.",
-      "Lagos tip: rent is due every Saturday in this game. Put rent money aside the moment you get paid.",
+      "Tip: rent is due every Saturday in this game. Put rent money aside the moment you get paid.",
     ],
     questions: [
       { q: "You earn ₦40,000 a week. Using 50/30/20, how much should you save?", options: ["₦4,000", "₦8,000", "₦12,000", "₦20,000"], answer: 1, explain: "20% of ₦40,000 is ₦8,000." },
@@ -171,7 +171,7 @@ export const LESSONS: Lesson[] = [
   {
     id: "negotiation", title: "Market Negotiation", emoji: "🤝🏾", topic: "Business", skill: "business", xp: 35, grant: 2000, kind: "quiz",
     intro: [
-      "In Lagos markets, the first price is an opening move, not the final price.",
+      "In Nigerian markets, the first price is an opening move, not the final price.",
       "Know the fair price before you go. Be polite, be ready to walk away.",
       "Win-win deals keep good sellers happy to see you again.",
     ],
@@ -181,12 +181,92 @@ export const LESSONS: Lesson[] = [
       { q: "Why build a relationship with a good trader?", options: ["Better prices and honesty next time", "No reason", "To borrow money", "To avoid paying"], answer: 0, explain: "Repeat customers get better deals." },
     ],
   },
+  {
+    id: "tax", title: "Tax & Your Payslip", emoji: "🧾", topic: "Money", skill: "finance", xp: 40, grant: 2500, kind: "quiz",
+    intro: [
+      "Gross pay is what you earn before deductions. Net pay is what lands in your account.",
+      "In Nigeria, PAYE (Pay As You Earn) income tax and pension contributions are usually deducted by your employer.",
+      "Taxes fund roads, schools, hospitals and security. Keeping honest records protects you.",
+    ],
+    questions: [
+      { q: "Your gross salary is ₦100,000 and ₦12,000 is deducted. Your net pay is:", options: ["₦112,000", "₦100,000", "₦88,000", "₦12,000"], answer: 2, explain: "Net = gross − deductions = ₦88,000." },
+      { q: "PAYE stands for:", options: ["Pay As You Earn", "Pay After Year End", "Personal Allowance Yearly Estimate", "Pay All Your Expenses"], answer: 0, explain: "Tax is taken from each paycheck as you earn." },
+      { q: "Why keep records of your income?", options: ["To show off", "To prove what you earned and paid if questions come up", "Because banks require selfies", "No reason"], answer: 1, explain: "Records protect you in disputes and applications." },
+    ],
+  },
+  {
+    id: "insurance", title: "Insurance Basics", emoji: "☂️", topic: "Money", skill: "finance", xp: 40, grant: 2500, kind: "quiz",
+    intro: [
+      "Insurance means paying a small, regular amount (a premium) so a big, unexpected cost is covered.",
+      "Health insurance (like NHIA plans) can cover hospital bills that would wipe out savings.",
+      "Insurance is for risks you can't afford to carry alone — not for small, predictable costs.",
+    ],
+    questions: [
+      { q: "The regular amount you pay for insurance is called the:", options: ["Premium", "Interest", "Dividend", "Profit"], answer: 0, explain: "You pay a premium to stay covered." },
+      { q: "Which risk is most worth insuring?", options: ["Losing a ₦200 pen", "A hospital stay costing ₦500,000", "Buying lunch", "A cinema ticket"], answer: 1, explain: "Insure big costs you couldn't pay yourself." },
+      { q: "A 'policy' is:", options: ["The insurance contract with its rules", "A government tax", "A type of loan", "A bank account"], answer: 0, explain: "Read the policy to know what's covered." },
+    ],
+  },
+  {
+    id: "misinfo", title: "Fake News & Misinformation", emoji: "📰", topic: "Safety", skill: "charisma", xp: 40, grant: 2500, kind: "quiz",
+    intro: [
+      "Misinformation spreads fastest when it makes people angry or scared.",
+      "Before you forward: check the source, check the date, and search if trusted news outlets report it.",
+      "Edited photos and voice notes can be fake. 'Forwarded many times' is not proof.",
+    ],
+    questions: [
+      { q: "A WhatsApp broadcast says the government is giving ₦50,000 to everyone who clicks a link. First step?", options: ["Click quickly", "Forward to all groups", "Check official government websites/news before believing it", "Send your BVN"], answer: 2, explain: "Verify with official sources first." },
+      { q: "Which is a red flag for fake news?", options: ["Named, reputable source", "ALL CAPS, urgency and 'share before they delete this!'", "A recent date", "Several outlets reporting it"], answer: 1, explain: "Emotional urgency is a manipulation tactic." },
+      { q: "A shocking photo is going viral. You can check if it's old or edited by:", options: ["Reverse image search", "Asking in the comments", "Zooming in", "Sharing it"], answer: 0, explain: "Reverse image search shows where it appeared before." },
+    ],
+  },
+  {
+    id: "kindness", title: "Cyberbullying & Online Kindness", emoji: "💛", topic: "Safety", skill: "charisma", xp: 35, grant: 2000, kind: "quiz",
+    intro: [
+      "Cyberbullying is repeated harm online: insults, threats, spreading rumours or sharing private photos.",
+      "If it happens to you: don't reply in anger, screenshot evidence, block, report, and tell a trusted adult.",
+      "If you see it: don't share it. Support the person being targeted.",
+    ],
+    questions: [
+      { q: "Someone keeps posting insults about you. Best first steps?", options: ["Insult them back", "Screenshot, block, report and tell someone you trust", "Delete your phone", "Ignore your feelings"], answer: 1, explain: "Keep evidence and get support." },
+      { q: "A friend shares an embarrassing photo of a classmate in your group chat. You:", options: ["Forward it", "Laugh and say nothing", "Don't share it and ask them to delete it", "Add a caption"], answer: 2, explain: "Not spreading it protects the victim." },
+      { q: "Is sharing someone's private photo without consent okay as a joke?", options: ["Yes", "No — it can be harmful and even illegal", "Only on weekends", "If it's funny"], answer: 1, explain: "Consent matters online too." },
+    ],
+  },
+  {
+    id: "ajo", title: "Ajo, Esusu & Cooperatives", emoji: "🤲🏾", topic: "Money", skill: "finance", xp: 40, grant: 2500, kind: "quiz",
+    intro: [
+      "Ajo (Yoruba), Esusu, Isusu (Igbo) and Adashe (Hausa) are rotating savings groups: everyone contributes each week, and one member collects the pot in turn.",
+      "They build discipline and give lump sums without interest. The risk: a member who collects early and stops paying.",
+      "Cooperatives are registered groups that save, lend and buy in bulk together. Choose people you trust and keep written records.",
+    ],
+    questions: [
+      { q: "10 people contribute ₦5,000 weekly in an ajo. Each payout is:", options: ["₦5,000", "₦10,000", "₦50,000", "₦500,000"], answer: 2, explain: "10 × ₦5,000 = ₦50,000 to one member each week." },
+      { q: "The biggest risk in an informal ajo is:", options: ["High interest", "A member collects and then stops contributing", "Inflation of 100%", "No risk"], answer: 1, explain: "Trust and records are everything." },
+      { q: "A good safeguard for a savings group is:", options: ["No records", "Written records and members you know", "Letting strangers join online", "Paying in cash to anyone"], answer: 1, explain: "Records and trust protect everyone." },
+    ],
+  },
+  {
+    id: "pricing", title: "Pricing Your Product", emoji: "🏷️", topic: "Business", skill: "business", xp: 45, grant: 3000, kind: "quiz",
+    intro: [
+      "Your price must cover your costs (materials, transport, power) and leave a profit.",
+      "Cost-plus pricing: total cost per item + a markup. Example: ₦800 cost + 25% markup = ₦1,000.",
+      "Watch competitors and value: people pay more for quality, speed and trust.",
+    ],
+    questions: [
+      { q: "A plate of food costs you ₦1,200 to make. With a 25% markup, you sell at:", options: ["₦1,225", "₦1,500", "₦2,400", "₦1,000"], answer: 1, explain: "₦1,200 × 1.25 = ₦1,500." },
+      { q: "Fuel prices rise and your delivery cost doubles. You should:", options: ["Ignore it", "Review your prices so you still make profit", "Close forever", "Give everything free"], answer: 1, explain: "Prices must track costs." },
+      { q: "Why might customers pay more at one shop than another?", options: ["They like losing money", "Better quality, trust or convenience", "It's illegal to compare", "No reason"], answer: 1, explain: "Value isn't only price." },
+    ],
+  },
   { id: "code1", title: "Code Lab 1: First Steps", emoji: "🤖", topic: "Coding", skill: "coding", xp: 30, grant: 1500, kind: "code", puzzle: "p1", intro: ["Programs are instructions a computer follows exactly, in order.", "Guide ByteBot to the ⭐ using MOVE and TURN blocks."] },
   { id: "code2", title: "Code Lab 2: Turning Corners", emoji: "🤖", topic: "Coding", skill: "coding", xp: 35, grant: 1500, kind: "code", puzzle: "p2", intro: ["TURN LEFT and TURN RIGHT rotate ByteBot without moving.", "Order matters — turn, then move."] },
   { id: "code3", title: "Code Lab 3: Loops", emoji: "🔁", topic: "Coding", skill: "coding", xp: 40, grant: 2000, kind: "code", puzzle: "p3", intro: ["A LOOP repeats a block. Tap a placed block to change ×1 to ×2, ×3...", "You have a block limit — use repeats to stay under it."] },
   { id: "code4", title: "Code Lab 4: Collect the Coins", emoji: "🪙", topic: "Coding", skill: "coding", xp: 45, grant: 2000, kind: "code", puzzle: "p4", intro: ["Collect every 🪙 before reaching the ⭐.", "Plan the whole route before you run."] },
-  { id: "code5", title: "Code Lab 5: The Lagos Maze", emoji: "🧱", topic: "Coding", skill: "coding", xp: 55, grant: 2500, kind: "code", puzzle: "p5", intro: ["Walls 🧱 block your path. Hit one and the program crashes.", "Debugging = finding the step where it went wrong."] },
+  { id: "code5", title: "Code Lab 5: The City Maze", emoji: "🧱", topic: "Coding", skill: "coding", xp: 55, grant: 2500, kind: "code", puzzle: "p5", intro: ["Walls 🧱 block your path. Hit one and the program crashes.", "Debugging = finding the step where it went wrong."] },
   { id: "code6", title: "Code Lab 6: Efficient Routes", emoji: "⚡", topic: "Coding", skill: "coding", xp: 65, grant: 3000, kind: "code", puzzle: "p6", intro: ["Good code is correct AND efficient.", "Get every coin with the fewest blocks."] },
+  { id: "code7", title: "Code Lab 7: Plan the Path", emoji: "🧭", topic: "Coding", skill: "coding", xp: 70, grant: 3000, kind: "code", puzzle: "p7", intro: ["Algorithms are plans. Trace the whole route on the grid before placing a single block.", "Exactly 7 blocks. No room for waste."] },
+  { id: "code8", title: "Code Lab 8: Loop Limits", emoji: "♾️", topic: "Coding", skill: "coding", xp: 80, grant: 3500, kind: "code", puzzle: "p8", intro: ["A block can repeat at most 5 times. Longer roads need two blocks.", "Real programs have limits too — memory, time, battery."] },
 ];
 
 export const getLesson = (id: string) => LESSONS.find((l) => l.id === id);
