@@ -164,3 +164,50 @@ export async function fulfil(db: SupabaseClient, reference: string, tx: Paystack
   await db.from("orders").update({ status: "paid", paid_at: new Date().toISOString(), provider_id: String(tx.id) }).eq("id", order.id).neq("status", "paid");
   return { ok: true, order: { ...order, status: "paid" } };
 }
+
+// ---------------------------------------------------------------------------
+// Reconciliation: completes purchases without relying on the webhook (the
+// Paystack business's single webhook slot is used by another app). Pending
+// orders are checked against Paystack and fulfilled if paid.
+// ---------------------------------------------------------------------------
+
+/** How far back to look for unpaid orders (bank transfer/USSD can be slow). */
+const RECONCILE_WINDOW_MS = 48 * 3600_000;
+/** Give up on checkouts Paystack still reports as not paid after this long. */
+const EXPIRE_AFTER_MS = 24 * 3600_000;
+
+export interface ReconcileResult {
+  checked: number;
+  paid: number;
+  expired: number;
+}
+
+export async function reconcile(db: SupabaseClient, opts: { userId?: string; limit?: number } = {}): Promise<ReconcileResult> {
+  let q = db
+    .from("orders")
+    .select("reference, created_at")
+    .eq("status", "pending")
+    .gte("created_at", new Date(Date.now() - RECONCILE_WINDOW_MS).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(opts.limit ?? 10);
+  if (opts.userId) q = q.eq("user_id", opts.userId);
+  const { data: pending } = await q;
+
+  const result: ReconcileResult = { checked: 0, paid: 0, expired: 0 };
+  for (const o of pending ?? []) {
+    const tx = await paystackVerify(o.reference);
+    result.checked++;
+    if (tx?.status === "success") {
+      if ((await fulfil(db, o.reference, tx)).ok) result.paid++;
+    } else if (Date.now() - Date.parse(o.created_at) > EXPIRE_AFTER_MS) {
+      await db.from("orders").update({ status: "failed" }).eq("reference", o.reference).eq("status", "pending");
+      result.expired++;
+    }
+  }
+
+  // Older pending orders are abandoned checkouts: close them without asking Paystack.
+  let old = db.from("orders").update({ status: "failed" }).eq("status", "pending").lt("created_at", new Date(Date.now() - RECONCILE_WINDOW_MS).toISOString());
+  if (opts.userId) old = old.eq("user_id", opts.userId);
+  await old;
+  return result;
+}

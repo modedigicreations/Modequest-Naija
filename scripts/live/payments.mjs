@@ -114,6 +114,26 @@ try {
   const { data: sup } = await player.c.from("entitlements").select("kind, item, expires_at").in("kind", ["supporter", "cosmetic"]);
   ok(r.json.status === "paid" && sup.some((e) => e.kind === "supporter" && e.expires_at) && sup.some((e) => e.item === "outfit_supporter"), "supporter pass grants badge + outfit", JSON.stringify(r.json));
 
+  // 3c. No webhook, no return page: reconciliation alone completes the purchase
+  const p6 = await paidOrder(player, `zz_pay_${stamp}@example.com`, "c_gradcap", 40000);
+  ok(p6.charge.data?.status === "success", "paid, then tab closed (no verify, no webhook)");
+  r = await api("/api/pay/reconcile", player.token, {});
+  const { data: cap } = await player.c.from("entitlements").select("item").eq("item", "acc_gradcap");
+  ok(r.json.paid >= 1 && cap.length === 1, "reconcile grants the paid item", JSON.stringify(r.json));
+  r = await api("/api/pay/reconcile", player.token, {});
+  ok(r.json.paid === 0, "reconcile is idempotent", JSON.stringify(r.json));
+
+  // 3d. Scheduled sweep for all users (CRON_SECRET)
+  const p7 = await paidOrder(player, `zz_pay_${stamp}@example.com`, "c_headset", 50000);
+  const bad = await fetch(APP + "/api/pay/reconcile/all", { method: "POST", headers: { authorization: "Bearer wrong" } });
+  ok(bad.status === 401 || bad.status === 503, "sweep rejects a wrong secret", String(bad.status));
+  if (env.CRON_SECRET) {
+    const sw = await fetch(APP + "/api/pay/reconcile/all", { method: "POST", headers: { authorization: `Bearer ${env.CRON_SECRET}` } }).then((x) => x.json());
+    const { data: hs } = await player.c.from("entitlements").select("item").eq("item", "acc_headset");
+    ok(sw.paid >= 1 && hs.length === 1, "scheduled sweep completes pending purchases", JSON.stringify(sw));
+  }
+  void p7;
+
   // 4. Tampered amount is rejected
   r = await api("/api/pay/init", player.token, { productId: "c_shades", ageConfirmed: true });
   const ref3 = r.json.reference;

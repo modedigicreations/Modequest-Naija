@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { COSMETICS, getProduct, PLAYER_MONTHLY_CAP_NAIRA, PRODUCTS, type Product } from "@/shop/catalog";
-import { buy, paymentsEnabled, useShop } from "@/shop/client";
+import { buy, paymentsEnabled, reconcilePayments, useShop } from "@/shop/client";
 import { useGame } from "@/game/store";
 import type { Appearance } from "@/game/types";
 import { useSession } from "@/online/session";
@@ -19,7 +19,7 @@ export function StoreApp() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    void refresh();
+    void reconcilePayments().then(() => refresh());
   }, [refresh]);
 
   if (!profile) return <Empty>Sign in from the title screen to visit the store.</Empty>;

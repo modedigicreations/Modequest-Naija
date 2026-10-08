@@ -80,6 +80,16 @@ export async function buy(productId: string, ageConfirmed: boolean) {
   window.location.href = authorizationUrl;
 }
 
+/** Ask the server to settle any of my orders Paystack says are paid. */
+export async function reconcilePayments(): Promise<number> {
+  try {
+    const r = (await authed("/api/pay/reconcile", {})) as { paid: number };
+    return r.paid ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function verifyPayment(reference: string): Promise<{ status: string; productId?: string; reason?: string }> {
   return authed("/api/pay/verify", { reference });
 }

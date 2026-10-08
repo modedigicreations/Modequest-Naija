@@ -59,7 +59,13 @@ Without Supabase configured the game is single-player and saves in the browser. 
 - **Flow:** `/api/pay/init` creates the order with the catalog price (never the browser's) and a Paystack checkout. After payment Paystack calls `/api/pay/webhook` (HMAC-verified) and the player returns to `/pay/return`, which calls `/api/pay/verify`. Either path grants entitlements; both are idempotent, and amounts are checked against the order.
 - **Game money** is credited in the game and saved to the cloud first; only then are those top-ups marked claimed, so paid money can't be lost.
 - **Protections:** class (student) accounts can't buy; buyers confirm they're 13+ and, if under 18, have a parent's permission; ₦20,000 cap per player per 30 days (school plans excluded); max 5 open checkouts per 10 minutes.
-- **Webhook URL** to set in Paystack (Settings → API Keys & Webhooks): `https://<your-domain>/api/pay/webhook`.
+- **No webhook required.** The Paystack business's single webhook slot can stay with another app. Purchases complete in three ways (all idempotent):
+  1. `/pay/return` verifies as soon as the buyer comes back;
+  2. `/api/pay/reconcile` runs whenever a signed-in player opens the game or the Store, settling their unpaid orders from the last 48 h that Paystack reports as paid (covers bank transfer/USSD where the tab was closed);
+  3. `/api/pay/reconcile/all` — a scheduled sweep for everyone (Railway cron), protected by `CRON_SECRET`:
+     `curl -X POST https://modequest.stream/api/pay/reconcile/all -H "Authorization: Bearer $CRON_SECRET"`.
+  If you *do* have a free webhook slot, point it at `https://<your-domain>/api/pay/webhook` for instant confirmation.
+- **Shared Paystack account:** ModeQuest references start with `mq_` and carry `metadata.product_id`, so they're easy to filter in Paystack reports. If another app owns the webhook it will also receive ModeQuest events — it should ignore references it doesn't recognise.
 
 ### Setup
 
@@ -74,6 +80,7 @@ Without Supabase configured the game is single-player and saves in the browser. 
    PAYSTACK_SECRET_KEY=sk_...      # server only
    NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_...
    NEXT_PUBLIC_APP_URL=https://your-domain   # Paystack redirects back here
+   CRON_SECRET=...                 # protects the scheduled payment sweep
    ```
 5. Restart `npm run dev`. The title screen now shows **Play online**.
 
