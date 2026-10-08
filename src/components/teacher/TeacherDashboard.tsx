@@ -29,7 +29,7 @@ import {
 } from "@/online/teacher";
 import { Empty, Modal, SectionTitle } from "../ui";
 import { PLANS, PRODUCTS } from "@/shop/catalog";
-import { buy, paymentsEnabled, useShop } from "@/shop/client";
+import { buy, useShop } from "@/shop/client";
 
 type Tab = "students" | "lessons" | "chat";
 
@@ -602,7 +602,7 @@ function ChatTab({ cls, roster, onChanged }: { cls: TClass; roster: RosterRow[] 
 }
 
 function PlanCard({ classCount }: { classCount: number }) {
-  const { plan, refresh } = useShop();
+  const { plan, refresh, enabled: paymentsEnabled } = useShop();
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 

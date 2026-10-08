@@ -10,10 +10,11 @@ import MessagesApp from "./phone/Messages";
 import SettingsApp from "./phone/Settings";
 import { ClassApp, OnlineApp } from "./phone/OnlineApps";
 import { StoreApp, StyleApp } from "./phone/StoreApps";
-import { paymentsEnabled } from "@/shop/client";
+import TravelApp from "./phone/TravelApp";
+import { useShop } from "@/shop/client";
 import { useSession } from "@/online/session";
 
-export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class" | "store" | "style";
+export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class" | "store" | "style" | "travel";
 
 const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "messages", name: "Messages", emoji: "💬", color: "#0f9d58" },
@@ -27,6 +28,7 @@ const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "skills", name: "Skills", emoji: "📘", color: "#0ea5e9" },
   { id: "goals", name: "Goals", emoji: "🌟", color: "#db2777" },
   { id: "contacts", name: "Padis", emoji: "🤝🏾", color: "#65a30d" },
+  { id: "travel", name: "Travel", emoji: "🧳", color: "#0d9488" },
   { id: "style", name: "Style", emoji: "👕", color: "#ec4899" },
   { id: "settings", name: "Settings", emoji: "⚙️", color: "#64748b" },
 ];
@@ -41,10 +43,15 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
   const profile = useSession((s) => s.profile);
+  const storeOpen = useShop((s) => s.enabled);
+  const loadStoreStatus = useShop((s) => s.loadStatus);
+  useEffect(() => {
+    void loadStoreStatus();
+  }, [loadStoreStatus]);
   const apps = [
     ...APPS,
     ...(profile
-      ? ONLINE_APPS.filter((a) => (!a.studentOnly || profile.role === "student") && (!a.noStudents || profile.role !== "student") && (a.id !== "store" || paymentsEnabled))
+      ? ONLINE_APPS.filter((a) => (!a.studentOnly || profile.role === "student") && (!a.noStudents || profile.role !== "student") && (a.id !== "store" || !!storeOpen))
       : []),
   ];
 
@@ -121,6 +128,7 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
           {app === "class" && <ClassApp onOpenLesson={() => setApp("academy")} />}
           {app === "store" && <StoreApp />}
           {app === "style" && <StyleApp />}
+          {app === "travel" && <TravelApp onBooked={() => setApp(null)} />}
         </div>
       </div>
     </div>

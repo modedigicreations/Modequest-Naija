@@ -11,7 +11,7 @@ import Toasts from "./Toasts";
 import TopBar from "./TopBar";
 import { usePresenceSync } from "@/online/presence";
 import { claimGifts } from "@/online/social";
-import { claimTopups, paymentsEnabled, reconcilePayments, useShop } from "@/shop/client";
+import { claimTopups, reconcilePayments, useShop } from "@/shop/client";
 import { useSession } from "@/online/session";
 
 export default function GameScreen() {
@@ -33,7 +33,8 @@ export default function GameScreen() {
     const collect = async (settlePayments: boolean) => {
       void claimGifts();
       // Settle paid-but-unconfirmed purchases first (no webhook needed), then collect.
-      if (settlePayments && paymentsEnabled) await reconcilePayments();
+      await useShop.getState().loadStatus();
+      if (settlePayments && useShop.getState().enabled) await reconcilePayments();
       await claimTopups();
       await useShop.getState().refresh();
     };

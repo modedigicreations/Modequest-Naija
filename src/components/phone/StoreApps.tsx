@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { COSMETICS, getProduct, PLAYER_MONTHLY_CAP_NAIRA, PRODUCTS, type Product } from "@/shop/catalog";
-import { buy, paymentsEnabled, reconcilePayments, useShop } from "@/shop/client";
+import { buy, reconcilePayments, useShop } from "@/shop/client";
 import { useGame } from "@/game/store";
 import type { Appearance } from "@/game/types";
 import { useSession } from "@/online/session";
@@ -13,7 +13,7 @@ const naira = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 
 export function StoreApp() {
   const profile = useSession((s) => s.profile);
-  const { cosmetics, supporterUntil, orders, refresh } = useShop();
+  const { cosmetics, supporterUntil, orders, refresh, enabled: paymentsEnabled } = useShop();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);

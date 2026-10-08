@@ -22,7 +22,7 @@ npm run test:live    # live end-to-end tests against Supabase + Paystack TEST mo
 
 | System | Details |
 |---|---|
-| Cities | 4 city packs (`src/game/data/cities/*`), each with its own map, 16–18 places, 7 homes, local transport names, local food, weather, rush-hour traffic and 7–12 locals. Travel between cities by luxury bus from a motor park or by plane from an airport. |
+| Cities | 4 city packs (`src/game/data/cities/*`), each with its own map, 16–18 places, 7 homes, local transport names, local food, weather, rush-hour traffic and 7–12 locals. Visit another city by bus or plane from the **Travel** app (from anywhere; booking away from the terminal adds the ride there), or move your whole life to another city from the title screen (**Change city**). |
 | Needs | Hunger, Energy, Hygiene, Fun and Social decay in real time. Together with Health they set your mood, and mood scales pay and learning. Starving or exhaustion can put you in hospital; boredom and loneliness mostly hurt mood. |
 | Careers | 9 tracks × 5 levels. Tech, Food, Creative, Trade, Banking, Logistics and Health exist in every city. Civil Service is Abuja-only (needs a ministry) and Oil & Gas is Port Harcourt-only (needs an industrial area). You work shifts, choose a work style, and can answer an Academy question for a task bonus. Some promotions need certificates. |
 | Homes & power | Seven home tiers per city, from a relative's couch to a penthouse. Rent is charged every Saturday and missing it twice gets you evicted. Each area's NEPA tariff band decides your hours of light; a generator or solar covers outages. |
@@ -78,7 +78,7 @@ Without Supabase configured the game is single-player and saves in the browser. 
    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
    SUPABASE_SERVICE_ROLE_KEY=...   # server only — used by /api/teacher/* and /api/pay/*
    PAYSTACK_SECRET_KEY=sk_...      # server only
-   NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_...
+   NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_...   # optional; the store opens whenever the secret key is set
    NEXT_PUBLIC_APP_URL=https://your-domain   # Paystack redirects back here
    CRON_SECRET=...                 # protects the scheduled payment sweep
    ```

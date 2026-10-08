@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { importSave } from "@/game/persistence";
-import { getCity } from "@/game/data/world";
+import { CITIES, getCity } from "@/game/data/world";
+import { sb } from "@/online/client";
+import { useSession } from "@/online/session";
 import { useGame } from "@/game/store";
 import { dayOf, formatNaira } from "@/game/util";
 import Avatar from "./Avatar";
@@ -19,7 +21,18 @@ const FEATURES = [
 ];
 
 export default function TitleScreen() {
-  const { game, hasSave, setScreen, load, showFlash, flash } = useGame();
+  const { game, hasSave, setScreen, load, showFlash, flash, dispatch, flushSave } = useGame();
+  const user = useSession((s) => s.user);
+  const [moving, setMoving] = useState(false);
+
+  const relocate = async (cityId: string) => {
+    const c = getCity(cityId);
+    if (!confirm(`Move your life to ${c.name}? Your home moves to a similar home there; your money, job and progress come with you.`)) return;
+    if (!dispatch({ type: "relocate", city: cityId })) return;
+    setMoving(false);
+    await flushSave();
+    if (user) await sb()?.from("profiles").update({ city: cityId }).eq("id", user.id);
+  };
   const [importOpen, setImportOpen] = useState(false);
   const [code, setCode] = useState("");
 
@@ -83,9 +96,24 @@ export default function TitleScreen() {
                   <div className="text-sm text-[var(--ink-2)]">
                     {getCity(game.city).name} · Day {dayOf(game.time)} · {formatNaira(game.cash + game.bank)}
                   </div>
+                  <button className="text-xs font-bold underline mt-1" onClick={() => setMoving((m) => !m)}>
+                    📍 {moving ? "Cancel" : "Change city"}
+                  </button>
                 </div>
               </div>
             ) : null}
+            {game && moving && (
+              <div className="rounded-2xl bg-[var(--bg-2)] p-3 mb-4 anim-up">
+                <div className="text-xs font-bold text-[var(--muted)] mb-2">Move this life to:</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {CITIES.filter((c) => c.id !== game.city).map((c) => (
+                    <button key={c.id} className="btn btn-ghost btn-sm justify-start" onClick={() => void relocate(c.id)}>
+                      {c.emoji} {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="grid sm:grid-cols-2 gap-3">
               {FEATURES.map(([e, t, d]) => (
                 <div key={t} className="rounded-2xl bg-[var(--card-2)] p-3">

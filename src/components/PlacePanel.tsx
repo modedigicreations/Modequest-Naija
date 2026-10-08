@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { activitiesHere, isOpen, kindsHere, placeOf, shiftStatus, workplaceFor } from "@/game/engine";
+import { activitiesHere, intercityQuote, isOpen, kindsHere, placeOf, shiftStatus, workplaceFor } from "@/game/engine";
 import { getCareer } from "@/game/data/economy";
 import { localActivity } from "@/game/data/activities";
 import { INTERACTIONS, type InteractionId, npcsAt } from "@/game/data/people";
-import { CITIES, getCity, getLocation, intercityRoute, transportIn } from "@/game/data/world";
+import { CITIES, getCity, getLocation, transportIn } from "@/game/data/world";
 import { friendshipTier, groceryCapacity, home, price } from "@/game/helpers";
 import { useGame } from "@/game/store";
 import type { NeedKey } from "@/game/types";
@@ -288,8 +288,9 @@ function IntercityCard({ mode, open }: { mode: "coach" | "flight"; open: boolean
       </p>
       <div className="grid gap-2">
         {others.map((c) => {
-          const r = intercityRoute(game.city, c.id, mode);
-          const fare = price(game, r.fare, false);
+          const r = intercityQuote(game, c.id, mode);
+          if (!r) return null;
+          const fare = r.fare;
           return (
             <button
               key={c.id}

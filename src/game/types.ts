@@ -227,6 +227,7 @@ export type Command =
   | { type: "setSpeed"; speed: GameState["speed"] }
   | { type: "travel"; to: string; mode: TransportMode }
   | { type: "intercity"; to: string; mode: "coach" | "flight" }
+  | { type: "relocate"; city: string }
   | { type: "startActivity"; activityId: string }
   | { type: "cancelActivity" }
   | { type: "startShift"; workStyle: WorkStyle; taskBonus: boolean }

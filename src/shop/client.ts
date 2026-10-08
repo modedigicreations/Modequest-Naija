@@ -4,8 +4,6 @@ import { create } from "zustand";
 import { useGame } from "@/game/store";
 import { sb } from "@/online/client";
 
-/** Payments show in the UI only when Paystack is configured. */
-export const paymentsEnabled = !!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
 
 export interface PlanInfo {
   plan: "free" | "classroom" | "school";
@@ -23,6 +21,9 @@ export interface OrderInfo {
 }
 
 interface ShopState {
+  /** Store open? Asked from the server at runtime (null = not known yet). */
+  enabled: boolean | null;
+  loadStatus(): Promise<void>;
   cosmetics: Set<string>;
   supporterUntil: number | null;
   plan: PlanInfo | null;
@@ -30,7 +31,17 @@ interface ShopState {
   refresh(): Promise<void>;
 }
 
-export const useShop = create<ShopState>((set) => ({
+export const useShop = create<ShopState>((set, get) => ({
+  enabled: null,
+  async loadStatus() {
+    if (get().enabled !== null) return;
+    try {
+      const r = await fetch("/api/pay/status");
+      set({ enabled: r.ok ? !!(await r.json()).enabled : false });
+    } catch {
+      set({ enabled: false });
+    }
+  },
   cosmetics: new Set(),
   supporterUntil: null,
   plan: null,
@@ -38,6 +49,7 @@ export const useShop = create<ShopState>((set) => ({
   async refresh() {
     const client = sb();
     if (!client) return;
+    void get().loadStatus();
     const { data: u } = await client.auth.getUser();
     if (!u.user) {
       set({ cosmetics: new Set(), supporterUntil: null, plan: null, orders: [] });

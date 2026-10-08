@@ -19,6 +19,7 @@ import { EVENTS, MESSAGE_CHANCE_PER_HOUR, MESSAGE_TEMPLATES } from "./data/event
 import { getLesson } from "./data/lessons";
 import { INTERACTIONS, type InteractionId, getNpc, npcsAt } from "./data/people";
 import {
+  CITIES,
   HOMES,
   type HomeDef,
   type LocationDef,
@@ -284,6 +285,26 @@ export const isBusy = (s: GameState) => !!s.activity || !!s.travel;
 // ---------------------------------------------------------------------------
 // Travel
 // ---------------------------------------------------------------------------
+
+/** Minutes added (and a local fare) to reach the terminal when booking from elsewhere. */
+const TERMINAL_TRANSFER_MINUTES = 45;
+const TERMINAL_TRANSFER_FARE = 1000;
+
+/** Price and duration of a trip to another city, from wherever the player is. */
+export function intercityQuote(s: GameState, to: string, mode: "coach" | "flight") {
+  if (to === s.city) return null;
+  const kind = mode === "coach" ? "motor_park" : "airport";
+  const arrival = findKind(to, kind);
+  if (!arrival) return null;
+  const atTerminal = kindsHere(s).includes(kind);
+  const route = intercityRoute(s.city, to, mode);
+  return {
+    arrival: arrival.id,
+    minutes: route.minutes + (atTerminal ? 0 : TERMINAL_TRANSFER_MINUTES),
+    fare: price(s, route.fare + (atTerminal ? 0 : TERMINAL_TRANSFER_FARE), false),
+    atTerminal,
+  };
+}
 
 export interface TravelOption {
   mode: TransportMode;
@@ -1031,16 +1052,32 @@ function apply(s: GameState, cmd: Command): string | void {
     case "intercity": {
       if (isBusy(s)) return "Finish what you're doing first.";
       if (cmd.to === s.city) return "You're already in this city.";
-      const needKind = cmd.mode === "coach" ? "motor_park" : "airport";
-      if (!kindsHere(s).includes(needKind)) return cmd.mode === "coach" ? "Go to a motor park to board a bus." : "Go to the airport to fly.";
-      if (!locationOpen(s, s.location)) return "It's closed right now.";
-      const arrival = findKind(cmd.to, needKind);
-      if (!arrival) return "No route there yet.";
-      const route = intercityRoute(s.city, cmd.to, cmd.mode);
-      const fare = price(s, route.fare, false);
-      if (!charge(s, fare, `${cmd.mode === "coach" ? "Bus" : "Flight"} to ${getCity(cmd.to).name}`)) return `You need ${formatNaira(fare)} for this trip.`;
-      s.travel = { from: s.location, to: arrival.id, mode: cmd.mode, start: s.time, end: s.time + route.minutes, toCity: cmd.to };
+      const q = intercityQuote(s, cmd.to, cmd.mode);
+      if (!q) return "No route there yet.";
+      if (!charge(s, q.fare, `${cmd.mode === "coach" ? "Bus" : "Flight"} to ${getCity(cmd.to).name}`)) return `You need ${formatNaira(q.fare)} for this trip.`;
+      s.travel = { from: s.location, to: q.arrival, mode: cmd.mode, start: s.time, end: s.time + q.minutes, toCity: cmd.to };
       log(s, "info", `${cmd.mode === "coach" ? "🚌" : "✈️"} Off to ${getCity(cmd.to).name}!`);
+      return;
+    }
+
+    case "relocate": {
+      const city = CITIES.find((c) => c.id === cmd.city);
+      if (!city) return "Unknown city.";
+      if (city.id === homeCity(s) && city.id === s.city) return "You already live here.";
+      const tier = getHome(s.homeId).tier;
+      const next = cityHome(city.id, tier === "hostel" && !s.flags.student ? "selfcon" : tier);
+      s.activity = null;
+      s.travel = null;
+      s.homeId = next.id;
+      s.city = city.id;
+      s.location = "home";
+      s.world.power = rollPower(s, next.band);
+      s.world.weather = rollWeather(s);
+      log(s, "good", `🧳 You moved your life to ${city.name}! New home: ${next.name}, ${next.area}. Your money, job and progress came with you.`);
+      if (s.career) {
+        const def = getCareer(s.career.careerId)!;
+        if (!findKind(city.id, def.workplace)) log(s, "bad", `There's no ${def.name} workplace in ${city.name}. Find a new job in the Jobs app, or move back.`);
+      }
       return;
     }
 

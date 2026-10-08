@@ -3,7 +3,7 @@ import { ACTIVITIES } from "./data/activities";
 import { CAREERS } from "./data/economy";
 import { ALL_NPCS, CITIES, HOMES, LOCATIONS, findKind } from "./data/world";
 import type { HomeTier, PlaceKind } from "./data/worldTypes";
-import { advance, dispatch, migrate, newGame } from "./engine";
+import { advance, dispatch, intercityQuote, migrate, newGame } from "./engine";
 import type { GameState, NewGameOptions } from "./types";
 
 const opts = (city: string): NewGameOptions => ({
@@ -87,11 +87,45 @@ describe("multi-city play", () => {
     expect(s.location).toBe(findKind("portharcourt", "motor_park")!.id);
   });
 
-  it("can't board a plane from the motor park or rent in another city", () => {
+  it("books trips from anywhere, with a transfer when not at the terminal", () => {
     const s = newGame(opts("abuja"));
-    s.location = findKind("abuja", "motor_park")!.id;
-    expect(dispatch(s, { type: "intercity", to: "lagos", mode: "flight" }).error).toMatch(/airport/);
+    s.cash = 500000;
+    const fromHome = intercityQuote(s, "lagos", "flight")!;
+    s.location = findKind("abuja", "airport")!.id;
+    const atAirport = intercityQuote(s, "lagos", "flight")!;
+    expect(fromHome.minutes).toBeGreaterThan(atAirport.minutes);
+    expect(fromHome.fare).toBeGreaterThan(atAirport.fare);
+    s.location = "home";
+    const r = dispatch(s, { type: "intercity", to: "lagos", mode: "flight" });
+    expect(r.error).toBeUndefined();
+    expect(r.state.travel?.toCity).toBe("lagos");
     expect(dispatch(s, { type: "moveHouse", homeId: "yaba_selfcon" }).error).toMatch(/Lagos/);
+  });
+
+  it("relocates a whole life to another city", () => {
+    let s = newGame(opts("lagos"));
+    s.cash = 77777;
+    s.lessons.budget = 100;
+    s = dispatch(s, { type: "applyJob", careerId: "trade" }).state;
+    const r = dispatch(s, { type: "relocate", city: "enugu" });
+    expect(r.error).toBeUndefined();
+    s = r.state;
+    expect(s.city).toBe("enugu");
+    expect(s.location).toBe("home");
+    expect(HOMES.find((h) => h.id === s.homeId)?.city).toBe("enugu");
+    expect(HOMES.find((h) => h.id === s.homeId)?.tier).toBe("room");
+    expect(s.cash).toBe(77777);
+    expect(s.lessons.budget).toBe(100);
+    expect(s.career?.careerId).toBe("trade");
+    expect(dispatch(s, { type: "relocate", city: "enugu" }).error).toMatch(/already/);
+  });
+
+  it("warns when the job doesn't exist in the new city", () => {
+    let s = newGame(opts("portharcourt"));
+    s.skills.fitness = 100;
+    s = dispatch(s, { type: "applyJob", careerId: "energy" }).state;
+    s = dispatch(s, { type: "relocate", city: "lagos" }).state;
+    expect(s.log.some((l) => l.text.includes("no Oil & Gas workplace"))).toBe(true);
   });
 
   it("uses city-specific workplaces", () => {
