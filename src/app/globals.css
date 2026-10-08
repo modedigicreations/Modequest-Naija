@@ -1,26 +1,255 @@
 @import "tailwindcss";
 
+/* ModeQuest: Lagos — warm Lagos palette: danfo yellow, Naija green, lagoon blue. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #fff7e8;
+  --bg-2: #fdecc8;
+  --card: #ffffff;
+  --card-2: #fbf4e6;
+  --ink: #1d1530;
+  --ink-2: #4a4060;
+  --muted: #8a8099;
+  --line: rgba(29, 21, 48, 0.1);
+  --danfo: #ffc629;
+  --danfo-ink: #3b2a00;
+  --green: #0f9d58;
+  --green-soft: #d7f5e3;
+  --coral: #ff5a4e;
+  --coral-soft: #ffe1dd;
+  --sky: #2e86ff;
+  --sky-soft: #dceaff;
+  --purple: #7b4dff;
+  --lagoon: #8fd3f4;
+  --ocean: #5bb8ec;
+  --land: #f6e3b4;
+  --land-2: #efd59a;
+  --road: #e9c97e;
+  --shadow: 0 5px 0 rgba(29, 21, 48, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg: #120d1f;
+    --bg-2: #1b1430;
+    --card: #211938;
+    --card-2: #2a2145;
+    --ink: #f6f0ff;
+    --ink-2: #cfc4e6;
+    --muted: #8f84a8;
+    --line: rgba(255, 255, 255, 0.1);
+    --green-soft: rgba(15, 157, 88, 0.22);
+    --coral-soft: rgba(255, 90, 78, 0.2);
+    --sky-soft: rgba(46, 134, 255, 0.22);
+    --lagoon: #1f4f7a;
+    --ocean: #173a5e;
+    --land: #2c2440;
+    --land-2: #362c4f;
+    --road: #4b3f6b;
+    --shadow: 0 5px 0 rgba(0, 0, 0, 0.35);
   }
 }
 
+:root[data-theme="dark"] {
+  --bg: #120d1f;
+  --bg-2: #1b1430;
+  --card: #211938;
+  --card-2: #2a2145;
+  --ink: #f6f0ff;
+  --ink-2: #cfc4e6;
+  --muted: #8f84a8;
+  --line: rgba(255, 255, 255, 0.1);
+  --green-soft: rgba(15, 157, 88, 0.22);
+  --coral-soft: rgba(255, 90, 78, 0.2);
+  --sky-soft: rgba(46, 134, 255, 0.22);
+  --lagoon: #1f4f7a;
+  --ocean: #173a5e;
+  --land: #2c2440;
+  --land-2: #362c4f;
+  --road: #4b3f6b;
+  --shadow: 0 5px 0 rgba(0, 0, 0, 0.35);
+}
+
+@theme inline {
+  --font-sans: var(--font-body);
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+/* ---------- Reusable game UI ----------
+   Declared with @utility so Tailwind orders them before single-purpose
+   utilities: `btn hidden sm:inline-flex` or `btn py-3` behave as expected. */
+@utility card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+}
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.15s;
+  box-shadow: var(--shadow);
+  border: 1.5px solid rgba(29, 21, 48, 0.12);
+  cursor: pointer;
+  user-select: none;
+  &:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 rgba(29, 21, 48, 0.12);
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+@utility btn-primary {
+  background: var(--danfo);
+  color: var(--danfo-ink);
+}
+@utility btn-green {
+  background: var(--green);
+  color: #fff;
+}
+@utility btn-coral {
+  background: var(--coral);
+  color: #fff;
+}
+@utility btn-ghost {
+  background: var(--card-2);
+  color: var(--ink);
+}
+@utility btn-sm {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--card-2);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+@utility chip-good {
+  background: var(--green-soft);
+  color: var(--green);
+}
+@utility chip-bad {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+@utility chip-info {
+  background: var(--sky-soft);
+  color: var(--sky);
+}
+
+@utility input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--card-2);
+  color: var(--ink);
+  padding: 10px 12px;
+  font-size: 16px;
+  outline: none;
+  &:focus {
+    border-color: var(--danfo);
+  }
+}
+
+@utility scroll-thin {
+  scrollbar-width: thin;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.anim-pop {
+  animation: pop 0.18s ease-out both;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-up {
+  animation: slide-up 0.22s ease-out both;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.anim-bob {
+  animation: bob 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+.pulse-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-bob,
+  .pulse-ring,
+  .anim-pop,
+  .anim-up {
+    animation: none;
+  }
 }
