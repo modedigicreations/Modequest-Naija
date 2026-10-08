@@ -144,3 +144,37 @@ describe("multi-city play", () => {
     expect(m.travel?.mode).toBe("bus");
   });
 });
+
+describe("save safety", () => {
+  it("rejects broken saves instead of loading them", () => {
+    const good = newGame(opts("abuja"));
+    expect(migrate(JSON.parse(JSON.stringify(good)))).not.toBeNull();
+    for (const breakIt of [
+      (s: Record<string, unknown>) => delete s.world,
+      (s: Record<string, unknown>) => (s.homeId = "nowhere"),
+      (s: Record<string, unknown>) => (s.city = "atlantis"),
+      (s: Record<string, unknown>) => (s.messages = null),
+      (s: Record<string, unknown>) => (s.cash = "lots"),
+    ]) {
+      const s = JSON.parse(JSON.stringify(good));
+      breakIt(s);
+      expect(migrate(s)).toBeNull();
+    }
+  });
+
+  it("can't move house mid-journey", () => {
+    let s = newGame(opts("lagos"));
+    s.cash = 500000;
+    const to = findKind("lagos", "market")!.id;
+    s = dispatch(s, { type: "travel", to, mode: "walk" }).state;
+    expect(s.travel).not.toBeNull();
+    expect(dispatch(s, { type: "moveHouse", homeId: "yaba_selfcon" }).error).toMatch(/Finish/);
+  });
+
+  it("won't send a gift from a frozen account", () => {
+    const s = newGame(opts("enugu"));
+    s.bank = 50000;
+    s.flags.bankFrozenUntil = s.time + 1000;
+    expect(dispatch(s, { type: "sendGift", to: "pal", amount: 1000 }).error).toMatch(/frozen/);
+  });
+});

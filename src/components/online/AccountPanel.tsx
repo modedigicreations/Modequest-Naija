@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CITIES } from "@/game/data/world";
+import { cleanRef, storedReferral } from "@/online/referral";
 import { useSession } from "@/online/session";
 
 type Tab = "signin" | "signup" | "student";
 
 export default function AccountPanel() {
   const { ready, enabled, user, profile, myClass, teacherName, signIn, signUpPlayer, signInStudent, signOut } = useSession();
-  const [tab, setTab] = useState<Tab>("student");
+  // Arrived from a friend's invite link? Start on sign-up with their code filled in.
+  const [ref, setRef] = useState(() => storedReferral());
+  const [tab, setTab] = useState<Tab>(() => (storedReferral() ? "signup" : "student"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
@@ -62,6 +65,7 @@ export default function AccountPanel() {
   return (
     <div className="card p-4">
       <div className="font-display font-bold mb-2">🌍 Play online</div>
+      {ref && tab === "signup" && <p className="text-xs rounded-xl bg-[var(--green-soft)] text-[var(--green-ink)] font-semibold px-3 py-2 mb-2">🎉 A friend invited you! Create your free account below.</p>}
       <div className="grid grid-cols-3 gap-1 mb-3 bg-[var(--card-2)] rounded-xl p-1">
         {([
           ["student", "Student"],
@@ -101,7 +105,7 @@ export default function AccountPanel() {
           className="grid gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            void run(() => signUpPlayer({ email, password, nickname, city }), "Account created! Check your email to confirm, then sign in.");
+            void run(() => signUpPlayer({ email, password, nickname, city, ref }), "Account created! Check your email to confirm, then sign in.");
           }}
         >
           <input className="input" placeholder="Public nickname (no real names)" value={nickname} onChange={(e) => setNickname(e.target.value.replace(/[^A-Za-z0-9_]/g, "").slice(0, 20))} />
@@ -114,6 +118,7 @@ export default function AccountPanel() {
               </option>
             ))}
           </select>
+          <input className="input uppercase" placeholder="Referral code (optional)" value={ref} onChange={(e) => setRef(cleanRef(e.target.value))} autoComplete="off" aria-label="Referral code (optional)" />
           <label className="flex items-start gap-2 text-xs text-[var(--ink-2)]">
             <input type="checkbox" checked={over13} onChange={(e) => setOver13(e.target.checked)} className="mt-0.5" />
             I am 13 or older. (Younger players: ask your teacher for a class login.)

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { LESSONS } from "@/game/data/lessons";
 import { getCity } from "@/game/data/world";
 import { formatNaira } from "@/game/util";
+import { cleanRef, storedReferral } from "@/online/referral";
 import { useSession } from "@/online/session";
 import {
   addStudents,
@@ -98,7 +99,7 @@ function Shell({ children, right }: { children: React.ReactNode; right?: React.R
 function TeacherAuth() {
   const { signIn, signUpTeacher } = useSession();
   const [mode, setMode] = useState<"signin" | "signup">("signup");
-  const [f, setF] = useState({ email: "", password: "", nickname: "", displayName: "", school: "" });
+  const [f, setF] = useState(() => ({ email: "", password: "", nickname: "", displayName: "", school: "", ref: storedReferral() }));
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
@@ -120,7 +121,7 @@ function TeacherAuth() {
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
-          const err = mode === "signin" ? await signIn(f.email, f.password) : await signUpTeacher({ email: f.email, password: f.password, nickname: f.nickname, displayName: f.displayName, school: f.school });
+          const err = mode === "signin" ? await signIn(f.email, f.password) : await signUpTeacher({ email: f.email, password: f.password, nickname: f.nickname, displayName: f.displayName, school: f.school, ref: f.ref });
           setBusy(false);
           setMsg(err ? { ok: false, text: err } : mode === "signup" ? { ok: true, text: "Account created! Confirm your email, then sign in." } : null);
         }}
@@ -137,6 +138,7 @@ function TeacherAuth() {
             <input className="input" placeholder="Your name as students see it (e.g. Mrs. Ibim)" value={f.displayName} onChange={set("displayName")} />
             <input className="input" placeholder="School (e.g. GGSS Rumueme, Port Harcourt)" value={f.school} onChange={set("school")} />
             <input className="input" placeholder="Nickname (letters, numbers, _)" value={f.nickname} onChange={(e) => setF({ ...f, nickname: e.target.value.replace(/[^A-Za-z0-9_]/g, "").slice(0, 20) })} />
+            <input className="input uppercase" placeholder="Referral code (optional)" value={f.ref} onChange={(e) => setF({ ...f, ref: cleanRef(e.target.value) })} autoComplete="off" aria-label="Referral code (optional)" />
           </>
         )}
         <input className="input" type="email" placeholder="School or personal email" value={f.email} onChange={set("email")} autoComplete="email" />
@@ -285,8 +287,12 @@ function ClassView({ cls, onChanged, onDeleted }: { cls: TClass; onChanged: () =
           className="text-xs text-[var(--coral)] underline"
           onClick={async () => {
             if (!confirm(`Delete ${cls.name}? All its student logins and their progress will be deleted too. This can't be undone.`)) return;
-            await deleteClass(cls.id);
-            onDeleted();
+            try {
+              await deleteClass(cls.id);
+              onDeleted();
+            } catch (e) {
+              alert(`Couldn't delete the class: ${(e as Error).message}`);
+            }
           }}
         >
           Delete class
@@ -544,8 +550,12 @@ function ChatTab({ cls, roster, onChanged }: { cls: TClass; roster: RosterRow[] 
               type="checkbox"
               checked={cls.chat_enabled}
               onChange={async (e) => {
-                await setChatEnabled(cls.id, e.target.checked);
-                onChanged();
+                try {
+                  await setChatEnabled(cls.id, e.target.checked);
+                  onChanged();
+                } catch (ex) {
+                  setErr((ex as Error).message);
+                }
               }}
             />
             Chat on

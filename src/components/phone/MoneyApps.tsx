@@ -53,7 +53,7 @@ export function BankApp() {
 
       <div className="card p-4">
         <SectionTitle>Move money</SectionTitle>
-        <AmountInput value={amt} onChange={setAmt} presets={[1000, 5000, 20000, Math.max(0, game.cash)]} />
+        <AmountInput value={amt} onChange={setAmt} presets={[...new Set([1000, 5000, 20000, Math.floor(game.cash)])].filter((p) => p > 0)} />
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button className="btn btn-green btn-sm" disabled={!n || frozen} onClick={() => dispatch({ type: "bankTransfer", direction: "deposit", amount: n }) && setAmt("")}>
             Deposit cash

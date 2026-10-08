@@ -6,6 +6,7 @@ import { LocalSaveAdapter } from "@/game/persistence";
 import { useGame } from "@/game/store";
 import { CloudSaveAdapter } from "./cloud";
 import { loadOnlineConfig, sb } from "./client";
+import { cleanRef, forgetReferral, REF_RE } from "./referral";
 import { NICKNAME_RE, studentEmail } from "./shared";
 
 export interface Profile {
@@ -38,14 +39,20 @@ interface Session {
 
   init(): Promise<void>;
   refresh(): Promise<void>;
-  signUpPlayer(o: { email: string; password: string; nickname: string; city: string }): Promise<string | null>;
-  signUpTeacher(o: { email: string; password: string; nickname: string; displayName: string; school: string }): Promise<string | null>;
+  signUpPlayer(o: { email: string; password: string; nickname: string; city: string; ref?: string }): Promise<string | null>;
+  signUpTeacher(o: { email: string; password: string; nickname: string; displayName: string; school: string; ref?: string }): Promise<string | null>;
   signIn(email: string, password: string): Promise<string | null>;
   signInStudent(classCode: string, username: string, pin: string): Promise<string | null>;
   signOut(): Promise<void>;
 }
 
 let started = false;
+
+/** Optional invite code sent with a sign-up (ignored by the server if unknown). */
+const referral = (ref?: string) => {
+  const code = cleanRef(ref ?? "");
+  return REF_RE.test(code) ? { ref: code } : {};
+};
 
 async function nicknameTaken(nickname: string) {
   const { count } = await sb()!.from("profiles").select("id", { count: "exact", head: true }).ilike("nickname", nickname);
@@ -100,8 +107,11 @@ export const useSession = create<Session>((set, get) => ({
       const next = session?.user ?? null;
       set({ user: next });
       if ((next?.id ?? null) !== prev) {
-        void get().refresh();
-        void switchSaves(next?.id ?? null);
+        // Supabase advises not to call its APIs inside this callback; defer.
+        setTimeout(() => {
+          void get().refresh();
+          void switchSaves(next?.id ?? null);
+        }, 0);
       }
       void event;
     });
@@ -134,16 +144,17 @@ export const useSession = create<Session>((set, get) => ({
     set({ profile: profile as Profile | null, myClass, teacherName, assignments });
   },
 
-  async signUpPlayer({ email, password, nickname, city }) {
+  async signUpPlayer({ email, password, nickname, city, ref }) {
     const client = sb();
     if (!client) return "Online play isn't available yet.";
     if (!NICKNAME_RE.test(nickname)) return "Nickname: 3–20 letters, numbers or _ only.";
     if (await nicknameTaken(nickname)) return "That nickname is taken.";
-    const { error } = await client.auth.signUp({ email, password, options: { data: { role: "player", nickname, city } } });
+    const { error } = await client.auth.signUp({ email, password, options: { data: { role: "player", nickname, city, ...referral(ref) } } });
+    if (!error) forgetReferral();
     return error?.message ?? null;
   },
 
-  async signUpTeacher({ email, password, nickname, displayName, school }) {
+  async signUpTeacher({ email, password, nickname, displayName, school, ref }) {
     const client = sb();
     if (!client) return "Online play isn't available yet.";
     if (!NICKNAME_RE.test(nickname)) return "Nickname: 3–20 letters, numbers or _ only.";
@@ -151,8 +162,9 @@ export const useSession = create<Session>((set, get) => ({
     const { error } = await client.auth.signUp({
       email,
       password,
-      options: { data: { role: "teacher", nickname, display_name: displayName, school } },
+      options: { data: { role: "teacher", nickname, display_name: displayName, school, ...referral(ref) } },
     });
+    if (!error) forgetReferral();
     return error?.message ?? null;
   },
 

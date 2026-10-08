@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { WORK_STYLES, getCareer } from "@/game/data/economy";
-import { LESSONS } from "@/game/data/lessons";
+import { LESSONS, seededRandom, shuffleOptions } from "@/game/data/lessons";
 import { useGame } from "@/game/store";
 import type { WorkStyle } from "@/game/types";
 import { Modal } from "./ui";
@@ -22,7 +22,9 @@ export default function ShiftModal({ onClose }: { onClose: () => void }) {
   // A quick on-the-job task: a question from the Academy for a +15% bonus.
   const task = useMemo(() => {
     const qs = LESSONS.flatMap((l) => l.questions ?? []);
-    return qs[(game.time + game.stats.shiftsWorked * 7) % qs.length];
+    const seed = game.time + game.stats.shiftsWorked * 7;
+    // Shuffle the options too, so the right answer isn't always in the same spot.
+    return shuffleOptions(qs[seed % qs.length], seededRandom(seed));
   }, [game.time, game.stats.shiftsWorked]);
 
   const career = getCareer(game.career!.careerId)!;

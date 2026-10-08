@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useGame } from "@/game/store";
+import { captureReferral } from "@/online/referral";
 import { useSession } from "@/online/session";
 import CharacterCreator from "./CharacterCreator";
 import GameScreen from "./GameScreen";
@@ -16,6 +17,7 @@ export default function GameRoot() {
   const initSession = useSession((s) => s.init);
 
   useEffect(() => {
+    captureReferral();
     void init().then(() => initSession());
   }, [init, initSession]);
 

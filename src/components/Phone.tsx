@@ -11,10 +11,11 @@ import SettingsApp from "./phone/Settings";
 import { ClassApp, OnlineApp } from "./phone/OnlineApps";
 import { StoreApp, StyleApp } from "./phone/StoreApps";
 import TravelApp from "./phone/TravelApp";
+import ShareCard from "./share/ShareCard";
 import { useShop } from "@/shop/client";
 import { useSession } from "@/online/session";
 
-export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class" | "store" | "style" | "travel";
+export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class" | "store" | "style" | "travel" | "share";
 
 const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "messages", name: "Messages", emoji: "💬", color: "#0f9d58" },
@@ -30,6 +31,7 @@ const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "contacts", name: "Padis", emoji: "🤝🏾", color: "#65a30d" },
   { id: "travel", name: "Travel", emoji: "🧳", color: "#0d9488" },
   { id: "style", name: "Style", emoji: "👕", color: "#ec4899" },
+  { id: "share", name: "Invite", emoji: "📣", color: "#1447e6" },
   { id: "settings", name: "Settings", emoji: "⚙️", color: "#64748b" },
 ];
 
@@ -136,6 +138,7 @@ export default function Phone({ app, setApp, docked = false }: { app: AppId | "h
           {app === "store" && <StoreApp />}
           {app === "style" && <StyleApp />}
           {app === "travel" && <TravelApp onBooked={() => setApp(null)} />}
+          {app === "share" && <ShareCard />}
         </div>
       </div>
   );

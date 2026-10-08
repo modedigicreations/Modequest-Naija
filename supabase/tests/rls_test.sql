@@ -208,5 +208,35 @@ set local role anon;
 select pg_temp.fails($$select * from leaderboard('net_worth')$$, 'signed-out visitors cannot read leaderboards');
 commit;
 
+-- Referrals -------------------------------------------------------------------
+select pg_temp.ok((select count(*) from profiles where referral_code ~ '^[A-Z0-9]{7}$') = 7, 'every profile has a referral code');
+select set_config('test.code', (select referral_code from profiles where nickname = 'LagosBoss'), false);
+select set_config('test.tcode', (select referral_code from profiles where nickname = 'SwiftDanfo42'), false);
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('88888888-8888-8888-8888-888888888888', 'p3@mail.com', jsonb_build_object('role', 'player', 'nickname', 'NewPal', 'ref', lower(current_setting('test.code')))),
+  ('99999999-9999-9999-9999-999999999999', 'p4@mail.com', '{"role":"player","nickname":"NoCodePal","ref":"NOPE!!"}'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'p5@mail.com', jsonb_build_object('role', 'player', 'nickname', 'StudentRef', 'ref', current_setting('test.tcode')));
+select pg_temp.ok((select referrer_id from referrals where referred_id = '88888888-8888-8888-8888-888888888888') = '55555555-5555-5555-5555-555555555555', 'sign-up with a code (any case) is recorded');
+select pg_temp.ok(exists (select 1 from profiles where nickname = 'NoCodePal'), 'a bad code never blocks sign-up');
+select pg_temp.ok(not exists (select 1 from referrals where referred_id in ('99999999-9999-9999-9999-999999999999', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')), 'bad codes and class accounts are not referrers');
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-5555-5555-555555555555', true);
+select pg_temp.ok((select invited from my_referral_stats()) = 1, 'inviter sees their count');
+select pg_temp.fails($$insert into referrals (referred_id, referrer_id) values ('66666666-6666-6666-6666-666666666666', '55555555-5555-5555-5555-555555555555')$$, 'players cannot fake referrals');
+select pg_temp.fails($$update profiles set referral_code = 'VANITY1' where id = '55555555-5555-5555-5555-555555555555'$$, 'players cannot change their code');
+commit;
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', true);
+select pg_temp.ok((select count(*) from referrals) = 0, 'others cannot see someone else''s referrals');
+commit;
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select pg_temp.ok((select count(*) from my_referral_stats()) = 0, 'class accounts get no referral code to share');
+commit;
+
 \o
 \echo 'ALL RLS TESTS PASSED'

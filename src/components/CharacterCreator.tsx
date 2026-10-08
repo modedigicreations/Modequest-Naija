@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BACKGROUNDS, DREAMS, TRAITS } from "@/game/data/economy";
 import { CITIES, cityHome, getCity } from "@/game/data/world";
 import { useGame } from "@/game/store";
+import { useSession } from "@/online/session";
 import type { Appearance, Player } from "@/game/types";
 import { formatNaira } from "@/game/util";
 import Avatar, { ACCESSORIES, HAIR_COLORS, HAIR_STYLES, OUTFITS, SKIN_TONES } from "./Avatar";
@@ -52,7 +53,8 @@ function Pills({ items, value, onChange, label }: { items: string[]; value: numb
 export default function CharacterCreator() {
   const { startNew, setScreen } = useGame();
   const [step, setStep] = useState(0);
-  const [city, setCity] = useState("lagos");
+  const homeCity = useSession((s) => s.profile?.city);
+  const [city, setCity] = useState(() => (homeCity && CITIES.some((c) => c.id === homeCity) ? homeCity : "lagos"));
   const [name, setName] = useState("");
   const [pronoun, setPronoun] = useState<Player["pronoun"]>("they");
   const [a, setA] = useState<Appearance>({ skin: 1, hair: 1, hairColor: 0, outfit: 0, accessory: 0 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { dispatch as engineDispatch } from "@/game/engine";
 import { useGame } from "@/game/store";
 import { sb } from "./client";
 
@@ -26,10 +27,14 @@ export async function sendGift(nickname: string, amount: number, note?: string):
   const client = sb();
   const game = useGame.getState();
   if (!client || !game.game) return "You're offline.";
-  if (game.game.bank < amount) return "Gifts are sent from your bank balance.";
+  // Dry run in the engine first (bank balance, frozen account), so the server
+  // never records a gift the game would then refuse to deduct.
+  const check = engineDispatch(game.game, { type: "sendGift", to: nickname, amount });
+  if (check.error) return check.error;
   const { error } = await client.rpc("send_gift", { to_nickname: nickname, amount, note: note ?? null });
   if (error) return error.message;
-  game.dispatch({ type: "sendGift", to: nickname, amount });
+  if (!useGame.getState().dispatch({ type: "sendGift", to: nickname, amount })) return "Gift sent, but your balance changed — check your bank.";
+  await useGame.getState().flushSave();
   return null;
 }
 
@@ -41,8 +46,9 @@ export async function claimGifts(): Promise<number> {
   const { data, error } = await client.rpc("claim_gifts");
   if (error || !data) return 0;
   for (const g of data as { amount: number; from_nickname: string; note: string | null }[]) {
-    game.dispatch({ type: "receiveGift", from: g.from_nickname, amount: g.amount, note: g.note ?? undefined });
+    useGame.getState().dispatch({ type: "receiveGift", from: g.from_nickname, amount: g.amount, note: g.note ?? undefined });
   }
+  if (data.length) await useGame.getState().flushSave();
   return data.length;
 }
 

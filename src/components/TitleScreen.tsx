@@ -9,6 +9,7 @@ import { useGame } from "@/game/store";
 import { dayOf, formatNaira } from "@/game/util";
 import Avatar from "./Avatar";
 import AccountPanel from "./online/AccountPanel";
+import ShareCard from "./share/ShareCard";
 import { Modal } from "./ui";
 
 const FEATURES = [
@@ -21,7 +22,8 @@ const FEATURES = [
 ];
 
 export default function TitleScreen() {
-  const { game, hasSave, setScreen, load, showFlash, flash, dispatch, flushSave } = useGame();
+  const { game, hasSave, setScreen, load, dispatch, flushSave } = useGame();
+  const [importErr, setImportErr] = useState<string | null>(null);
   const user = useSession((s) => s.user);
   const [moving, setMoving] = useState(false);
 
@@ -34,6 +36,7 @@ export default function TitleScreen() {
     if (user) await sb()?.from("profiles").update({ city: cityId }).eq("id", user.id);
   };
   const [importOpen, setImportOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [code, setCode] = useState("");
 
   return (
@@ -76,9 +79,14 @@ export default function TitleScreen() {
                 ✨ New life
               </button>
             </div>
-            <button className="mt-3 text-sm font-semibold text-[var(--muted)] underline" onClick={() => setImportOpen(true)}>
-              Import a save code
-            </button>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <button className="text-sm font-bold text-[var(--brand)]" onClick={() => setShareOpen(true)}>
+                📣 Invite friends
+              </button>
+              <button className="text-sm font-semibold text-[var(--muted)] underline" onClick={() => setImportOpen(true)}>
+                Import a save code
+              </button>
+            </div>
             <div className="mt-6 max-w-md">
               <AccountPanel />
             </div>
@@ -131,11 +139,18 @@ export default function TitleScreen() {
         </p>
       </div>
 
+      <Modal open={shareOpen} onClose={() => setShareOpen(false)} label="Invite friends">
+        <ShareCard />
+        <button className="btn btn-ghost w-full mt-3" onClick={() => setShareOpen(false)}>
+          Close
+        </button>
+      </Modal>
+
       <Modal open={importOpen} onClose={() => setImportOpen(false)} label="Import save">
         <h2 className="font-display text-xl font-bold mb-2">Import save</h2>
         <p className="text-sm text-[var(--ink-2)] mb-3">Paste a save code from Settings → Export on another device.</p>
         <textarea className="input h-32 font-mono text-xs" value={code} onChange={(e) => setCode(e.target.value)} />
-        {flash && <p className="text-sm text-[var(--coral)] mt-2">{flash.text}</p>}
+        {importErr && <p className="text-sm text-[var(--coral)] mt-2">{importErr}</p>}
         <div className="flex gap-2 mt-3">
           <button className="btn btn-ghost flex-1" onClick={() => setImportOpen(false)}>
             Cancel
@@ -144,7 +159,10 @@ export default function TitleScreen() {
             className="btn btn-primary flex-1"
             onClick={() => {
               const s = importSave(code);
-              if (!s) return showFlash("That code doesn't look like a valid save.");
+              if (!s) return setImportErr("That code doesn't look like a valid save.");
+              if (hasSave && !confirm("Replace your current life with this save?")) return;
+              setImportErr(null);
+              setImportOpen(false);
               load(s);
             }}
           >

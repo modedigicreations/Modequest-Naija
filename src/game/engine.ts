@@ -1187,7 +1187,7 @@ function apply(s: GameState, cmd: Command): string | void {
       if (h.id === s.homeId) return "You already live here.";
       if (h.studentOnly && !s.flags.student) return "Students only.";
       if (h.city !== s.city) return `Travel to ${getCity(h.city).name} to rent there.`;
-      if (s.activity) return "Finish what you're doing first.";
+      if (isBusy(s)) return "Finish what you're doing first.";
       const upfront = price(s, h.weeklyRent, false) * h.moveInWeeks;
       if (!charge(s, upfront, `Move-in: ${h.name}`)) return `Need ${formatNaira(upfront)} upfront (rent + agency & caution fees).`;
       s.homeId = h.id;
@@ -1414,12 +1414,32 @@ export function migrate(raw: unknown): GameState | null {
   const s = raw as GameState;
   if (typeof s.version !== "number" || !s.player || !s.needs) return null;
   if (s.version > SAVE_VERSION) return null;
+  // Reject broken or hand-edited saves instead of crashing on every load.
+  const isObj = (v: unknown) => !!v && typeof v === "object";
+  if (
+    typeof s.time !== "number" ||
+    typeof s.cash !== "number" ||
+    typeof s.bank !== "number" ||
+    !isObj(s.skills) ||
+    !isObj(s.world) ||
+    !isObj(s.stats) ||
+    !isObj(s.flags) ||
+    !isObj(s.lessons) ||
+    !Array.isArray(s.messages) ||
+    !Array.isArray(s.log) ||
+    !Array.isArray(s.items) ||
+    !HOMES.some((h) => h.id === s.homeId)
+  ) {
+    return null;
+  }
   if (s.version < 2) {
     // v2: multiple cities. All v1 saves were in Lagos; "danfo" became "bus".
     s.city = "lagos";
     if (s.travel && (s.travel.mode as string) === "danfo") s.travel.mode = "bus";
     s.version = 2;
   }
+  if (!CITIES.some((c) => c.id === s.city)) return null;
+  if (s.location !== "home" && !getLocation(s.location)) s.location = "home";
   return s;
 }
 

@@ -120,7 +120,7 @@ export function HomesApp() {
   const dispatch = useGame((s) => s.dispatch);
   return (
     <div className="space-y-2">
-      <p className="text-xs text-[var(--ink-2)] px-1">Moving costs {4} weeks upfront (2 weeks rent + agency & caution fees). Better areas get more hours of NEPA light.</p>
+      <p className="text-xs text-[var(--ink-2)] px-1">Moving in costs several weeks&apos; rent upfront (rent plus agency &amp; caution fees) — the button shows the total. Better areas get more hours of NEPA light.</p>
       <p className="text-xs font-bold px-1">
         {getCity(game.city).emoji} Homes in {getCity(game.city).name}
         {HOMES.find((h) => h.id === game.homeId)?.city !== game.city ? ` · you live in ${getCity(HOMES.find((h) => h.id === game.homeId)!.city).name}` : ""}
@@ -179,7 +179,7 @@ export function SkillsApp() {
       </div>
       <div className="card p-4">
         <SectionTitle>📜 Certificates</SectionTitle>
-        {game.certificates.length === 0 && <Empty>None yet. Take courses at Yaba Tech Hub, UNILAG or the National Theatre.</Empty>}
+        {game.certificates.length === 0 && <Empty>None yet. Take courses at a tech hub, university or theatre in your city.</Empty>}
         {game.certificates.map((c) => (
           <div key={c} className="chip chip-good mr-1.5 mb-1.5">
             🎓 {CERTIFICATES[c]}

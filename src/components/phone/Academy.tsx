@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { LESSONS, type Lesson } from "@/game/data/lessons";
+import { LESSONS, buildQuiz, buildSort, type Lesson } from "@/game/data/lessons";
 import { type Cmd, type Frame, type Step, getPuzzle, parsePuzzle, runProgram } from "@/game/puzzles";
 import { useGame } from "@/game/store";
 import { useSession } from "@/online/session";
@@ -123,7 +123,7 @@ function LessonPlayer({ lesson, onExit }: { lesson: Lesson; onExit: () => void }
 }
 
 function Quiz({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => void }) {
-  const qs = lesson.questions!;
+  const [qs] = useState(() => buildQuiz(lesson));
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [correct, setCorrect] = useState(0);
@@ -178,7 +178,8 @@ function Quiz({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => v
 }
 
 function Sorter({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => void }) {
-  const { buckets, cards } = lesson.sort!;
+  const { buckets } = lesson.sort!;
+  const [cards] = useState(() => buildSort(lesson));
   const [i, setI] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [correct, setCorrect] = useState(0);

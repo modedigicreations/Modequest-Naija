@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { activitiesHere, intercityQuote, isOpen, kindsHere, placeOf, shiftStatus, workplaceFor } from "@/game/engine";
-import { getCareer } from "@/game/data/economy";
+import { getCareer, getItem } from "@/game/data/economy";
 import { localActivity } from "@/game/data/activities";
 import { INTERACTIONS, type InteractionId, npcsAt } from "@/game/data/people";
 import { CITIES, getCity, getLocation, transportIn } from "@/game/data/world";
@@ -84,7 +84,7 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
             </span>
             {game.items.map((i) => (
               <span key={i} className="chip chip-info">
-                {i.replace("_", " ")}
+                {getItem(i)?.emoji} {getItem(i)?.name ?? i.replace(/_/g, " ")}
               </span>
             ))}
           </div>
@@ -108,7 +108,7 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
               <button className="btn btn-green" onClick={() => setShiftOpen(true)}>
                 Start shift
               </button>
-            ) : game.location !== career.workplace && shift.workday && !shift.reason.includes("Already") && !shift.reason.includes("missed") ? (
+            ) : game.location !== workplace?.id && shift.workday && !shift.reason.includes("Already") && !shift.reason.includes("missed") ? (
               <button className="btn btn-ghost btn-sm" onClick={onOpenMap}>
                 Go to work
               </button>
