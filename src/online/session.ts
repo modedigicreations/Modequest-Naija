@@ -5,7 +5,7 @@ import { create } from "zustand";
 import { LocalSaveAdapter } from "@/game/persistence";
 import { useGame } from "@/game/store";
 import { CloudSaveAdapter } from "./cloud";
-import { onlineEnabled, sb } from "./client";
+import { loadOnlineConfig, sb } from "./client";
 import { NICKNAME_RE, studentEmail } from "./shared";
 
 export interface Profile {
@@ -28,6 +28,8 @@ export interface ClassInfo {
 
 interface Session {
   ready: boolean;
+  /** Online play available (Supabase configured). Known once ready. */
+  enabled: boolean;
   user: User | null;
   profile: Profile | null;
   myClass: ClassInfo | null;
@@ -69,7 +71,8 @@ async function switchSaves(uid: string | null) {
 }
 
 export const useSession = create<Session>((set, get) => ({
-  ready: !onlineEnabled,
+  ready: false,
+  enabled: false,
   user: null,
   profile: null,
   myClass: null,
@@ -77,12 +80,15 @@ export const useSession = create<Session>((set, get) => ({
   assignments: [],
 
   async init() {
+    if (started) return;
+    started = true;
+    const enabled = await loadOnlineConfig();
     const client = sb();
-    if (!client || started) {
-      set({ ready: true });
+    if (!enabled || !client) {
+      set({ ready: true, enabled: false });
       return;
     }
-    started = true;
+    set({ enabled: true });
     const { data } = await client.auth.getSession();
     set({ user: data.session?.user ?? null });
     await get().refresh();

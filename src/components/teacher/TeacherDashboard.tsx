@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { LESSONS } from "@/game/data/lessons";
 import { getCity } from "@/game/data/world";
 import { formatNaira } from "@/game/util";
-import { onlineEnabled } from "@/online/client";
 import { useSession } from "@/online/session";
 import {
   addStudents,
@@ -43,13 +42,14 @@ function timeAgo(iso?: string | null) {
 }
 
 export default function TeacherDashboard() {
-  const { ready, user, profile, init, signOut } = useSession();
+  const { ready, enabled, user, profile, init, signOut } = useSession();
 
   useEffect(() => {
     void init();
   }, [init]);
 
-  if (!onlineEnabled) {
+  if (!ready) return <Shell><Empty>Loading…</Empty></Shell>;
+  if (!enabled) {
     return (
       <Shell>
         <div className="card p-6 max-w-lg">
@@ -59,7 +59,6 @@ export default function TeacherDashboard() {
       </Shell>
     );
   }
-  if (!ready) return <Shell><Empty>Loading…</Empty></Shell>;
   if (!user || !profile) return <Shell><TeacherAuth /></Shell>;
   if (profile.role !== "teacher") {
     return (

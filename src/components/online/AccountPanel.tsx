@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CITIES } from "@/game/data/world";
-import { onlineEnabled } from "@/online/client";
 import { useSession } from "@/online/session";
 
 type Tab = "signin" | "signup" | "student";
 
 export default function AccountPanel() {
-  const { ready, user, profile, myClass, teacherName, signIn, signUpPlayer, signInStudent, signOut } = useSession();
+  const { ready, enabled, user, profile, myClass, teacherName, signIn, signUpPlayer, signInStudent, signOut } = useSession();
   const [tab, setTab] = useState<Tab>("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,8 +21,8 @@ export default function AccountPanel() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  if (!onlineEnabled) return null;
   if (!ready) return <div className="card p-4 text-sm text-[var(--muted)]">Connecting…</div>;
+  if (!enabled) return null;
 
   if (user && profile) {
     return (
