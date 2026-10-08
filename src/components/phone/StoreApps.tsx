@@ -73,7 +73,7 @@ export function StoreApp() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,#7b4dff,#ff5a4e)" }}>
+      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,var(--brand-dark),var(--brand))" }}>
         <div className="font-display text-2xl font-extrabold">ModeQuest Store</div>
         <div className="text-sm opacity-90">Real money, paid securely with Paystack (card, transfer or USSD).</div>
         {supporterUntil && <div className="mt-2 text-xs font-bold bg-black/20 rounded-lg px-2 py-1 w-fit">⭐ Supporter until {new Date(supporterUntil).toLocaleDateString()}</div>}

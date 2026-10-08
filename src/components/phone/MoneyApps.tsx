@@ -41,7 +41,7 @@ export function BankApp() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,#2e86ff,#7b4dff)" }}>
+      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,var(--brand-dark),var(--brand))" }}>
         <div className="text-xs opacity-80">Marina Bank · Savings</div>
         <div className="font-display text-3xl font-extrabold mt-1">{formatNaira(game.bank)}</div>
         <div className="flex justify-between text-xs mt-3 opacity-90">

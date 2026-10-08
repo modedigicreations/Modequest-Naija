@@ -20,7 +20,7 @@ export default function Academy() {
   const passed = LESSONS.filter((l) => (game.lessons[l.id] ?? 0) >= 60).length;
   return (
     <div className="space-y-3">
-      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,#ff5a4e,#ff9f1c)" }}>
+      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,var(--brand),#2f6ea8)" }}>
         <div className="font-display text-2xl font-extrabold">Mode Academy</div>
         <div className="text-sm opacity-90">Pass lessons to earn grants & skills. Time pauses while you learn.</div>
         <div className="h-2.5 rounded-full bg-white/25 mt-3 overflow-hidden">

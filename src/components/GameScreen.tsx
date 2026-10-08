@@ -23,6 +23,15 @@ export default function GameScreen() {
   const unread = game?.messages.filter((m) => !m.read || (m.choices && !m.resolved)).length ?? 0;
 
   const openPhone = useCallback((app: AppId | "home" = "home") => setPhoneApp(app), []);
+  // Desktop: the phone docks into the right panel instead of covering the HUD.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const fn = () => setWide(mq.matches);
+    fn();
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, []);
   const online = useSession((s) => !!s.profile);
 
   usePresenceSync();
@@ -72,7 +81,7 @@ export default function GameScreen() {
           <CityMap active={tab === "map"} onArrivePlan={() => setTab("here")} />
         </section>
         <section className={`${tab === "here" ? "flex" : "hidden"} lg:flex min-h-0 flex-col lg:border-l border-[var(--line)] bg-[var(--bg)]`}>
-          <PlacePanel onOpenMap={() => setTab("map")} onOpenPhone={openPhone} />
+          {wide && phoneApp ? <Phone docked app={phoneApp} setApp={setPhoneApp} /> : <PlacePanel onOpenMap={() => setTab("map")} onOpenPhone={openPhone} />}
         </section>
       </main>
 
@@ -92,7 +101,7 @@ export default function GameScreen() {
         </button>
       </nav>
 
-      <Phone app={phoneApp} setApp={setPhoneApp} />
+      {!wide && <Phone app={phoneApp} setApp={setPhoneApp} />}
       <EventModal />
       <Toasts />
     </div>

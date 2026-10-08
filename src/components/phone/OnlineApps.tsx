@@ -158,7 +158,7 @@ export function ClassApp({ onOpenLesson }: { onOpenLesson: () => void }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,#0f9d58,#2e86ff)" }}>
+      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,var(--brand),#2f6ea8)" }}>
         <div className="text-xs opacity-80">{myClass.school ?? "My class"}</div>
         <div className="font-display text-2xl font-extrabold">{myClass.name}</div>
         {teacherName && <div className="text-sm opacity-90">👩🏾‍🏫 {teacherName}</div>}

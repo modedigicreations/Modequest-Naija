@@ -203,14 +203,14 @@ export function GoalsApp() {
   const dp = dreamProgress(game);
   return (
     <div className="space-y-3">
-      <div className="rounded-3xl p-5" style={{ background: "linear-gradient(135deg,var(--danfo),#ff9f1c)", color: "#2b1d00" }}>
+      <div className="rounded-3xl p-5" style={{ background: "linear-gradient(135deg,var(--danfo),#d48f00)", color: "#12304d" }}>
         <div className="text-xs font-bold opacity-75">LIFETIME DREAM</div>
         <div className="font-display text-2xl font-extrabold">
           {dream.emoji} {dream.name}
         </div>
         <div className="text-sm mt-1">{dream.blurb}</div>
         <div className="h-3 rounded-full bg-black/15 mt-3 overflow-hidden">
-          <div className="h-full bg-[#1d1530] rounded-full" style={{ width: `${dp.progress * 100}%` }} />
+          <div className="h-full bg-[#12304d] rounded-full" style={{ width: `${dp.progress * 100}%` }} />
         </div>
         <div className="text-xs mt-2 font-semibold">{dp.done ? "🌟 ACHIEVED! You're a Naija legend." : dp.detail}</div>
       </div>

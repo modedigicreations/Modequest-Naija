@@ -1,71 +1,81 @@
 @import "tailwindcss";
 
-/* ModeQuest: Naija — warm palette: danfo yellow, Naija green, lagoon blue. */
+/* ModeQuest: Naija — Mode Digital Creations brand palette. */
 :root {
-  --bg: #fff7e8;
-  --bg-2: #fdecc8;
+  /* Mode Digital Creations brand: navy (#1F4E79) with gold highlights. */
+  --brand: #1f4e79;
+  --brand-dark: #12304d;
+  --brand-soft: #dce7f2;
+  --bg: #f3f6fa;
+  --bg-2: #e3ecf5;
   --card: #ffffff;
-  --card-2: #fbf4e6;
-  --ink: #1d1530;
-  --ink-2: #4a4060;
-  --muted: #8a8099;
-  --line: rgba(29, 21, 48, 0.1);
-  --danfo: #ffc629;
-  --danfo-ink: #3b2a00;
+  --card-2: #eef3f8;
+  --ink: #12304d;
+  --ink-2: #3d5a78;
+  --muted: #7b8da3;
+  --line: rgba(18, 48, 77, 0.12);
+  --danfo: #f2a900;
+  --danfo-ink: #2a1d00;
   --green: #0f9d58;
   --green-soft: #d7f5e3;
-  --coral: #ff5a4e;
-  --coral-soft: #ffe1dd;
-  --sky: #2e86ff;
-  --sky-soft: #dceaff;
-  --purple: #7b4dff;
-  --lagoon: #8fd3f4;
-  --ocean: #5bb8ec;
-  --land: #f6e3b4;
-  --land-2: #efd59a;
-  --road: #e9c97e;
-  --shadow: 0 5px 0 rgba(29, 21, 48, 0.12);
+  --coral: #e5484d;
+  --coral-soft: #fde2e3;
+  --sky: #2f6ea8;
+  --sky-soft: #dce7f2;
+  --purple: #6d5bd0;
+  --lagoon: #9cc7e8;
+  --ocean: #5f9fd3;
+  --land: #f2ecdd;
+  --land-2: #e4d8bb;
+  --road: #d9c9a3;
+  --shadow: 0 5px 0 rgba(18, 48, 77, 0.14);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #120d1f;
-    --bg-2: #1b1430;
-    --card: #211938;
-    --card-2: #2a2145;
-    --ink: #f6f0ff;
-    --ink-2: #cfc4e6;
-    --muted: #8f84a8;
+    --brand: #4d8bc7;
+    --brand-dark: #0b1a2b;
+    --brand-soft: rgba(77, 139, 199, 0.2);
+    --bg: #0b1a2b;
+    --bg-2: #12263d;
+    --card: #12263d;
+    --card-2: #183150;
+    --ink: #eaf2fb;
+    --ink-2: #c3d4e6;
+    --muted: #8aa1ba;
     --line: rgba(255, 255, 255, 0.1);
     --green-soft: rgba(15, 157, 88, 0.22);
-    --coral-soft: rgba(255, 90, 78, 0.2);
-    --sky-soft: rgba(46, 134, 255, 0.22);
+    --coral-soft: rgba(229, 72, 77, 0.22);
+    --sky-soft: rgba(77, 139, 199, 0.22);
     --lagoon: #1f4f7a;
     --ocean: #173a5e;
-    --land: #2c2440;
-    --land-2: #362c4f;
-    --road: #4b3f6b;
+    --land: #1c2f45;
+    --land-2: #243b56;
+    --road: #35506f;
     --shadow: 0 5px 0 rgba(0, 0, 0, 0.35);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #120d1f;
-  --bg-2: #1b1430;
-  --card: #211938;
-  --card-2: #2a2145;
-  --ink: #f6f0ff;
-  --ink-2: #cfc4e6;
-  --muted: #8f84a8;
+  --brand: #4d8bc7;
+  --brand-dark: #0b1a2b;
+  --brand-soft: rgba(77, 139, 199, 0.2);
+  --bg: #0b1a2b;
+  --bg-2: #12263d;
+  --card: #12263d;
+  --card-2: #183150;
+  --ink: #eaf2fb;
+  --ink-2: #c3d4e6;
+  --muted: #8aa1ba;
   --line: rgba(255, 255, 255, 0.1);
   --green-soft: rgba(15, 157, 88, 0.22);
-  --coral-soft: rgba(255, 90, 78, 0.2);
-  --sky-soft: rgba(46, 134, 255, 0.22);
+  --coral-soft: rgba(229, 72, 77, 0.22);
+  --sky-soft: rgba(77, 139, 199, 0.22);
   --lagoon: #1f4f7a;
   --ocean: #173a5e;
-  --land: #2c2440;
-  --land-2: #362c4f;
-  --road: #4b3f6b;
+  --land: #1c2f45;
+  --land-2: #243b56;
+  --road: #35506f;
   --shadow: 0 5px 0 rgba(0, 0, 0, 0.35);
 }
 
@@ -124,6 +134,11 @@ body {
 }
 
 @utility btn-primary {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+@utility btn-gold {
   background: var(--danfo);
   color: var(--danfo-ink);
 }

@@ -40,11 +40,11 @@ export default function TitleScreen() {
     <main className="min-h-dvh relative overflow-hidden">
       <div
         className="absolute inset-0 -z-10"
-        style={{ background: "radial-gradient(1200px 500px at 50% -10%, var(--danfo) 0%, transparent 60%), var(--bg)" }}
+        style={{ background: "radial-gradient(1200px 520px at 50% -12%, var(--brand-soft) 0%, transparent 62%), var(--bg)" }}
       />
       <div className="max-w-5xl mx-auto px-4 pt-10 pb-16">
         <div className="flex items-center gap-2 text-sm font-bold text-[var(--ink-2)]">
-          <span className="w-8 h-8 rounded-xl grid place-items-center bg-[var(--ink)] text-[var(--bg)] font-display">M</span>
+          <span className="w-8 h-8 rounded-xl grid place-items-center bg-[var(--brand)] text-[var(--danfo)] font-display">M</span>
           Mode Digital Creations
         </div>
 
@@ -54,7 +54,7 @@ export default function TitleScreen() {
             <h1 className="font-display font-extrabold text-[44px] sm:text-[64px] leading-[0.95] tracking-tight">
               ModeQuest:
               <br />
-              <span className="inline-block bg-[var(--ink)] text-[var(--danfo)] px-3 rounded-2xl mt-2 -rotate-1">Naija</span>
+              <span className="inline-block bg-[#12304d] text-[var(--danfo)] px-3 rounded-2xl mt-2 -rotate-1">Naija</span>
             </h1>
             <p className="mt-5 text-lg text-[var(--ink-2)] max-w-md">
               Live your Naija story. Hustle, learn, dodge scams, beat NEPA and build your empire — from Lagos to Abuja, Port Harcourt to Enugu.

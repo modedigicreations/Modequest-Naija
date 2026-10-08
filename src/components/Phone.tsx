@@ -23,7 +23,7 @@ const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "academy", name: "Academy", emoji: "🎓", color: "#ff5a4e" },
   { id: "invest", name: "Invest", emoji: "📈", color: "#14b8a6" },
   { id: "business", name: "Business", emoji: "🏪", color: "#f97316" },
-  { id: "shop", name: "Shop", emoji: "🛒", color: "#ffc629" },
+  { id: "shop", name: "Shop", emoji: "🛒", color: "#f2a900" },
   { id: "homes", name: "Homes", emoji: "🏠", color: "#a16207" },
   { id: "skills", name: "Skills", emoji: "📘", color: "#0ea5e9" },
   { id: "goals", name: "Goals", emoji: "🌟", color: "#db2777" },
@@ -39,7 +39,11 @@ const ONLINE_APPS: { id: AppId; name: string; emoji: string; color: string; stud
   { id: "store", name: "Store", emoji: "🛍️", color: "#7b4dff", noStudents: true },
 ];
 
-export default function Phone({ app, setApp }: { app: AppId | "home" | null; setApp: (a: AppId | "home" | null) => void }) {
+/**
+ * The in-game phone. On desktop it docks into the right-hand panel (so it
+ * never covers the top bar or map); on phones/tablets it's a full-screen sheet.
+ */
+export default function Phone({ app, setApp, docked = false }: { app: AppId | "home" | null; setApp: (a: AppId | "home" | null) => void; docked?: boolean }) {
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
   const profile = useSession((s) => s.profile);
@@ -66,11 +70,14 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
   const unread = game.messages.filter((m) => !m.read || (m.choices && !m.resolved)).length;
   const current = apps.find((a) => a.id === app);
 
-  return (
-    <div className="fixed inset-0 z-40 bg-black/40 lg:bg-transparent lg:pointer-events-none" onClick={() => setApp(null)}>
+  const frame = (
       <div
-        className="pointer-events-auto absolute inset-0 lg:inset-auto lg:right-6 lg:bottom-6 lg:w-[400px] lg:h-[min(780px,calc(100dvh-48px))] lg:rounded-[40px] lg:border-[10px] lg:border-[#1d1530] bg-[var(--bg)] flex flex-col overflow-hidden anim-up"
-        style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}
+        className={
+          docked
+            ? "flex-1 min-h-0 m-3 rounded-[28px] border-[6px] border-[var(--brand-dark)] bg-[var(--bg)] flex flex-col overflow-hidden anim-up"
+            : "absolute inset-0 bg-[var(--bg)] flex flex-col overflow-hidden anim-up"
+        }
+        style={{ boxShadow: docked ? "var(--shadow)" : "0 30px 80px rgba(0,0,0,0.35)" }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label="Phone"
@@ -131,6 +138,12 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
           {app === "travel" && <TravelApp onBooked={() => setApp(null)} />}
         </div>
       </div>
+  );
+
+  if (docked) return frame;
+  return (
+    <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setApp(null)}>
+      {frame}
     </div>
   );
 }
