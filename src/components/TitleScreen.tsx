@@ -50,7 +50,7 @@ export default function TitleScreen() {
 
         <div className="grid lg:grid-cols-2 gap-10 items-center mt-10">
           <div>
-            <span className="chip chip-good mb-4">🇳🇬 Free · Plays in your browser</span>
+            <span className="inline-flex items-center gap-2 mb-4 rounded-full px-4 py-1.5 text-[15px] font-bold bg-[var(--green-soft)] text-[var(--green-ink)] border border-[#0f9d58]/30">🇳🇬 Free · Plays in your browser</span>
             <h1 className="font-display font-extrabold text-[44px] sm:text-[64px] leading-[0.95] tracking-tight">
               ModeQuest:
               <br />

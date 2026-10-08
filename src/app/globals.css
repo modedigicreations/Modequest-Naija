@@ -18,6 +18,7 @@
   --danfo-ink: #2a1d00;
   --green: #0f9d58;
   --green-soft: #d7f5e3;
+  --green-ink: #0a7a43;
   --coral: #e5484d;
   --coral-soft: #fde2e3;
   --sky: #456aec;
@@ -45,6 +46,8 @@
     --muted: #8b95bd;
     --line: rgba(255, 255, 255, 0.1);
     --green-soft: rgba(15, 157, 88, 0.22);
+  --green-ink: #4ade80;
+    --green-ink: #4ade80;
     --coral-soft: rgba(229, 72, 77, 0.22);
     --sky-soft: rgba(69, 106, 236, 0.22);
     --lagoon: #1f4f7a;

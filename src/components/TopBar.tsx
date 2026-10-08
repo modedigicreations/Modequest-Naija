@@ -62,8 +62,15 @@ export default function TopBar({ onPhone, unread }: { onPhone: () => void; unrea
           </div>
         </div>
         <div className="text-right shrink-0">
-          <div className="font-display font-extrabold text-[17px] leading-none text-[var(--green)]">{formatNaira(game.cash)}</div>
-          <div className="text-[11px] text-[var(--muted)] mt-1">🏦 {formatNaira(game.bank)}</div>
+          <div className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)] leading-none">Total money</div>
+          <div className="font-display font-extrabold text-[18px] leading-tight text-[var(--green)]" title="Cash in hand + bank balance">
+            {formatNaira(game.cash + game.bank)}
+          </div>
+          <div className="text-[11px] font-semibold text-[var(--ink-2)] whitespace-nowrap">
+            <span title="Cash in hand — can be pickpocketed">💵 Cash {formatNaira(game.cash)}</span>
+            <span className="text-[var(--muted)]"> · </span>
+            <span title="Bank balance — safe, earns interest">🏦 Bank {formatNaira(game.bank)}</span>
+          </div>
         </div>
       </div>
 
