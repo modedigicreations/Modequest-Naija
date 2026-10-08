@@ -178,3 +178,16 @@ describe("save safety", () => {
     expect(dispatch(s, { type: "sendGift", to: "pal", amount: 1000 }).error).toMatch(/frozen/);
   });
 });
+
+describe("invite bonus", () => {
+  it("is added to the bank once per friend", () => {
+    const s = newGame(opts("portharcourt"));
+    const bank = s.bank;
+    const r = dispatch(s, { type: "referralBonus", amount: 20000, ref: "friend-1", friend: "NewPal" });
+    expect(r.error).toBeUndefined();
+    expect(r.state.bank).toBe(bank + 20000);
+    expect(r.state.log.at(-1)?.text).toContain("NewPal");
+    expect(dispatch(r.state, { type: "referralBonus", amount: 20000, ref: "friend-1", friend: "NewPal" }).error).toMatch(/Already/);
+    expect(dispatch(r.state, { type: "referralBonus", amount: 20000, ref: "friend-2", friend: "Pal2" }).state.bank).toBe(bank + 40000);
+  });
+});

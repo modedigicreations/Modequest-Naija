@@ -238,5 +238,55 @@ select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222
 select pg_temp.ok((select count(*) from my_referral_stats()) = 0, 'class accounts get no referral code to share');
 commit;
 
+-- Invite bonus ------------------------------------------------------------------
+insert into saves (user_id, state, day) values ('88888888-8888-8888-8888-888888888888', '{}', 1);
+select pg_temp.ok((select rewarded_at from referrals where referred_id = '88888888-8888-8888-8888-888888888888') is null, 'no bonus before the friend plays');
+update saves set day = 3 where user_id = '88888888-8888-8888-8888-888888888888';
+select pg_temp.ok((select reward from referrals where referred_id = '88888888-8888-8888-8888-888888888888') = 20000, 'bonus granted when the friend reaches day 3');
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', true);
+select pg_temp.ok((select count(*) from referral_rewards()) = 0, 'others see no bonus');
+select pg_temp.ok((select count(*) from claim_referral_rewards(array['88888888-8888-8888-8888-888888888888'::uuid])) = 0, 'others cannot claim someone else''s bonus');
+select pg_temp.fails($$select grant_referral_bonus('88888888-8888-8888-8888-888888888888', 99)$$, 'players cannot grant bonuses directly');
+commit;
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-5555-5555-555555555555', true);
+select pg_temp.ok((select amount from referral_rewards()) = 20000, 'inviter sees the bonus waiting');
+select pg_temp.ok((select friend from referral_rewards()) = 'NewPal', 'bonus names the friend');
+select pg_temp.ok((select earned from my_referral_stats()) = 20000, 'stats show bonus earned');
+select pg_temp.ok((select count(*) from claim_referral_rewards(array['88888888-8888-8888-8888-888888888888'::uuid])) = 1, 'inviter claims the bonus');
+select pg_temp.ok((select count(*) from claim_referral_rewards(array['88888888-8888-8888-8888-888888888888'::uuid])) = 0, 'a bonus can only be claimed once');
+select pg_temp.ok((select count(*) from referral_rewards()) = 0, 'nothing left to claim');
+commit;
+
+-- Cap: 10 bonuses per inviter every 30 days
+do $$
+declare i int;
+begin
+  for i in 1..11 loop
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (('bbbbbbbb-0000-0000-0000-' || lpad(i::text, 12, '0'))::uuid, 'cap' || i || '@mail.com',
+       jsonb_build_object('role', 'player', 'nickname', 'CapPal' || i, 'ref', (select referral_code from profiles where nickname = 'MrsIbim')));
+    insert into saves (user_id, state, day) values (('bbbbbbbb-0000-0000-0000-' || lpad(i::text, 12, '0'))::uuid, '{}', 5);
+  end loop;
+end $$;
+select pg_temp.ok((select count(*) from referrals r join profiles p on p.id = r.referrer_id where p.nickname = 'MrsIbim' and r.rewarded_at is not null) = 10, 'bonus capped at 10 per 30 days');
+select pg_temp.ok((select count(*) from referrals r join profiles p on p.id = r.referrer_id where p.nickname = 'MrsIbim') = 11, 'every invite is still counted');
+
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'p6@mail.com', jsonb_build_object('role', 'player', 'nickname', 'RealPal', 'ref', (select referral_code from profiles where nickname = 'LagosBoss')));
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'cccccccc-cccc-cccc-cccc-cccccccccccc', true);
+insert into saves (user_id, state, day) values ('cccccccc-cccc-cccc-cccc-cccccccccccc', '{}', 1);
+update saves set day = 4 where user_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+select pg_temp.fails($$update referrals set claimed_at = null$$, 'friends cannot touch referral rows');
+commit;
+select pg_temp.ok((select reward from referrals where referred_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc') = 20000, 'the friend''s own game save triggers the bonus');
+
 \o
 \echo 'ALL RLS TESTS PASSED'

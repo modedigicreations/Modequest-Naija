@@ -253,6 +253,7 @@ export type Command =
   | { type: "sendGift"; to: string; amount: number }
   | { type: "receiveGift"; from: string; amount: number; note?: string }
   | { type: "topUp"; amount: number; ref: string }
+  | { type: "referralBonus"; amount: number; ref: string; friend: string }
   | { type: "setAppearance"; appearance: Appearance };
 
 export interface DispatchResult {

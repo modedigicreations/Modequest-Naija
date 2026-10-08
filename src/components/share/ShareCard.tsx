@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchMyReferral, inviteUrl } from "@/online/referral";
+import { fetchMyReferral, INVITE_BONUS, INVITE_BONUS_DAY, INVITE_BONUS_MONTHLY_CAP, inviteUrl, type ReferralStats } from "@/online/referral";
+import { formatNaira } from "@/game/util";
 import { useSession } from "@/online/session";
 
 const MESSAGE =
@@ -11,7 +12,7 @@ const MESSAGE =
 export default function ShareCard() {
   const user = useSession((s) => s.user);
   const role = useSession((s) => s.profile?.role);
-  const [ref, setRef] = useState<{ code: string; invited: number } | null>(null);
+  const [ref, setRef] = useState<ReferralStats | null>(null);
   const [withCode, setWithCode] = useState(true);
   const [copied, setCopied] = useState<"link" | "message" | null>(null);
   // Only rendered in the browser (title screen / phone), so this is safe.
@@ -55,12 +56,18 @@ export default function ShareCard() {
       <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,var(--brand-dark),var(--brand))" }}>
         <div className="font-display text-2xl font-extrabold">📣 Invite friends</div>
         <div className="text-sm opacity-90">Share ModeQuest so your friends can sign up and play with you — it&apos;s free.</div>
+        {(!user || canRefer) && (
+          <div className="mt-3 rounded-2xl bg-white/15 px-3 py-2 text-sm">
+            🎁 Earn <b>{formatNaira(INVITE_BONUS)} game money</b> for every friend who signs up with your link and plays to Day {INVITE_BONUS_DAY}.
+          </div>
+        )}
         {canRefer && ref && (
           <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
             <span className="bg-black/20 rounded-lg px-2 py-1">Your code: {ref.code}</span>
             <span className="bg-black/20 rounded-lg px-2 py-1">
               🎉 {ref.invited} {ref.invited === 1 ? "friend" : "friends"} joined
             </span>
+            <span className="bg-black/20 rounded-lg px-2 py-1">💰 {formatNaira(ref.earned)} bonus earned</span>
           </div>
         )}
       </div>
@@ -76,9 +83,15 @@ export default function ShareCard() {
         {canRefer && ref && (
           <label className="flex items-center gap-2 text-xs text-[var(--ink-2)] mt-2">
             <input type="checkbox" checked={withCode} onChange={(e) => setWithCode(e.target.checked)} />
-            Include my referral code, so I can see who joined from my link
+            Include my referral code, so I can see who joined from my link and earn the bonus
           </label>
         )}
+        {canRefer && ref && ref.invited > ref.rewarded && (
+          <p className="text-[11px] text-[var(--ink-2)] mt-2">
+            ⏳ {ref.invited - ref.rewarded} {ref.invited - ref.rewarded === 1 ? "friend hasn't" : "friends haven't"} reached Day {INVITE_BONUS_DAY} yet — your bonus lands in your bank when they do.
+          </p>
+        )}
+        {canRefer && <p className="text-[10px] text-[var(--muted)] mt-1">Up to {INVITE_BONUS_MONTHLY_CAP} bonuses every 30 days. Bonus money is game money only.</p>}
         {!user && <p className="text-[11px] text-[var(--muted)] mt-2">Sign in (or create an account) to get your own referral link and see how many friends joined.</p>}
         {role === "student" && <p className="text-[11px] text-[var(--muted)] mt-2">Class accounts share the plain game link. Your teacher can add classmates.</p>}
       </div>

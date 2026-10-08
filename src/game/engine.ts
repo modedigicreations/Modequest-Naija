@@ -1368,6 +1368,17 @@ function apply(s: GameState, cmd: Command): string | void {
       return;
     }
 
+    case "referralBonus": {
+      const amt = Math.floor(cmd.amount);
+      if (!(amt > 0)) return "Invalid bonus.";
+      const key = `refbonus_${cmd.ref}`;
+      if (s.flags[key]) return "Already added.";
+      s.flags[key] = 1;
+      earn(s, amt, `Invite bonus: ${cmd.friend}`, "bank");
+      log(s, "good", `📣 ${cmd.friend} joined from your invite and is playing! +${formatNaira(amt)} invite bonus.`);
+      return;
+    }
+
     case "setAppearance":
       s.player.appearance = { ...cmd.appearance };
       return;

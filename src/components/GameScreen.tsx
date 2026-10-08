@@ -10,6 +10,7 @@ import PlacePanel from "./PlacePanel";
 import Toasts from "./Toasts";
 import TopBar from "./TopBar";
 import { usePresenceSync } from "@/online/presence";
+import { claimReferralRewards } from "@/online/referral";
 import { claimGifts } from "@/online/social";
 import { claimTopups, reconcilePayments, useShop } from "@/shop/client";
 import { useSession } from "@/online/session";
@@ -45,6 +46,7 @@ export default function GameScreen() {
       await useShop.getState().loadStatus();
       if (settlePayments && useShop.getState().enabled) await reconcilePayments();
       await claimTopups();
+      await claimReferralRewards();
       await useShop.getState().refresh();
     };
     void collect(true);
