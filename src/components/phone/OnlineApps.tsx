@@ -9,6 +9,8 @@ import { type ChatMessage, classRoster, fetchClassMessages, fetchLeaderboard, ty
 import { useSession } from "@/online/session";
 import { Empty, SectionTitle } from "../ui";
 
+const NO_LESSONS: Record<string, number> = {};
+
 const METRICS: [Metric, string][] = [
   ["net_worth", "💰 Net worth"],
   ["academy", "🎓 Academy"],
@@ -130,7 +132,7 @@ export function ClassApp({ onOpenLesson }: { onOpenLesson: () => void }) {
   const myClass = useSession((s) => s.myClass);
   const teacherName = useSession((s) => s.teacherName);
   const assignments = useSession((s) => s.assignments);
-  const lessons = useGame((s) => s.game?.lessons ?? {});
+  const lessons = useGame((s) => s.game?.lessons ?? NO_LESSONS);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState("");
@@ -158,7 +160,7 @@ export function ClassApp({ onOpenLesson }: { onOpenLesson: () => void }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,var(--brand),#2f6ea8)" }}>
+      <div className="rounded-3xl p-5 text-white" style={{ background: "linear-gradient(135deg,var(--brand),#456aec)" }}>
         <div className="text-xs opacity-80">{myClass.school ?? "My class"}</div>
         <div className="font-display text-2xl font-extrabold">{myClass.name}</div>
         {teacherName && <div className="text-sm opacity-90">👩🏾‍🏫 {teacherName}</div>}

@@ -2,51 +2,51 @@
 
 /* ModeQuest: Naija — Mode Digital Creations brand palette. */
 :root {
-  /* Mode Digital Creations brand: navy (#1F4E79) with gold highlights. */
-  --brand: #1f4e79;
-  --brand-dark: #12304d;
-  --brand-soft: #dce7f2;
-  --bg: #f3f6fa;
-  --bg-2: #e3ecf5;
+  /* Mode Digital Creations / ModeCBT brand: royal blue #1447E6, gold for coins & highlights. */
+  --brand: #1447e6;
+  --brand-dark: #0b2d9e;
+  --brand-soft: #e8ecfd;
+  --bg: #f5f7ff;
+  --bg-2: #e8ecfd;
   --card: #ffffff;
-  --card-2: #eef3f8;
-  --ink: #12304d;
-  --ink-2: #3d5a78;
-  --muted: #7b8da3;
-  --line: rgba(18, 48, 77, 0.12);
+  --card-2: #eef0fd;
+  --ink: #0f172a;
+  --ink-2: #4a5370;
+  --muted: #8590ab;
+  --line: rgba(15, 23, 42, 0.1);
   --danfo: #f2a900;
   --danfo-ink: #2a1d00;
   --green: #0f9d58;
   --green-soft: #d7f5e3;
   --coral: #e5484d;
   --coral-soft: #fde2e3;
-  --sky: #2f6ea8;
-  --sky-soft: #dce7f2;
-  --purple: #6d5bd0;
+  --sky: #456aec;
+  --sky-soft: #e8ecfd;
+  --purple: #728ff2;
   --lagoon: #9cc7e8;
   --ocean: #5f9fd3;
   --land: #f2ecdd;
   --land-2: #e4d8bb;
   --road: #d9c9a3;
-  --shadow: 0 5px 0 rgba(18, 48, 77, 0.14);
+  --shadow: 0 5px 0 rgba(20, 71, 230, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --brand: #4d8bc7;
-    --brand-dark: #0b1a2b;
-    --brand-soft: rgba(77, 139, 199, 0.2);
-    --bg: #0b1a2b;
-    --bg-2: #12263d;
-    --card: #12263d;
-    --card-2: #183150;
-    --ink: #eaf2fb;
-    --ink-2: #c3d4e6;
-    --muted: #8aa1ba;
+    --brand: #456aec;
+    --brand-dark: #0a1230;
+    --brand-soft: rgba(69, 106, 236, 0.22);
+    --bg: #0a1230;
+    --bg-2: #111c45;
+    --card: #111c45;
+    --card-2: #17245a;
+    --ink: #eef1ff;
+    --ink-2: #c3cbea;
+    --muted: #8b95bd;
     --line: rgba(255, 255, 255, 0.1);
     --green-soft: rgba(15, 157, 88, 0.22);
     --coral-soft: rgba(229, 72, 77, 0.22);
-    --sky-soft: rgba(77, 139, 199, 0.22);
+    --sky-soft: rgba(69, 106, 236, 0.22);
     --lagoon: #1f4f7a;
     --ocean: #173a5e;
     --land: #1c2f45;
@@ -57,20 +57,20 @@
 }
 
 :root[data-theme="dark"] {
-  --brand: #4d8bc7;
-  --brand-dark: #0b1a2b;
-  --brand-soft: rgba(77, 139, 199, 0.2);
-  --bg: #0b1a2b;
-  --bg-2: #12263d;
-  --card: #12263d;
-  --card-2: #183150;
-  --ink: #eaf2fb;
-  --ink-2: #c3d4e6;
-  --muted: #8aa1ba;
+  --brand: #456aec;
+  --brand-dark: #0a1230;
+  --brand-soft: rgba(69, 106, 236, 0.22);
+  --bg: #0a1230;
+  --bg-2: #111c45;
+  --card: #111c45;
+  --card-2: #17245a;
+  --ink: #eef1ff;
+  --ink-2: #c3cbea;
+  --muted: #8b95bd;
   --line: rgba(255, 255, 255, 0.1);
   --green-soft: rgba(15, 157, 88, 0.22);
   --coral-soft: rgba(229, 72, 77, 0.22);
-  --sky-soft: rgba(77, 139, 199, 0.22);
+  --sky-soft: rgba(69, 106, 236, 0.22);
   --lagoon: #1f4f7a;
   --ocean: #173a5e;
   --land: #1c2f45;
