@@ -57,6 +57,7 @@ function Leaderboard({ classId }: { classId?: string | null }) {
             <li key={r.nickname} className={`flex items-center justify-between py-1.5 ${r.is_me ? "font-extrabold" : ""}`}>
               <span>
                 {i < 3 ? ["🥇", "🥈", "🥉"][i] : `${i + 1}.`} {r.nickname}
+                {r.supporter && <span title="ModeQuest Supporter"> ⭐</span>}
                 {r.city && <span className="text-[11px] text-[var(--muted)]"> · {getCity(r.city).name}</span>}
               </span>
               <span>{metric === "net_worth" ? formatNaira(r.value ?? 0) : r.value ?? 0}</span>
@@ -144,7 +145,13 @@ export function ClassApp({ onOpenLesson }: { onOpenLesson: () => void }) {
     if (!classId) return;
     fetchClassMessages(classId).then(setMessages);
     classRoster(classId).then((r) => setNames(Object.fromEntries(r.map((x) => [x.student_id, x.nickname]))));
-    return subscribeClassChat(classId, load);
+    const unsubscribe = subscribeClassChat(classId, load);
+    // Fallback in case a realtime update is missed (flaky mobile networks).
+    const poll = setInterval(load, 20000);
+    return () => {
+      unsubscribe();
+      clearInterval(poll);
+    };
   }, [classId, load]);
 
   if (!profile || !myClass) return <Empty>Join a class with the code from your teacher (Student login on the title screen).</Empty>;

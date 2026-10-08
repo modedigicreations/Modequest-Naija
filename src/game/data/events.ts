@@ -429,8 +429,9 @@ export const EVENTS: EventDef[] = [
         id: "ok",
         label: "Lesson learnt",
         resolve: (s, d) => {
-          s.cash -= +d.lost;
-          s.transactions.push({ t: s.time, amount: -d.lost, label: "Pickpocketed", account: "cash" });
+          const lost = Math.min(Math.max(0, s.cash), +d.lost);
+          s.cash -= lost;
+          s.transactions.push({ t: s.time, amount: -lost, label: "Pickpocketed", account: "cash" });
           return "Carry only the cash you need in crowded markets. Keep the rest in the bank and pay by transfer.";
         },
       },

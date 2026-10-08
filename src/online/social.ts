@@ -10,6 +10,7 @@ export interface LeaderRow {
   city: string | null;
   value: number;
   is_me: boolean;
+  supporter?: boolean;
 }
 
 export async function fetchLeaderboard(metric: Metric, classId?: string | null): Promise<LeaderRow[]> {

@@ -28,6 +28,7 @@ export interface RosterRow {
     scams_fallen: number | null;
     shifts: number | null;
     career: string | null;
+    topped_up: number | null;
   } | null;
 }
 
@@ -76,10 +77,7 @@ export async function setChatEnabled(classId: string, on: boolean) {
   if (error) throw new Error(error.message);
 }
 
-export async function deleteClass(classId: string) {
-  const { error } = await client().from("classes").delete().eq("id", classId);
-  if (error) throw new Error(error.message);
-}
+export const deleteClass = (classId: string) => api<{ ok: boolean; removedStudents: number }>("/api/teacher/class", "DELETE", { classId });
 
 export async function loadRoster(classId: string): Promise<RosterRow[]> {
   const c = client();
@@ -89,7 +87,7 @@ export async function loadRoster(classId: string): Promise<RosterRow[]> {
   if (ids.length === 0) return [];
   const [{ data: profiles }, { data: saves }] = await Promise.all([
     c.from("profiles").select("id, nickname").in("id", ids),
-    c.from("saves").select("user_id, updated_at, city, day, net_worth, lessons_passed, lesson_scores, scams_avoided, scams_fallen, shifts, career").in("user_id", ids),
+    c.from("saves").select("user_id, updated_at, city, day, net_worth, lessons_passed, lesson_scores, scams_avoided, scams_fallen, shifts, career, topped_up").in("user_id", ids),
   ]);
   const nick = new Map((profiles ?? []).map((p) => [p.id, p.nickname as string]));
   const save = new Map((saves ?? []).map((s) => [s.user_id, s]));
@@ -143,12 +141,12 @@ export async function postAsTeacher(classId: string, body: string) {
 }
 
 export function rosterCsv(rows: RosterRow[], lessonIds: string[]): string {
-  const head = ["Name", "Username", "Nickname", "Last active", "City", "Day", "Net worth", "Lessons passed", "Assigned passed", "Scams avoided", "Scams fallen for", "Shifts", "Career"];
+  const head = ["Name", "Username", "Nickname", "Last active", "City", "Day", "Net worth", "Lessons passed", "Assigned passed", "Scams avoided", "Scams fallen for", "Shifts", "Career", "Bought game money"];
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = rows.map((r) => {
     const s = r.save;
     const assigned = lessonIds.filter((id) => (s?.lesson_scores?.[id] ?? 0) >= 60).length;
-    return [r.real_name, r.username, r.nickname, s?.updated_at ?? "never", s?.city, s?.day, s?.net_worth, s?.lessons_passed, `${assigned}/${lessonIds.length}`, s?.scams_avoided, s?.scams_fallen, s?.shifts, s?.career].map(esc).join(",");
+    return [r.real_name, r.username, r.nickname, s?.updated_at ?? "never", s?.city, s?.day, s?.net_worth, s?.lessons_passed, `${assigned}/${lessonIds.length}`, s?.scams_avoided, s?.scams_fallen, s?.shifts, s?.career, s?.topped_up ?? 0].map(esc).join(",");
   });
   return [head.map(esc).join(","), ...lines].join("\n");
 }

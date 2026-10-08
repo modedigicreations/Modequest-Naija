@@ -11,6 +11,7 @@ import Toasts from "./Toasts";
 import TopBar from "./TopBar";
 import { usePresenceSync } from "@/online/presence";
 import { claimGifts } from "@/online/social";
+import { claimTopups, useShop } from "@/shop/client";
 import { useSession } from "@/online/session";
 
 export default function GameScreen() {
@@ -29,8 +30,13 @@ export default function GameScreen() {
   // Collect gifts from other players now and every 2 minutes.
   useEffect(() => {
     if (!online) return;
-    void claimGifts();
-    const id = setInterval(() => void claimGifts(), 120_000);
+    const collect = () => {
+      void claimGifts();
+      void claimTopups();
+      void useShop.getState().refresh();
+    };
+    collect();
+    const id = setInterval(collect, 120_000);
     return () => clearInterval(id);
   }, [online]);
 

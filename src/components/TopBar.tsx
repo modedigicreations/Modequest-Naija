@@ -1,6 +1,6 @@
 "use client";
 
-import { WEATHER_INFO, getCity } from "@/game/data/world";
+import { WEATHER_INFO, getCity, getHome } from "@/game/data/world";
 import { careerTitle } from "@/game/goals";
 import { gridPowerOn, homePower, mood, moodLabel } from "@/game/helpers";
 import { useGame } from "@/game/store";
@@ -48,12 +48,14 @@ export default function TopBar({ onPhone, unread }: { onPhone: () => void; unrea
             <span className="chip" title={`Weather: ${w.label}`}>
               {w.emoji} <span className="hidden sm:inline">{w.label}</span>
             </span>
-            <span
-              className={`chip ${grid ? "chip-good" : backup !== "none" ? "chip-info" : "chip-bad"}`}
-              title="Electricity at your home (NEPA)"
-            >
-              {grid ? "⚡ Light" : backup === "solar" ? "🔆 Solar" : backup === "generator" ? "⛽ Gen" : "🕯️ No light"}
-            </span>
+            {getHome(game.homeId).city === game.city && (
+              <span
+                className={`chip ${grid ? "chip-good" : backup !== "none" ? "chip-info" : "chip-bad"}`}
+                title="Electricity at your home (NEPA)"
+              >
+                {grid ? "⚡ Light" : backup === "solar" ? "🔆 Solar" : backup === "generator" ? "⛽ Gen" : "🕯️ No light"}
+              </span>
+            )}
           </div>
           <div className="text-[12px] text-[var(--ink-2)] truncate mt-1">
             <b>{game.player.name}</b> · {careerTitle(game)} · {ml.emoji} {ml.label}

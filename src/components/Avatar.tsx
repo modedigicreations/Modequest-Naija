@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { Appearance } from "@/game/types";
 
 export const SKIN_TONES = ["#5a3825", "#7b4a2e", "#9a6440", "#b9825a", "#d8a47f", "#3f2618"];
@@ -11,12 +12,25 @@ export default function Avatar({ a, size = 96, className }: { a: Appearance; siz
   const hair = HAIR_COLORS[a.hairColor % HAIR_COLORS.length];
   const outfit = OUTFITS[a.outfit % OUTFITS.length];
   const style = a.hair % HAIR_STYLES.length;
-  const acc = a.accessory % ACCESSORIES.length;
+  const acc = a.premiumAccessory ? -1 : a.accessory % ACCESSORIES.length;
+  const uid = useId().replace(/:/g, "");
+  const po = a.premiumOutfit;
+  const bodyFill = po ? `url(#po-${uid})` : outfit;
 
   return (
     <svg viewBox="0 0 100 120" width={size} height={(size * 120) / 100} className={className} aria-hidden>
+      {po && <PremiumOutfitPattern id={`po-${uid}`} outfit={po} />}
       {/* body */}
-      <path d="M18 120 C18 92 32 82 50 82 C68 82 82 92 82 120 Z" fill={outfit} />
+      {po === "outfit_agbada" ? (
+        <path d="M6 120 C8 94 30 82 50 82 C70 82 92 94 94 120 Z" fill={bodyFill} stroke="#d4a017" strokeWidth="2" />
+      ) : po === "outfit_gown" ? (
+        <path d="M14 120 C14 90 30 82 50 82 C70 82 86 90 86 120 Z" fill={bodyFill} />
+      ) : (
+        <path d="M18 120 C18 92 32 82 50 82 C68 82 82 92 82 120 Z" fill={bodyFill} />
+      )}
+      {po === "outfit_jersey" && <rect x="44" y="84" width="12" height="36" fill="#ffffff" />}
+      {po === "outfit_gown" && <path d="M36 84 L50 100 L64 84" fill="#ffffff" />}
+      {po === "outfit_agbada" && <path d="M38 86 C44 96 56 96 62 86" fill="none" stroke="#d4a017" strokeWidth="2.5" />}
       <path d="M40 82 L50 96 L60 82" fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="3" strokeLinejoin="round" />
       {/* neck */}
       <rect x="43" y="68" width="14" height="16" rx="6" fill={skin} />
@@ -91,6 +105,103 @@ export default function Avatar({ a, size = 96, className }: { a: Appearance; siz
           <circle cx="72" cy="57" r="3" />
         </g>
       )}
+      {a.premiumAccessory === "acc_crown" && (
+        <g>
+          <path d="M30 26 L34 8 L42 20 L50 4 L58 20 L66 8 L70 26 Z" fill="#f5c518" stroke="#b8860b" strokeWidth="1.5" strokeLinejoin="round" />
+          <circle cx="50" cy="18" r="2.6" fill="#e0457b" />
+          <circle cx="38" cy="22" r="2" fill="#2e86ff" />
+          <circle cx="62" cy="22" r="2" fill="#0f9d58" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_shades" && (
+        <g>
+          <rect x="32" y="42" width="16" height="11" rx="4" fill="#111" />
+          <rect x="52" y="42" width="16" height="11" rx="4" fill="#111" />
+          <path d="M48 46 L52 46" stroke="#111" strokeWidth="2.5" />
+          <path d="M35 44 L40 44" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_gradcap" && (
+        <g>
+          <path d="M20 22 L50 10 L80 22 L50 34 Z" fill="#1d1530" />
+          <rect x="36" y="24" width="28" height="10" rx="2" fill="#1d1530" />
+          <path d="M78 22 L80 38" stroke="#ffc629" strokeWidth="2" />
+          <circle cx="80" cy="39" r="2.5" fill="#ffc629" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_headset" && (
+        <g>
+          <path d="M26 44 C24 14 76 14 74 44" fill="none" stroke="#00d4ff" strokeWidth="4.5" />
+          <rect x="20" y="38" width="10" height="18" rx="4" fill="#7b4dff" stroke="#00d4ff" strokeWidth="1.5" />
+          <rect x="70" y="38" width="10" height="18" rx="4" fill="#7b4dff" stroke="#00d4ff" strokeWidth="1.5" />
+          <path d="M24 54 C26 64 34 66 40 64" fill="none" stroke="#00d4ff" strokeWidth="2" />
+          <circle cx="41" cy="64" r="2.5" fill="#00d4ff" />
+        </g>
+      )}
     </svg>
   );
+}
+
+function PremiumOutfitPattern({ id, outfit }: { id: string; outfit: string }) {
+  switch (outfit) {
+    case "outfit_ankara_blue":
+      return (
+        <defs>
+          <pattern id={id} width="12" height="12" patternUnits="userSpaceOnUse">
+            <rect width="12" height="12" fill="#1e5bd8" />
+            <circle cx="6" cy="6" r="3.2" fill="#ffc629" />
+            <circle cx="6" cy="6" r="1.4" fill="#ffffff" />
+            <path d="M0 0 L3 3 M12 0 L9 3 M0 12 L3 9 M12 12 L9 9" stroke="#ffffff" strokeWidth="1" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_ankara_sunset":
+      return (
+        <defs>
+          <pattern id={id} width="14" height="14" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill="#ff7a1a" />
+            <path d="M0 7 Q3.5 0 7 7 T14 7" fill="none" stroke="#7b2cbf" strokeWidth="2.2" />
+            <circle cx="7" cy="11" r="1.6" fill="#ffd166" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_supporter":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#f5c518" />
+            <path d="M5 1 L9 5 L5 9 L1 5 Z" fill="#1d1530" />
+            <circle cx="5" cy="5" r="1.2" fill="#f5c518" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_agbada":
+      return (
+        <defs>
+          <pattern id={id} width="8" height="8" patternUnits="userSpaceOnUse">
+            <rect width="8" height="8" fill="#fbfaf5" />
+            <circle cx="4" cy="4" r="0.8" fill="#e8dcc0" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_jersey":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#0f9d58" />
+            <path d="M0 10 L10 0" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_gown":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#1d1530" />
+          </pattern>
+        </defs>
+      );
+    default:
+      return null;
+  }
 }

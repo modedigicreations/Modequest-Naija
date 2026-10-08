@@ -236,3 +236,20 @@ describe("scam replies", () => {
     }
   });
 });
+
+describe("purchases in the engine", () => {
+  it("adds a top-up once and tracks it apart from earnings", () => {
+    let s = newGame(OPTS);
+    const bank = s.bank;
+    s = ok(s, { type: "topUp", amount: 30000, ref: "7" });
+    expect(s.bank).toBe(bank + 30000);
+    expect(s.stats.toppedUp).toBe(30000);
+    expect(dispatch(s, { type: "topUp", amount: 30000, ref: "7" }).error).toMatch(/Already/);
+  });
+
+  it("changes appearance including premium items", () => {
+    let s = newGame(OPTS);
+    s = ok(s, { type: "setAppearance", appearance: { ...s.player.appearance, premiumOutfit: "outfit_agbada", premiumAccessory: "acc_crown" } });
+    expect(s.player.appearance.premiumOutfit).toBe("outfit_agbada");
+  });
+});

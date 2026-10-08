@@ -40,7 +40,10 @@ export default function PlayersHere() {
               <span className="rounded-2xl bg-[var(--bg-2)]">
                 <Avatar a={p.appearance} size={34} />
               </span>
-              <span className="text-sm font-bold">{p.nickname}</span>
+              <span className="text-sm font-bold">
+                {p.nickname}
+                {p.supporter && " ⭐"}
+              </span>
             </div>
           ))}
         </div>

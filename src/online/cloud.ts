@@ -22,6 +22,9 @@ export function saveSummary(s: GameState) {
     scams_fallen: s.stats.scamsFallen,
     shifts: s.stats.shiftsWorked,
     career: careerTitle(s),
+    topped_up: s.stats.toppedUp ?? 0,
+    // Wealth leaderboards rank what you earned, not what you bought.
+    earned_worth: netWorth(s) - (s.stats.toppedUp ?? 0),
   };
 }
 
@@ -59,6 +62,11 @@ export class CloudSaveAdapter implements SaveAdapter {
     if (!this.timer) this.timer = setTimeout(() => void this.flush(), wait);
   }
 
+  /** True while a save hasn't reached the cloud yet (e.g. offline). */
+  get unsynced() {
+    return this.pending !== null;
+  }
+
   /** Push the latest state to the cloud now (e.g. when the tab is hidden). */
   async flush(): Promise<void> {
     if (this.timer) clearTimeout(this.timer);
@@ -68,11 +76,12 @@ export class CloudSaveAdapter implements SaveAdapter {
     this.pending = null;
     this.lastCloud = Date.now();
     try {
-      await sb()!
+      const { error } = await sb()!
         .from("saves")
         .upsert({ user_id: this.uid, state, updated_at: new Date().toISOString(), ...saveSummary(state) });
+      if (error) throw error;
     } catch {
-      this.pending = state; // retry next time
+      this.pending ??= state; // retry next time
     }
   }
 

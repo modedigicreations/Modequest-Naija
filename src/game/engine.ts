@@ -1319,6 +1319,22 @@ function apply(s: GameState, cmd: Command): string | void {
       return;
     }
 
+    case "topUp": {
+      const amt = Math.floor(cmd.amount);
+      if (!(amt > 0)) return "Invalid top-up.";
+      const key = `topup_${cmd.ref}`;
+      if (s.flags[key]) return "Already added.";
+      s.flags[key] = 1;
+      earn(s, amt, "Game money top-up", "bank");
+      s.stats.toppedUp = (s.stats.toppedUp ?? 0) + amt;
+      log(s, "money", `💰 ${formatNaira(amt)} game money added to your bank. Thank you for supporting ModeQuest!`);
+      return;
+    }
+
+    case "setAppearance":
+      s.player.appearance = { ...cmd.appearance };
+      return;
+
     case "completeLesson": {
       const lesson = getLesson(cmd.lessonId);
       if (!lesson) return "Unknown lesson.";

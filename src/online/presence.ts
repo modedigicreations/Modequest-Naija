@@ -8,6 +8,7 @@ import type { Appearance } from "@/game/types";
 import { sb } from "./client";
 import { QUICK_CHAT } from "./shared";
 import { useSession } from "./session";
+import { useShop } from "@/shop/client";
 
 export interface OnlinePlayer {
   id: string;
@@ -16,6 +17,7 @@ export interface OnlinePlayer {
   location: string;
   busy: string | null;
   role: string;
+  supporter?: boolean;
 }
 
 export interface Bubble {
@@ -36,6 +38,8 @@ interface PresenceStore {
 }
 
 let channel: RealtimeChannel | null = null;
+let subscribed = false;
+let latest: OnlinePlayer | null = null;
 let bubbleSeq = 0;
 
 export const usePresence = create<PresenceStore>((set, get) => ({
@@ -72,6 +76,7 @@ export function usePresenceSync() {
   const location = useGame((s) => (s.game?.travel ? "travel" : (s.game?.location ?? null)));
   const busy = useGame((s) => s.game?.activity?.activityId ?? null);
   const appearance = useGame((s) => s.game?.player.appearance ?? null);
+  const supporter = useShop((s) => !!s.supporterUntil && s.supporterUntil > 0);
 
   // (Re)join the city channel.
   useEffect(() => {
@@ -90,20 +95,30 @@ export function usePresenceSync() {
     ch.on("broadcast", { event: "qc" }, ({ payload }) => {
       if (typeof payload?.text === "string" && (QUICK_CHAT as readonly string[]).includes(payload.text)) addBubble(payload);
     });
-    ch.subscribe();
+    subscribed = false;
+    ch.subscribe((status) => {
+      if (status === "SUBSCRIBED" && channel === ch) {
+        subscribed = true;
+        if (latest) void ch.track(latest);
+      }
+    });
     return () => {
       void client.removeChannel(ch);
-      if (channel === ch) channel = null;
+      if (channel === ch) {
+        channel = null;
+        subscribed = false;
+      }
       usePresence.setState({ players: [], city: null });
     };
   }, [user, profile, city]);
 
   // Tell others where we are.
   useEffect(() => {
-    if (!channel || !user || !profile || !appearance || !location) return;
-    const ch = channel;
-    const payload: OnlinePlayer = { id: user.id, nickname: profile.nickname, appearance, location, busy, role: profile.role };
-    const t = setTimeout(() => void ch.track(payload), 300);
+    if (!user || !profile || !appearance || !location) return;
+    latest = { id: user.id, nickname: profile.nickname, appearance, location, busy, role: profile.role, supporter };
+    const t = setTimeout(() => {
+      if (channel && subscribed && latest) void channel.track(latest);
+    }, 300);
     return () => clearTimeout(t);
-  }, [user, profile, appearance, location, busy]);
+  }, [user, profile, appearance, location, busy, city, supporter]);
 }

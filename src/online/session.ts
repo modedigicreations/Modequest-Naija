@@ -53,7 +53,18 @@ async function nicknameTaken(nickname: string) {
 /** Point the game at this user's saves (or the guest save) and reload. */
 async function switchSaves(uid: string | null) {
   const game = useGame.getState();
-  const adapter = uid ? new CloudSaveAdapter(uid) : new LocalSaveAdapter();
+  if (!uid) {
+    await game.switchAdapter(new LocalSaveAdapter());
+    return;
+  }
+  const adapter = new CloudSaveAdapter(uid);
+  // First sign-in on this device: bring the guest game along instead of losing it.
+  const [mine, guest] = await Promise.all([adapter.load(), new LocalSaveAdapter().load()]);
+  if (!mine && guest) {
+    await adapter.save(guest);
+    await adapter.flush();
+    await new LocalSaveAdapter().clear();
+  }
   await game.switchAdapter(adapter);
 }
 

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:db": "./scripts/test-db.sh",
+    "test:live": "node scripts/live/multiplayer.mjs && node scripts/live/payments.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

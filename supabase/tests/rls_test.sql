@@ -151,6 +151,58 @@ select pg_temp.ok((select count(*) from leaderboard('net_worth')) = 4, 'global l
 select pg_temp.ok(not exists (select 1 from information_schema.columns where table_name = 'leaderboard'), 'leaderboard is a function');
 commit;
 
+-- Payments & plans -----------------------------------------------------------
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-5555-5555-555555555555', true);
+select pg_temp.fails($$insert into orders (user_id, product_id, amount_kobo, reference) values ('55555555-5555-5555-5555-555555555555', 'x', 100, 'r1')$$, 'players cannot create orders directly');
+select pg_temp.fails($$insert into entitlements (user_id, kind, item, quantity) values ('55555555-5555-5555-5555-555555555555', 'naira', 'topup', 999999)$$, 'players cannot grant themselves items');
+commit;
+
+-- Server grants a paid top-up
+insert into orders (id, user_id, product_id, amount_kobo, reference, status) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '55555555-5555-5555-5555-555555555555', 'topup_s', 30000, 'ref_test_1', 'paid');
+insert into entitlements (user_id, order_id, kind, item, quantity) values ('55555555-5555-5555-5555-555555555555', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'naira', 'topup_s', 30000);
+select pg_temp.fails($$insert into entitlements (user_id, order_id, kind, item, quantity) values ('55555555-5555-5555-5555-555555555555', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'naira', 'topup_s', 30000)$$, 'an order grants each item only once');
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-5555-5555-555555555555', true);
+select pg_temp.ok((select count(*) from claim_topups_by_id(array[999]::bigint[])) = 0, 'claim by id ignores unknown ids');
+select pg_temp.ok((select sum(amount) from claim_topups_by_id(array(select id from entitlements where kind = 'naira'))) = 30000, 'player claims top-up by id');
+select pg_temp.ok((select count(*) from claim_topups_by_id(array(select id from entitlements where kind = 'naira'))) = 0, 'top-up cannot be claimed twice');
+select pg_temp.ok((select count(*) from orders) = 1, 'player sees own orders');
+commit;
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', true);
+select pg_temp.ok((select count(*) from orders) = 0, 'players cannot see others'' orders');
+select pg_temp.ok((select count(*) from claim_topups()) = 0, 'cannot claim someone else''s top-up');
+commit;
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true);
+select pg_temp.ok((select plan from my_plan()) = 'free', 'teachers start on the free plan');
+select pg_temp.fails($$insert into classes (teacher_id, name) values ('11111111-1111-1111-1111-111111111111', 'Second class')$$, 'free plan allows one class');
+commit;
+
+insert into entitlements (user_id, kind, item, expires_at) values ('11111111-1111-1111-1111-111111111111', 'plan', 'classroom', now() + interval '120 days');
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true);
+select pg_temp.ok((select max_classes from my_plan()) = 5, 'classroom plan raises limit');
+insert into classes (teacher_id, name) values ('11111111-1111-1111-1111-111111111111', 'Second class');
+select pg_temp.ok((select count(*) from classes) = 2, 'upgraded teacher creates a second class');
+commit;
+
+update saves set earned_worth = 10 where user_id = '55555555-5555-5555-5555-555555555555';
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', true);
+select pg_temp.ok((select value from leaderboard('net_worth') where nickname = 'LagosBoss') = 10, 'leaderboard ranks earned wealth, not bought wealth');
+commit;
+
 begin;
 set local role anon;
 select pg_temp.fails($$select * from leaderboard('net_worth')$$, 'signed-out visitors cannot read leaderboards');

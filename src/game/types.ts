@@ -29,6 +29,9 @@ export interface Appearance {
   hairColor: number;
   outfit: number; // outfit colour index
   accessory: number; // 0 = none
+  /** Purchased cosmetics worn instead of the basic outfit/accessory. */
+  premiumOutfit?: string;
+  premiumAccessory?: string;
 }
 
 export interface Player {
@@ -202,6 +205,8 @@ export interface GameState {
     friendsMade: number;
     hospitalVisits: number;
     evictions: number;
+    /** In-game naira bought with real money (kept off wealth leaderboards). */
+    toppedUp?: number;
   };
   world: WorldState;
   flags: Record<string, number>;
@@ -245,7 +250,9 @@ export type Command =
   | { type: "markMessagesRead" }
   | { type: "completeLesson"; lessonId: string; score: number }
   | { type: "sendGift"; to: string; amount: number }
-  | { type: "receiveGift"; from: string; amount: number; note?: string };
+  | { type: "receiveGift"; from: string; amount: number; note?: string }
+  | { type: "topUp"; amount: number; ref: string }
+  | { type: "setAppearance"; appearance: Appearance };
 
 export interface DispatchResult {
   state: GameState;

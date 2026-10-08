@@ -9,9 +9,11 @@ import { ContactsApp, GoalsApp, HomesApp, JobsApp, ShopApp, SkillsApp } from "./
 import MessagesApp from "./phone/Messages";
 import SettingsApp from "./phone/Settings";
 import { ClassApp, OnlineApp } from "./phone/OnlineApps";
+import { StoreApp, StyleApp } from "./phone/StoreApps";
+import { paymentsEnabled } from "@/shop/client";
 import { useSession } from "@/online/session";
 
-export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class";
+export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class" | "store" | "style";
 
 const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "messages", name: "Messages", emoji: "💬", color: "#0f9d58" },
@@ -25,19 +27,26 @@ const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "skills", name: "Skills", emoji: "📘", color: "#0ea5e9" },
   { id: "goals", name: "Goals", emoji: "🌟", color: "#db2777" },
   { id: "contacts", name: "Padis", emoji: "🤝🏾", color: "#65a30d" },
+  { id: "style", name: "Style", emoji: "👕", color: "#ec4899" },
   { id: "settings", name: "Settings", emoji: "⚙️", color: "#64748b" },
 ];
 
-const ONLINE_APPS: { id: AppId; name: string; emoji: string; color: string; studentOnly?: boolean }[] = [
+const ONLINE_APPS: { id: AppId; name: string; emoji: string; color: string; studentOnly?: boolean; noStudents?: boolean }[] = [
   { id: "online", name: "Online", emoji: "🌍", color: "#0891b2" },
   { id: "class", name: "My Class", emoji: "🏫", color: "#16a34a", studentOnly: true },
+  { id: "store", name: "Store", emoji: "🛍️", color: "#7b4dff", noStudents: true },
 ];
 
 export default function Phone({ app, setApp }: { app: AppId | "home" | null; setApp: (a: AppId | "home" | null) => void }) {
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
   const profile = useSession((s) => s.profile);
-  const apps = [...APPS, ...(profile ? ONLINE_APPS.filter((a) => !a.studentOnly || profile.role === "student") : [])];
+  const apps = [
+    ...APPS,
+    ...(profile
+      ? ONLINE_APPS.filter((a) => (!a.studentOnly || profile.role === "student") && (!a.noStudents || profile.role !== "student") && (a.id !== "store" || paymentsEnabled))
+      : []),
+  ];
 
   useEffect(() => {
     if (!app) return;
@@ -110,6 +119,8 @@ export default function Phone({ app, setApp }: { app: AppId | "home" | null; set
           {app === "settings" && <SettingsApp onClose={() => setApp(null)} />}
           {app === "online" && <OnlineApp />}
           {app === "class" && <ClassApp onOpenLesson={() => setApp("academy")} />}
+          {app === "store" && <StoreApp />}
+          {app === "style" && <StyleApp />}
         </div>
       </div>
     </div>

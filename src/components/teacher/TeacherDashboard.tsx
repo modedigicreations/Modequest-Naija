@@ -28,6 +28,8 @@ import {
   type TMessage,
 } from "@/online/teacher";
 import { Empty, Modal, SectionTitle } from "../ui";
+import { PLANS, PRODUCTS } from "@/shop/catalog";
+import { buy, paymentsEnabled, useShop } from "@/shop/client";
 
 type Tab = "students" | "lessons" | "chat";
 
@@ -210,6 +212,7 @@ function Classes() {
           </button>
         </form>
         {err && <p className="text-xs text-[var(--coral)] mt-2">{err}</p>}
+        <PlanCard classCount={classes?.length ?? 0} />
       </aside>
       {cls ? <ClassView key={cls.id} cls={cls} onChanged={reload} onDeleted={() => { setActive(null); reload(); }} /> : <div className="card p-6"><Empty>Create or pick a class to get started.</Empty></div>}
     </div>
@@ -282,7 +285,7 @@ function ClassView({ cls, onChanged, onDeleted }: { cls: TClass; onChanged: () =
         <button
           className="text-xs text-[var(--coral)] underline"
           onClick={async () => {
-            if (!confirm(`Delete ${cls.name}? Student logins stay, but they leave the class.`)) return;
+            if (!confirm(`Delete ${cls.name}? All its student logins and their progress will be deleted too. This can't be undone.`)) return;
             await deleteClass(cls.id);
             onDeleted();
           }}
@@ -375,6 +378,7 @@ function StudentsTab({ cls, roster, assignedIds, onChanged }: { cls: TClass; ros
                 <th className="pr-3">Scams ✓/✗</th>
                 <th className="pr-3">Net worth</th>
                 <th className="pr-3">Career</th>
+                <th className="pr-3" title="In-game money bought with real money">Bought ₦</th>
                 <th />
               </tr>
             </thead>
@@ -403,6 +407,7 @@ function StudentsTab({ cls, roster, assignedIds, onChanged }: { cls: TClass; ros
                     </td>
                     <td className="pr-3">{s?.net_worth != null ? formatNaira(s.net_worth) : "—"}</td>
                     <td className="pr-3 text-xs">{s?.career ?? "—"}</td>
+                    <td className="pr-3 text-xs">{s?.topped_up ? <span className="chip chip-bad">{formatNaira(s.topped_up)}</span> : "—"}</td>
                     <td className="text-right whitespace-nowrap">
                       <button
                         className="text-xs underline mr-2"
@@ -592,6 +597,54 @@ function ChatTab({ cls, roster, onChanged }: { cls: TClass; roster: RosterRow[] 
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function PlanCard({ classCount }: { classCount: number }) {
+  const { plan, refresh } = useShop();
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh, classCount]);
+
+  const current = PLANS.find((p) => p.id === (plan?.plan ?? "free")) ?? PLANS[0];
+  return (
+    <div className="mt-4 pt-4 border-t border-[var(--line)]">
+      <div className="text-xs font-bold text-[var(--muted)] uppercase tracking-wide">Your plan</div>
+      <div className="font-display text-lg font-extrabold">{current.name}</div>
+      <div className="text-xs text-[var(--ink-2)]">
+        {classCount}/{current.maxClasses} classes · up to {current.maxStudents} students
+        {plan?.expires_at && <span className="block">Renews/ends {new Date(plan.expires_at).toLocaleDateString()}</span>}
+      </div>
+      {paymentsEnabled && (
+        <div className="grid gap-1.5 mt-2">
+          {PRODUCTS.filter((p) => p.teacherOnly).map((p) => (
+            <button
+              key={p.id}
+              className="btn btn-ghost btn-sm justify-between"
+              disabled={!!busy}
+              title={p.blurb}
+              onClick={async () => {
+                setErr(null);
+                setBusy(p.id);
+                try {
+                  await buy(p.id, true);
+                } catch (e) {
+                  setErr((e as Error).message);
+                  setBusy(null);
+                }
+              }}
+            >
+              <span>{p.emoji} {p.name.split(" · ")[0]}</span>
+              <span>₦{p.priceNaira.toLocaleString()}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {err && <p className="text-xs text-[var(--coral)] mt-1">{err}</p>}
     </div>
   );
 }

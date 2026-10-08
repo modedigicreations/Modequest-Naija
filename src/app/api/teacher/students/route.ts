@@ -16,10 +16,19 @@ export async function POST(req: Request) {
     if (names.length === 0) throw new HttpError(400, "Add at least one name.");
     if (names.length > MAX_PER_REQUEST) throw new HttpError(400, `Add at most ${MAX_PER_REQUEST} students at a time.`);
 
-    const { db, cls } = await requireTeacherOf(req, body.classId);
+    const { db, cls, teacherId } = await requireTeacherOf(req, body.classId);
     const { data: existing } = await db.from("class_members").select("username").eq("class_id", cls.id);
     const taken = new Set((existing ?? []).map((m: { username: string }) => m.username));
     if (taken.size + names.length > MAX_PER_CLASS) throw new HttpError(400, `A class can have at most ${MAX_PER_CLASS} students.`);
+
+    // Plan limit: total students across all of this teacher's classes.
+    const { data: plan } = await db.rpc("plan_limits", { uid: teacherId }).single<{ plan: string; max_students: number }>();
+    const { data: myClasses } = await db.from("classes").select("id").eq("teacher_id", teacherId);
+    const { count: total } = await db.from("class_members").select("student_id", { count: "exact", head: true }).in("class_id", (myClasses ?? []).map((c: { id: string }) => c.id));
+    const limit = plan?.max_students ?? 40;
+    if ((total ?? 0) + names.length > limit) {
+      throw new HttpError(402, `Your ${plan?.plan ?? "free"} plan allows ${limit} students in total. Upgrade your school plan to add more.`);
+    }
 
     const created: { studentId: string; realName: string; username: string; pin: string; nickname: string }[] = [];
     const failed: { realName: string; error: string }[] = [];

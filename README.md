@@ -13,7 +13,9 @@ npm test             # engine, city, puzzle and balance tests (Vitest)
 npm run typecheck
 npm run lint
 npm run build
-./scripts/test-db.sh # database migration + row-level security tests on a throwaway local Postgres
+npm run test:db      # all migrations + row-level security tests on a throwaway local Postgres
+npm run test:live    # live end-to-end tests against Supabase + Paystack TEST mode (app must be running;
+                     # set APP_URL, default http://localhost:3000). Refuses to run with live Paystack keys.
 ```
 
 ## The game
@@ -44,16 +46,34 @@ Without Supabase configured the game is single-player and saves in the browser. 
   - moderate the class chat.
 - **Students** sign in with class code + username + PIN. Their public name is a random nickname such as `SwiftDanfo42`; real names are visible only to their teacher. Class chat is the only free text, and it automatically hides insults, phone numbers, emails and links.
 
+### In-app purchases (Paystack)
+
+| Product | Price | Notes |
+|---|---|---|
+| Cosmetics (outfits & accessories) | ₦400–₦800 | Visual only — worn from the **Style** app |
+| Naija Style Pack | ₦1,500 | 4 cosmetics |
+| Supporter pass | ₦1,000 / 30 days | ⭐ badge on leaderboards and map + an outfit to keep |
+| Game money | ₦300 / ₦700 / ₦1,500 | ₦30k / ₦80k / ₦200k in-game. Kept off wealth leaderboards (they rank *earned* worth) and shown to teachers |
+| School plans | ₦7,500 / term, ₦35,000 / year | Free: 1 class, 40 students · Classroom: 5 / 250 · Whole School: 60 / 3,000. Enforced in the database |
+
+- **Flow:** `/api/pay/init` creates the order with the catalog price (never the browser's) and a Paystack checkout. After payment Paystack calls `/api/pay/webhook` (HMAC-verified) and the player returns to `/pay/return`, which calls `/api/pay/verify`. Either path grants entitlements; both are idempotent, and amounts are checked against the order.
+- **Game money** is credited in the game and saved to the cloud first; only then are those top-ups marked claimed, so paid money can't be lost.
+- **Protections:** class (student) accounts can't buy; buyers confirm they're 13+ and, if under 18, have a parent's permission; ₦20,000 cap per player per 30 days (school plans excluded); max 5 open checkouts per 10 minutes.
+- **Webhook URL** to set in Paystack (Settings → API Keys & Webhooks): `https://<your-domain>/api/pay/webhook`.
+
 ### Setup
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run `supabase/migrations/20261008000000_init.sql`.
+2. In **SQL Editor**, run every file in `supabase/migrations/` in name order.
 3. In **Authentication → Providers → Email**, keep email confirmation on for player and teacher sign-ups. (Student logins are created confirmed by the server.)
 4. Copy `.env.example` to `.env.local` and fill in values from **Settings → API**:
    ```
    NEXT_PUBLIC_SUPABASE_URL=...
    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-   SUPABASE_SERVICE_ROLE_KEY=...   # server only — used by /api/teacher/* to create student logins
+   SUPABASE_SERVICE_ROLE_KEY=...   # server only — used by /api/teacher/* and /api/pay/*
+   PAYSTACK_SECRET_KEY=sk_...      # server only
+   NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_...
+   NEXT_PUBLIC_APP_URL=https://your-domain   # Paystack redirects back here
    ```
 5. Restart `npm run dev`. The title screen now shows **Play online**.
 
@@ -68,9 +88,12 @@ src/game/                 Pure TypeScript engine (no React, no browser APIs)
   persistence.ts          SaveAdapter + localStorage implementation
   store.ts                Zustand game store + real-time clock
 src/online/               Supabase: auth/session, cloud saves, presence, social, teacher APIs
-src/app/api/teacher/*     Route handlers (service role) to create/reset/remove student logins
+src/shop/                 Store catalog (shared), Paystack checkout/verify/fulfilment (server), store client
+src/app/api/teacher/*     Route handlers (service role): student logins, class deletion
+src/app/api/pay/*         Route handlers: checkout, verify, Paystack webhook
 supabase/migrations/      Database schema, functions and row-level security
-supabase/tests/           RLS tests (run with scripts/test-db.sh)
+supabase/tests/           RLS tests (npm run test:db)
+scripts/live/             Live end-to-end tests (npm run test:live)
 src/components/           React UI: title, creator, HUD, maps, place panel, phone apps, teacher dashboard
 ```
 
