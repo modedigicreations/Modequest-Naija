@@ -222,6 +222,8 @@ export interface NewGameOptions {
   traits: string[];
   dream: string;
   seed?: number;
+  /** Real time (ms) to start the clock from; omitted = classic Day 1, Monday 7am. */
+  now?: number;
 }
 
 export type Command =

@@ -63,10 +63,6 @@ export default function GameScreen() {
       if (!g) return;
       if (e.key === "m" || e.key === "M") setTab((x) => (x === "map" ? "here" : "map"));
       else if (e.key === "p" || e.key === "P") setPhoneApp((x) => (x ? null : "home"));
-      else if (e.key === " ") {
-        e.preventDefault();
-        dispatch({ type: "setSpeed", speed: g.speed === 0 ? 1 : 0 });
-      } else if (["1", "2", "3"].includes(e.key)) dispatch({ type: "setSpeed", speed: Number(e.key) as 1 | 2 | 3 });
     };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);

@@ -6,7 +6,8 @@ import { CITIES, getCity } from "@/game/data/world";
 import { sb } from "@/online/client";
 import { useSession } from "@/online/session";
 import { useGame } from "@/game/store";
-import { dayOf, formatNaira } from "@/game/util";
+import { lifeDay } from "@/game/engine";
+import { formatNaira } from "@/game/util";
 import Avatar from "./Avatar";
 import AccountPanel from "./online/AccountPanel";
 import ShareCard from "./share/ShareCard";
@@ -102,7 +103,7 @@ export default function TitleScreen() {
                   <div className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">Saved life</div>
                   <div className="font-display text-2xl font-extrabold">{game.player.name}</div>
                   <div className="text-sm text-[var(--ink-2)]">
-                    {getCity(game.city).name} · Day {dayOf(game.time)} · {formatNaira(game.cash + game.bank)}
+                    {getCity(game.city).name} · Day {lifeDay(game)} · {formatNaira(game.cash + game.bank)}
                   </div>
                   <button className="text-xs font-bold underline mt-1" onClick={() => setMoving((m) => !m)}>
                     📍 {moving ? "Cancel" : "Change city"}

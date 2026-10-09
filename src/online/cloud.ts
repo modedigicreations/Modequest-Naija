@@ -1,11 +1,10 @@
 "use client";
 
-import { migrate } from "@/game/engine";
+import { lifeDay, migrate } from "@/game/engine";
 import { careerTitle } from "@/game/goals";
 import { netWorth } from "@/game/helpers";
 import { LocalSaveAdapter, type SaveAdapter } from "@/game/persistence";
 import type { GameState } from "@/game/types";
-import { dayOf } from "@/game/util";
 import { sb } from "./client";
 
 const CLOUD_INTERVAL_MS = 30_000;
@@ -14,7 +13,7 @@ const CLOUD_INTERVAL_MS = 30_000;
 export function saveSummary(s: GameState) {
   return {
     city: s.city,
-    day: dayOf(s.time),
+    day: lifeDay(s),
     net_worth: netWorth(s),
     lessons_passed: Object.values(s.lessons).filter((v) => v >= 60).length,
     lesson_scores: s.lessons,

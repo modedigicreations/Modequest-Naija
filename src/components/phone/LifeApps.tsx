@@ -10,7 +10,7 @@ import { ACHIEVEMENTS, dreamProgress } from "@/game/goals";
 import { friendshipTier, level, price, SKILL_NAMES, wageMultiplier } from "@/game/helpers";
 import { useGame } from "@/game/store";
 import { SKILL_KEYS } from "@/game/types";
-import { WEEKDAYS, formatNaira, skillProgress } from "@/game/util";
+import { WEEKDAYS, actionMinutes, formatNaira, skillProgress } from "@/game/util";
 import { Empty, Meter, SectionTitle } from "../ui";
 
 export function JobsApp() {
@@ -27,7 +27,7 @@ export function JobsApp() {
             {cur.emoji} {cur.levels[game.career.level].title}
           </div>
           <div className="text-sm text-[var(--ink-2)]">
-            {formatNaira(cur.levels[game.career.level].pay * wageMultiplier(game))}/shift · {cur.days.map((d) => WEEKDAYS[d]).join(" ")} · {cur.start}:00, {cur.hours}h · {workplaceFor(game, cur.workplace)?.name ?? `no workplace in ${getCity(game.city).name}`}
+            {formatNaira(cur.levels[game.career.level].pay * wageMultiplier(game))}/shift · {cur.days.map((d) => WEEKDAYS[d]).join(" ")} · clock in {cur.start}:00–{cur.start + 2}:00 · shift takes {actionMinutes(cur.hours * 60)} min · {workplaceFor(game, cur.workplace)?.name ?? `no workplace in ${getCity(game.city).name}`}
           </div>
           <div className="mt-3">
             <Meter value={game.career.performance} label="Performance" emoji="📊" />
@@ -59,7 +59,7 @@ export function JobsApp() {
               {mine ? <span className="chip chip-good">Your job</span> : null}
             </div>
             <div className="text-[11px] text-[var(--muted)] mt-2">
-              {c.days.map((d) => WEEKDAYS[d]).join(" ")} · {c.start}:00 ({c.hours}h) · {where?.name ?? `Not available in ${getCity(game.city).name}`} · Skill: {SKILL_NAMES[c.skill]}
+              {c.days.map((d) => WEEKDAYS[d]).join(" ")} · from {c.start}:00 ({actionMinutes(c.hours * 60)} min) · {where?.name ?? `Not available in ${getCity(game.city).name}`} · Skill: {SKILL_NAMES[c.skill]}
             </div>
             <ol className="mt-2 text-xs space-y-0.5">
               {c.levels.map((l, i) => (

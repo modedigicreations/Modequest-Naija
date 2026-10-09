@@ -3,7 +3,8 @@ import { ACTIVITIES } from "./data/activities";
 import { CAREERS } from "./data/economy";
 import { ALL_NPCS, CITIES, HOMES, LOCATIONS, ROAD_HOURS, findKind } from "./data/world";
 import type { HomeTier, PlaceKind } from "./data/worldTypes";
-import { advance, dispatch, foodPrice, intercityQuote, migrate, newGame, workplaceFor } from "./engine";
+import { advance, dispatch, foodPrice, intercityQuote, lifeDay, migrate, newGame, realGameTime, syncToRealClock, workplaceFor } from "./engine";
+import { actionMinutes, minuteOfDay, weekdayOf } from "./util";
 import type { GameState, NewGameOptions } from "./types";
 
 const opts = (city: string): NewGameOptions => ({
@@ -279,5 +280,64 @@ describe("food", () => {
     const level = findKind("abuja", "food_market")!.groceryPrice! / 1000;
     const jollof = foodPrice(s, "rice", level) + foodPrice(s, "tomato_pepper", level);
     expect(jollof).toBeLessThan(1500);
+  });
+});
+
+describe("real clock (WAT)", () => {
+  // Friday 9 October 2026, 9:40am in Nigeria = 08:40 UTC.
+  const FRI_940 = Date.UTC(2026, 9, 9, 8, 40);
+
+  it("starts a new life on the real weekday and time", () => {
+    const s = newGame({ ...opts("lagos"), now: FRI_940 });
+    expect(weekdayOf(s.time)).toBe(4); // Friday (Mon = 0)
+    expect(minuteOfDay(s.time)).toBe(9 * 60 + 40);
+    expect(lifeDay(s)).toBe(1);
+    expect(realGameTime(s, FRI_940 + 90 * 60000)).toBe(s.time + 90);
+  });
+
+  it("moves an old fast-clock save onto real time without going backwards", () => {
+    const old = newGame(opts("abuja"));
+    old.time += 40 * 1440; // played 40 fast days
+    const s = syncToRealClock(old, FRI_940);
+    expect(s.time).toBeGreaterThanOrEqual(old.time);
+    expect(s.time - old.time).toBeLessThan(7 * 1440);
+    expect(weekdayOf(s.time)).toBe(4);
+    expect(minuteOfDay(s.time)).toBe(580);
+    expect(lifeDay(s)).toBe(lifeDay(old) + Math.floor((s.time - old.time + minuteOfDay(old.time)) / 1440));
+  });
+
+  it("makes actions quick: an 8-hour shift takes 8 minutes", () => {
+    expect(actionMinutes(480)).toBe(8);
+    expect(actionMinutes(25)).toBe(1);
+  });
+
+  it("looks after the basics while you're away", () => {
+    let s = newGame({ ...opts("enugu"), now: FRI_940 });
+    s.needs = { hunger: 60, energy: 60, hygiene: 60, fun: 60, social: 60 };
+    s = advance(s, 3 * 1440, "away");
+    for (const v of Object.values(s.needs)) expect(v).toBeGreaterThanOrEqual(24.9);
+    expect(s.stats.hospitalVisits).toBe(0);
+    expect(s.pendingEvent).toBeNull();
+  });
+
+  it("only gives missed-shift strikes if you were playing during the shift", () => {
+    let s = newGame({ ...opts("lagos"), now: Date.UTC(2026, 9, 5, 5, 0) }); // Monday 6am WAT
+    s.skills.business = 500;
+    s = dispatch(s, { type: "applyJob", careerId: "trade" }).state;
+    const away = advance(s, 2 * 1440, "away");
+    expect(away.career?.missedStreak).toBe(0);
+    let live = s;
+    const end = s.time + 2 * 1440;
+    while (live.time < end) {
+      if (live.pendingEvent) live = { ...live, pendingEvent: null };
+      live = advance(live, end - live.time, "live");
+    }
+    expect(live.career?.missedStreak ?? 3).toBeGreaterThan(0);
+  });
+
+  it("caps catch-up after a long absence", () => {
+    const s = newGame({ ...opts("calabar"), now: FRI_940 });
+    const later = advance(s, 30 * 1440, "away");
+    expect(later.time).toBe(s.time + 30 * 1440);
   });
 });

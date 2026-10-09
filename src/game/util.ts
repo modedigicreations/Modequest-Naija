@@ -50,6 +50,31 @@ export const WEEKDAYS_LONG = [
 ] as const;
 
 export const dayOf = (t: number) => Math.floor(t / MIN_PER_DAY) + 1;
+
+// ---------------------------------------------------------------------------
+// Real clock. The game day follows West Africa Time (UTC+1): what the clock
+// says in the game is what it says on the player's phone in Nigeria.
+// Game time t lines up with the real week when t ≡ realMinute + 3 days
+// (mod 1 week), because 1 Jan 1970 was a Thursday and game Day 1 is a Monday.
+// ---------------------------------------------------------------------------
+
+export const MIN_PER_WEEK = MIN_PER_DAY * 7;
+const WAT_OFFSET_MINUTES = 60;
+
+/** Minutes since 1970 in Nigerian time. */
+export const realMinute = (nowMs: number) => Math.floor(nowMs / 60000) + WAT_OFFSET_MINUTES;
+
+/** The earliest game time ≥ atLeast that shows the same weekday and time as the real clock. */
+export function alignedGameTime(nowMs: number, atLeast = 0): number {
+  const inWeek = (((realMinute(nowMs) + 3 * MIN_PER_DAY) % MIN_PER_WEEK) + MIN_PER_WEEK) % MIN_PER_WEEK;
+  return inWeek >= atLeast ? inWeek : inWeek + Math.ceil((atLeast - inWeek) / MIN_PER_WEEK) * MIN_PER_WEEK;
+}
+
+/** Actions finish this many times faster than real life (an 8h shift takes 8 minutes). */
+export const ACTION_SPEED = 60;
+
+/** Real minutes an action takes, from its in-world length. */
+export const actionMinutes = (gameMinutes: number) => Math.max(1, Math.ceil(gameMinutes / ACTION_SPEED));
 export const weekdayOf = (t: number) => Math.floor(t / MIN_PER_DAY) % 7; // 0 = Mon
 export const weekOf = (t: number) => Math.floor(t / (MIN_PER_DAY * 7)) + 1;
 export const minuteOfDay = (t: number) => ((t % MIN_PER_DAY) + MIN_PER_DAY) % MIN_PER_DAY;

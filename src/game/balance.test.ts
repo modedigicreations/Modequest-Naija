@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advance, dispatch, newGame, shiftStatus, travelOptions } from "./engine";
+import { advance, dispatch, isOpen, newGame, shiftStatus, travelOptions } from "./engine";
 import { getCareer } from "./data/economy";
 import { EVENTS } from "./data/events";
 import { CITIES, findKind } from "./data/world";
@@ -83,12 +83,21 @@ function playDay(s: GameState, workplace: string): GameState {
     }
     if (s.needs.hunger < 45) {
       if (s.location !== "home") s = goTo(s, "home");
-      if ((s.pantry.bread ?? 0) > 0) s = untilFree(try_(s, { type: "startActivity", activityId: "snack" }));
-      else if ((s.pantry.garri ?? 0) > 0) s = untilFree(try_(s, { type: "startActivity", activityId: "soak_garri" }));
-      else {
-        s = goTo(s, findKind(s.city, "buka")!.id);
-        s = untilFree(try_(s, { type: "startActivity", activityId: "amala" }));
+      if ((s.pantry.bread ?? 0) + (s.pantry.garri ?? 0) === 0) {
+        // Out of food: order delivery if riders are working, else the buka if it's open, else wait.
+        const ordered = dispatch(s, { type: "buyFood", items: { bread: 2, garri: 2 }, delivery: true });
+        if (!ordered.error) s = ordered.state;
+        else if (isOpen(findKind(s.city, "buka")!, s.time)) {
+          s = goTo(s, findKind(s.city, "buka")!.id);
+          s = untilFree(try_(s, { type: "startActivity", activityId: "amala" }));
+          continue;
+        } else {
+          s = advance(s, 30);
+          continue;
+        }
       }
+      if ((s.pantry.bread ?? 0) > 0) s = untilFree(try_(s, { type: "startActivity", activityId: "snack" }));
+      else s = untilFree(try_(s, { type: "startActivity", activityId: "soak_garri" }));
       continue;
     }
     if (s.location === "home" && s.needs.hygiene < 40) {

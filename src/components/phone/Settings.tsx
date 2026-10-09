@@ -31,8 +31,9 @@ export function useStoredTheme() {
 }
 
 const HOW_TO = [
-  "Keep your 5 needs up: eat, sleep, bathe, have fun, socialise. Low needs hurt your pay, learning and health.",
-  "Get a job in the Jobs app and show up for shifts on time. Great shifts + skills + certificates = promotions.",
+  "The clock is real Nigerian time (WAT), so shift times, opening hours and rent day match your watch. Actions are quick: an 8-hour shift takes 8 minutes, a night's sleep takes 8 minutes.",
+  "Keep your 5 needs up: eat, sleep, bathe, have fun, socialise. Low needs hurt your pay, learning and health. While you're away, your character looks after the basics.",
+  "Get a job in the Jobs app and clock in within 2 hours of your shift's start time. Missing shifts while you're playing earns strikes (3 = fired); you're never punished for being offline. Great shifts + skills + certificates = promotions.",
   "Rent is charged every Saturday at 8am. Miss two and you're evicted to a relative's couch.",
   "NEPA cuts light at random. Laptops and TVs at home need power — a generator or solar helps.",
   "Scam DMs arrive on your phone. Read carefully. Never share OTPs, never pay to receive money.",
@@ -122,7 +123,7 @@ export default function SettingsApp({ onClose }: { onClose: () => void }) {
           ))}
         </ul>
         <div className="text-xs mt-3">
-          <b>Keyboard:</b> M map · P phone · Space pause · 1/2/3 speed
+          <b>Keyboard:</b> M map · P phone
         </div>
       </div>
 

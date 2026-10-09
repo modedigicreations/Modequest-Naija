@@ -1,16 +1,15 @@
 "use client";
 
 import { create } from "zustand";
-import { advance, dispatch as engineDispatch, newGame } from "./engine";
+import { advance, dispatch as engineDispatch, newGame, realGameTime, syncToRealClock } from "./engine";
 import { LocalSaveAdapter, type SaveAdapter } from "./persistence";
 import type { Command, GameState, NewGameOptions } from "./types";
 
-// Game minutes per real second: [idle, busy] for each speed setting.
-const RATES: Record<1 | 2 | 3, [number, number]> = {
-  1: [2, 20],
-  2: [6, 40],
-  3: [15, 60],
-};
+/** A gap longer than this (minutes) means the app was closed or asleep: catch up gently. */
+const AWAY_AFTER_MINUTES = 3;
+
+/** Older saves ran on a fast clock; move them onto real Nigerian time once. */
+const onRealClock = (g: GameState | null) => (g && !g.flags.realClock ? syncToRealClock(g, Date.now()) : g);
 
 export type Screen = "loading" | "title" | "create" | "play";
 
@@ -35,7 +34,8 @@ interface GameStore {
   startNew(opts: NewGameOptions): void;
   load(state: GameState): void;
   dispatch(cmd: Command): boolean;
-  tick(realMs: number): void;
+  /** Bring the game up to the real clock. */
+  tick(): void;
   hold(key: string, on: boolean): void;
   save(): void;
   flushSave(): Promise<void>;
@@ -58,7 +58,7 @@ export const useGame = create<GameStore>((set, get) => ({
   lastSave: 0,
 
   async init() {
-    const saved = await get().adapter.load();
+    const saved = onRealClock(await get().adapter.load());
     set({ game: saved, hasSave: !!saved, screen: "title" });
   },
 
@@ -67,14 +67,15 @@ export const useGame = create<GameStore>((set, get) => ({
   },
 
   startNew(opts) {
-    const game = newGame(opts);
+    const game = newGame({ ...opts, now: Date.now() });
     set({ game, hasSave: true, screen: "play", carry: 0 });
     void get().adapter.save(game);
   },
 
   load(state) {
-    set({ game: state, hasSave: true, screen: "play", carry: 0 });
-    void get().adapter.save(state);
+    const game = onRealClock(state)!;
+    set({ game, hasSave: true, screen: "play", carry: 0 });
+    void get().adapter.save(game);
   },
 
   dispatch(cmd) {
@@ -89,18 +90,17 @@ export const useGame = create<GameStore>((set, get) => ({
     return true;
   },
 
-  tick(realMs) {
-    const { game, holds, carry } = get();
-    if (!game || game.speed === 0 || game.pendingEvent || holds.size > 0) return;
-    const busy = !!game.activity || !!game.travel;
-    const rate = RATES[game.speed][busy ? 1 : 0];
-    const total = carry + (realMs / 1000) * rate;
-    const whole = Math.floor(total);
-    if (whole <= 0) {
-      set({ carry: total });
+  tick() {
+    const { game } = get();
+    if (!game || game.pendingEvent) return;
+    if (!game.flags.realClock) {
+      set({ game: onRealClock(game) });
       return;
     }
-    set({ game: advance(game, whole), carry: total - whole });
+    // Follow the real clock; a long gap (app closed, phone asleep) is caught up gently.
+    const behind = realGameTime(game, Date.now()) - game.time;
+    if (behind <= 0) return;
+    set({ game: advance(game, behind, behind > AWAY_AFTER_MINUTES ? "away" : "live") });
     if (Date.now() - get().lastSave > 15000) get().save();
   },
 
@@ -126,7 +126,7 @@ export const useGame = create<GameStore>((set, get) => ({
 
   async switchAdapter(adapter) {
     await get().flushSave();
-    const saved = await adapter.load();
+    const saved = onRealClock(await adapter.load());
     set({ adapter, game: saved, hasSave: !!saved, screen: "title", carry: 0 });
   },
 

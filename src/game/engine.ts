@@ -78,6 +78,9 @@ import type {
 import { NEED_KEYS, SKILL_KEYS } from "./types";
 import {
   MIN_PER_DAY,
+  actionMinutes,
+  alignedGameTime,
+  realMinute,
   chance,
   clamp,
   dayOf,
@@ -94,8 +97,11 @@ import {
 export const SAVE_VERSION = 3;
 export const START_MINUTE = 7 * 60; // Day 1, Monday, 7:00am
 
-// Base need decay per game hour.
-const DECAY: Needs = { hunger: 4, energy: 3.5, hygiene: 2.5, fun: 2.2, social: 1.6 };
+// Base need decay per hour. Shifts and sleep are quick now (8 minutes), so the
+// character is "awake" for nearly the whole real day: needs drain at 40% of the
+// old fast-clock rate, so a real day costs about the same food and sleep as before.
+const REAL_TIME_DECAY = 0.4;
+const DECAY: Needs = { hunger: 4 * REAL_TIME_DECAY, energy: 3.5 * REAL_TIME_DECAY, hygiene: 2.5 * REAL_TIME_DECAY, fun: 2.2 * REAL_TIME_DECAY, social: 1.6 * REAL_TIME_DECAY };
 // Health damage per game hour while a need is under 10. Starving and
 // exhaustion are dangerous; boredom and loneliness mostly hurt mood.
 const HEALTH_HIT: Needs = { hunger: 2, energy: 2, hygiene: 0.6, fun: 0.5, social: 0.5 };
@@ -169,6 +175,14 @@ export function newGame(o: NewGameOptions): GameState {
     flags: { rentPaidThroughWeek: bg.prepaidWeeks, student: bg.student ? 1 : 0 },
   };
 
+  if (o.now !== undefined) {
+    // Start on today's real weekday and time, in week 1.
+    s.time = alignedGameTime(o.now);
+    s.flags.clockOffset = s.time - realMinute(o.now);
+    s.flags.realClock = 1;
+  }
+  s.flags.startDay = dayOf(s.time);
+
   if (bg.loan) {
     const def = getLoanDef(bg.loan)!;
     s.loans.push({ id: def.id, principal: def.principal, remaining: def.weekly * def.weeks, weekly: def.weekly, missed: 0, lender: def.lender });
@@ -191,6 +205,28 @@ export function newGame(o: NewGameOptions): GameState {
     text: `My child, you have reached ${getCity(s.city).name} safely? Eat well, find a good job, and don't follow bad friends. Call me when you can.`,
   });
   log(s, "info", `Day 1 in ${getCity(s.city).name}. Rent is due every Saturday. Prepaid until week ${bg.prepaidWeeks}.`);
+  return s;
+}
+
+// ---------------------------------------------------------------------------
+// Real clock
+// ---------------------------------------------------------------------------
+
+/** Days lived in this life (Day 1 = the day you started). */
+export const lifeDay = (s: GameState) => dayOf(s.time) - (s.flags.startDay ?? 1) + 1;
+
+/** Game time that matches the real clock right now. */
+export const realGameTime = (s: GameState, nowMs: number) => realMinute(nowMs) + (s.flags.clockOffset ?? 0);
+
+/** Move an older (fast-clock) save onto real Nigerian time. Never goes backwards. */
+export function syncToRealClock(state: GameState, nowMs: number): GameState {
+  const s = clone(state);
+  s.flags.startDay ??= 1;
+  s.time = alignedGameTime(nowMs, state.time);
+  s.flags.clockOffset = s.time - realMinute(nowMs);
+  s.flags.realClock = 1;
+  rollDay(s);
+  log(s, "info", "🕐 Game time now follows real Nigerian time. Actions are quick: an 8-hour shift takes 8 minutes.");
   return s;
 }
 
@@ -305,7 +341,7 @@ export function intercityQuote(s: GameState, to: string, mode: "coach" | "flight
   if (!route) return null;
   return {
     arrival: arrival.id,
-    minutes: route.minutes + (atTerminal ? 0 : TERMINAL_TRANSFER_MINUTES),
+    minutes: actionMinutes(route.minutes + (atTerminal ? 0 : TERMINAL_TRANSFER_MINUTES)),
     fare: price(s, route.fare + (atTerminal ? 0 : TERMINAL_TRANSFER_FARE), false),
     atTerminal,
   };
@@ -358,7 +394,7 @@ export function travelOptions(s: GameState, to: string): TravelOption[] {
       ok = false;
       reason = "Can't afford";
     }
-    return { mode: t.id, name: t.name, emoji: t.emoji, minutes: Math.max(5, minutes), fare, ok, reason, blurb: t.blurb };
+    return { mode: t.id, name: t.name, emoji: t.emoji, minutes: actionMinutes(Math.max(5, minutes)), fare, ok, reason, blurb: t.blurb };
   });
 }
 
@@ -692,6 +728,15 @@ export function shiftStatus(s: GameState): ShiftStatus {
 // The clock: per-minute simulation
 // ---------------------------------------------------------------------------
 
+/**
+ * While the player is away (app closed), their character looks after the
+ * basics: needs don't fall below this, and nobody collapses or gets pop-ups.
+ */
+const AWAY_NEED_FLOOR = 25;
+/** The most time simulated when coming back; longer absences are skipped. */
+const MAX_CATCH_UP = 7 * MIN_PER_DAY;
+let away = false;
+
 function tickMinute(s: GameState) {
   s.time += 1;
   const run = s.activity;
@@ -706,12 +751,13 @@ function tickMinute(s: GameState) {
       if (k === "social" && hasTrait(s, "social")) rate *= 0.7;
       if (k === "energy" && hasTrait(s, "night_owl")) rate *= 0.85;
       if (k === "fun" && hasTrait(s, "calm")) rate *= 0.8;
-      s.needs[k] = clamp(s.needs[k] - rate / 60);
+      const next = clamp(s.needs[k] - rate / 60);
+      s.needs[k] = away ? Math.max(next, Math.min(s.needs[k], AWAY_NEED_FLOOR)) : next;
     }
   }
 
   // Health
-  const hit = NEED_KEYS.reduce((a, k) => a + (s.needs[k] < 10 ? HEALTH_HIT[k] : 0), 0);
+  const hit = away ? 0 : NEED_KEYS.reduce((a, k) => a + (s.needs[k] < 10 ? HEALTH_HIT[k] : 0), 0);
   if (hit > 0) s.health = clamp(s.health - (hit * (hasTrait(s, "calm") ? 0.5 : 1)) / 60);
   else if (NEED_KEYS.every((k) => s.needs[k] > 30)) s.health = clamp(s.health + (hasTrait(s, "athletic") ? 1 : 0.5) / 60);
 
@@ -745,8 +791,9 @@ function tickMinute(s: GameState) {
         log(s, "bad", "🕯️ NEPA took light! Your session stopped.");
         completeActivity(s, true);
       } else if (src === "generator") {
-        s.flags.genMinutes = (s.flags.genMinutes ?? 0) + 1;
-        if (s.flags.genMinutes >= 60) {
+        // Bill fuel for the in-world time the session covers, not the quick real time.
+        s.flags.genMinutes = (s.flags.genMinutes ?? 0) + (def.duration ?? 0) / Math.max(1, run.end - run.start);
+        while (s.flags.genMinutes >= 60) {
           s.flags.genMinutes -= 60;
           forceCharge(s, price(s, GENERATOR_COST_PER_HOUR, false), "Generator fuel");
         }
@@ -759,13 +806,22 @@ function tickMinute(s: GameState) {
   if (s.travel && s.time >= s.travel.end) arrive(s);
 
   // Collapse
-  if (s.health <= 0) collapse(s);
+  if (s.health <= 0 && !away) collapse(s);
+
+  // You only get a strike for a missed shift if you were playing while it was on.
+  if (!away && s.career) {
+    const def = getCareer(s.career.careerId);
+    const mm = minuteOfDay(s.time);
+    if (def?.days.includes(weekdayOf(s.time)) && mm >= def.start * 60 && mm <= def.start * 60 + 120) s.flags.sawShiftDay = dayOf(s.time);
+  }
 
   // Calendar hooks
   const m = minuteOfDay(s.time);
   if (m === 0) daily(s);
   if (weekdayOf(s.time) === 5 && m === 8 * 60) payRent(s);
   if (m === 0 && weekdayOf(s.time) === 0) weekly(s);
+  // Real time passes slowly, so surprises are checked every 15 minutes while you play.
+  if (!away && m % 15 === 0) surprises(s);
   if (m % 60 === 0) hourly(s);
 }
 
@@ -785,8 +841,8 @@ function collapse(s: GameState) {
   };
 }
 
-function hourly(s: GameState) {
-  // Pop-up events
+/** Pop-up events and DMs (live play only). */
+function surprises(s: GameState) {
   if (!s.pendingEvent) {
     for (const ev of EVENTS) {
       if (ev.condition(s) && chance(s, ev.chance)) {
@@ -795,9 +851,13 @@ function hourly(s: GameState) {
       }
     }
   }
-  // DMs
   const h = hourOf(s.time);
   if (h >= 7 && h <= 23 && chance(s, MESSAGE_CHANCE_PER_HOUR)) spawnMessage(s);
+}
+
+function hourly(s: GameState) {
+  // Messages still arrive while you're away (read them when you're back).
+  if (away && hourOf(s.time) >= 7 && hourOf(s.time) <= 23 && chance(s, MESSAGE_CHANCE_PER_HOUR)) spawnMessage(s);
 
   // Achievements & dream
   for (const a of ACHIEVEMENTS) {
@@ -853,7 +913,8 @@ function daily(s: GameState) {
     const def = getCareer(career.careerId)!;
     const shiftStartT = (today - 2) * MIN_PER_DAY + def.start * 60;
     const hiredBefore = (s.flags.careerStartT ?? 0) < shiftStartT;
-    if (def.days.includes(weekdayOf(yesterdayT)) && career.lastShiftDay !== today - 1 && hiredBefore) {
+    const wasPlaying = s.flags.realClock ? s.flags.sawShiftDay === today - 1 : true;
+    if (def.days.includes(weekdayOf(yesterdayT)) && career.lastShiftDay !== today - 1 && hiredBefore && wasPlaying) {
       career.missedStreak += 1;
       career.performance = clamp(career.performance - 12);
       if (career.missedStreak >= 3) {
@@ -1020,13 +1081,27 @@ function weekly(s: GameState) {
 
 const clone = (s: GameState): GameState => structuredClone(s);
 
-/** Advance the simulation. Stops early when a pop-up event needs the player. */
-export function advance(state: GameState, minutes: number): GameState {
-  if (minutes <= 0 || state.pendingEvent) return state;
+/**
+ * Advance the simulation. Stops early when a pop-up event needs the player.
+ * "away" = catching up on time the app was closed (see AWAY_NEED_FLOOR).
+ */
+export function advance(state: GameState, minutes: number, mode: "live" | "away" = "live"): GameState {
+  if (minutes <= 0 || (state.pendingEvent && mode === "live")) return state;
   const s = clone(state);
-  for (let i = 0; i < minutes; i++) {
-    tickMinute(s);
-    if (s.pendingEvent) break;
+  if (mode === "away" && minutes > MAX_CATCH_UP) {
+    // Very long absence: life was on hold; only the last week is simulated.
+    s.time += minutes - MAX_CATCH_UP;
+    minutes = MAX_CATCH_UP;
+    rollDay(s);
+  }
+  away = mode === "away";
+  try {
+    for (let i = 0; i < minutes; i++) {
+      tickMinute(s);
+      if (s.pendingEvent && !away) break;
+    }
+  } finally {
+    away = false;
   }
   s.updatedAt = Date.now();
   return s;
@@ -1096,7 +1171,7 @@ function apply(s: GameState, cmd: Command): string | void {
       if (!v.ok) return v.reason;
       if (v.cost && !charge(s, v.cost, def.name)) return "Can't afford it.";
       for (const id of def.requires?.food ?? []) s.pantry[id] = Math.max(0, (s.pantry[id] ?? 0) - 1);
-      startRun(s, { activityId: def.id, start: s.time, end: s.time + def.duration });
+      startRun(s, { activityId: def.id, start: s.time, end: s.time + actionMinutes(def.duration) });
       return;
     }
 
@@ -1113,7 +1188,7 @@ function apply(s: GameState, cmd: Command): string | void {
       startRun(s, {
         activityId: `shift:${def.id}`,
         start: s.time,
-        end: s.time + def.hours * 60,
+        end: s.time + actionMinutes(def.hours * 60),
         workStyle: cmd.workStyle as WorkStyle,
         taskBonus: cmd.taskBonus,
         late: st.late,
@@ -1286,7 +1361,7 @@ function apply(s: GameState, cmd: Command): string | void {
       const b = s.businesses.find((x) => x.id === cmd.businessId);
       if (!b) return "You don't own this.";
       if (isBusy(s)) return "You're busy.";
-      startRun(s, { activityId: `manage:${b.id}`, start: s.time, end: s.time + 120 });
+      startRun(s, { activityId: `manage:${b.id}`, start: s.time, end: s.time + actionMinutes(120) });
       return;
     }
 
@@ -1324,7 +1399,7 @@ function apply(s: GameState, cmd: Command): string | void {
       if (cmd.interaction === "hangout" && !charge(s, price(s, 1500), `Hangout with ${npc.name}`)) return "Can't afford ₦1,500.";
       if (cmd.interaction === "gift" && !charge(s, price(s, 3000), `Gift for ${npc.name}`)) return "Can't afford ₦3,000.";
       rel.met = true;
-      startRun(s, { activityId: `talk:${npc.id}:${cmd.interaction}`, start: s.time, end: s.time + it.minutes });
+      startRun(s, { activityId: `talk:${npc.id}:${cmd.interaction}`, start: s.time, end: s.time + actionMinutes(it.minutes) });
       return;
     }
 

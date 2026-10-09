@@ -5,7 +5,8 @@ import { careerTitle } from "@/game/goals";
 import { gridPowerOn, homePower, mood, moodLabel } from "@/game/helpers";
 import { useGame } from "@/game/store";
 import { NEED_KEYS, type NeedKey } from "@/game/types";
-import { WEEKDAYS, dayOf, formatClock, formatNaira, weekOf, weekdayOf } from "@/game/util";
+import { lifeDay } from "@/game/engine";
+import { WEEKDAYS, formatClock, formatNaira, weekdayOf } from "@/game/util";
 import Avatar from "./Avatar";
 import { Meter } from "./ui";
 
@@ -19,7 +20,6 @@ export const NEED_INFO: Record<NeedKey, { label: string; emoji: string }> = {
 
 export default function TopBar({ onPhone, unread }: { onPhone: () => void; unread: number }) {
   const game = useGame((s) => s.game)!;
-  const dispatch = useGame((s) => s.dispatch);
   const setScreen = useGame((s) => s.setScreen);
   const save = useGame((s) => s.save);
 
@@ -28,7 +28,6 @@ export default function TopBar({ onPhone, unread }: { onPhone: () => void; unrea
   const backup = homePower(game);
   const m = mood(game);
   const ml = moodLabel(m);
-  const paused = game.speed === 0;
 
   return (
     <header className="bg-[var(--card)] border-b border-[var(--line)] px-3 sm:px-4 pt-[max(8px,env(safe-area-inset-top))] pb-2">
@@ -44,7 +43,7 @@ export default function TopBar({ onPhone, unread }: { onPhone: () => void; unrea
             <span className="chip font-bold">
               {getCity(game.city).emoji} {getCity(game.city).name}
             </span>
-            <span className="chip">Day {dayOf(game.time)} · Wk {weekOf(game.time)}</span>
+            <span className="chip" title="Days since you started this life">Day {lifeDay(game)}</span>
             <span className="chip" title={`Weather: ${w.label}`}>
               {w.emoji} <span className="hidden sm:inline">{w.label}</span>
             </span>
@@ -93,33 +92,10 @@ export default function TopBar({ onPhone, unread }: { onPhone: () => void; unrea
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Game speed">
-          <button
-            className={`btn btn-sm ${paused ? "btn-coral" : "btn-ghost"} w-9 px-0`}
-            onClick={() => dispatch({ type: "setSpeed", speed: paused ? 1 : 0 })}
-            aria-label={paused ? "Resume" : "Pause"}
-            title="Pause (space)"
-          >
-            {paused ? "▶" : "⏸"}
-          </button>
-          {([1, 2, 3] as const).map((sp) => (
-            <button
-              key={sp}
-              className={`btn btn-sm w-9 px-0 hidden sm:inline-flex ${game.speed === sp ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => dispatch({ type: "setSpeed", speed: sp })}
-              aria-label={`Speed ${sp}`}
-              title={`Speed ${sp} (key ${sp})`}
-            >
-              {">".repeat(sp)}
-            </button>
-          ))}
-          <button
-            className={`btn btn-sm sm:hidden w-9 px-0 ${game.speed > 1 ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => dispatch({ type: "setSpeed", speed: game.speed >= 3 ? 1 : ((game.speed + 1) as 2 | 3) })}
-            aria-label="Change speed"
-          >
-            {game.speed === 0 ? "1×" : `${game.speed}×`}
-          </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="chip chip-good hidden sm:inline-flex" title="Game time is real Nigerian time (WAT). Actions are quick: an 8-hour shift takes 8 minutes.">
+            ● Live · WAT
+          </span>
           <button className="btn btn-sm btn-ghost relative hidden lg:inline-flex" onClick={onPhone} title="Phone (P)">
             📱
             {unread > 0 && <span className="absolute -top-1.5 -right-1 min-w-5 h-5 px-1 rounded-full bg-[var(--coral)] text-white text-[11px] grid place-items-center">{unread}</span>}

@@ -24,12 +24,7 @@ export default function GameRoot() {
   // Real-time clock
   useEffect(() => {
     if (screen !== "play") return;
-    let last = performance.now();
-    const id = window.setInterval(() => {
-      const now = performance.now();
-      useGame.getState().tick(Math.min(1000, now - last));
-      last = now;
-    }, 200);
+    const id = window.setInterval(() => useGame.getState().tick(), 1000);
     const save = () => useGame.getState().save();
     const onVis = () => document.visibilityState === "hidden" && void useGame.getState().flushSave();
     document.addEventListener("visibilitychange", onVis);

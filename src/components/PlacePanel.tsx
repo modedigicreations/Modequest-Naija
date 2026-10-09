@@ -11,7 +11,7 @@ import { getFood } from "@/game/data/food";
 import FoodShop from "./FoodShop";
 import { useGame } from "@/game/store";
 import type { NeedKey } from "@/game/types";
-import { WEEKDAYS_LONG, formatClock, formatDuration, formatHour, formatNaira, hourOf, weekOf, weekdayOf } from "@/game/util";
+import { WEEKDAYS_LONG, actionMinutes, formatClock, formatDuration, formatHour, formatNaira, hourOf, weekOf, weekdayOf } from "@/game/util";
 import type { AppId } from "./Phone";
 import ShiftModal from "./ShiftModal";
 import PlayersHere from "./online/PlayersHere";
@@ -112,7 +112,7 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
         <div className="card p-4">
           <SectionTitle right={<span className="chip">{career.emoji} {career.name}</span>}>💼 Work</SectionTitle>
           <div className="text-sm">
-            <b>{career.levels[game.career!.level].title}</b> · {career.days.map((d) => WEEKDAYS_LONG[d].slice(0, 3)).join(", ")} · {career.start}:00 for {career.hours}h at{" "}
+            <b>{career.levels[game.career!.level].title}</b> · {career.days.map((d) => WEEKDAYS_LONG[d].slice(0, 3)).join(", ")} · clock in {career.start}:00–{career.start + 2}:00 (takes {actionMinutes(career.hours * 60)} min) at{" "}
             {workplace?.name ?? `(no workplace in ${getCity(game.city).name})`}
           </div>
           <div className="mt-2">
@@ -179,7 +179,7 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-sm">{lc.name}</span>
                       <span className="text-xs font-semibold text-[var(--ink-2)] shrink-0">
-                        {formatDuration(def.duration)}
+                        {formatDuration(actionMinutes(def.duration))}
                         {cost ? ` · ${formatNaira(cost)}` : ""}
                       </span>
                     </div>
