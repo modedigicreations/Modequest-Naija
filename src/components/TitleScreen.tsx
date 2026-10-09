@@ -14,7 +14,7 @@ import ShareCard from "./share/ShareCard";
 import { Modal } from "./ui";
 
 const FEATURES = [
-  ["🗺️", "7 real cities", "Lagos, Abuja, Port Harcourt, Enugu, Aba, Kaduna and Calabar — each with its own map, food, people and go-slow."],
+  ["🗺️", `${CITIES.length} real cities`, "From Lagos to Kaduna, Calabar to Abuja — each with its own map, food, people and go-slow."],
   ["💼", "9 careers", "Tech, food, media, trade, banking, logistics, health, civil service, oil & gas."],
   ["🎣", "Beat the scams", "Phishing DMs, Ponzi schemes, fake alerts — learn to spot them."],
   ["📈", "Grow money", "Save, invest, run businesses — and watch inflation bite."],
@@ -61,8 +61,15 @@ export default function TitleScreen() {
               <span className="inline-block bg-[var(--brand)] text-white px-3 rounded-2xl mt-2 -rotate-1">Naija</span>
             </h1>
             <p className="mt-5 text-lg text-[var(--ink-2)] max-w-md">
-              Live your Naija story. Hustle, learn, dodge scams, beat NEPA and build your empire — from Lagos to Kaduna, Abuja to Calabar, Enugu to Aba and Port Harcourt.
+              Live your Naija story. Hustle, learn, dodge scams, beat NEPA and build your empire in {CITIES.length} real Nigerian cities.
             </p>
+            <div className="mt-3 flex flex-wrap gap-1.5 max-w-md" aria-label="Cities you can play in">
+              {CITIES.map((c) => (
+                <span key={c.id} className="chip font-bold" title={`${c.name} · ${c.nickname}`}>
+                  {c.emoji} {c.name}
+                </span>
+              ))}
+            </div>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md">
               {hasSave && game && (
