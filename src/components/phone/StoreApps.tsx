@@ -11,8 +11,21 @@ import { Empty, SectionTitle } from "../ui";
 
 const naira = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 
+/** Your own character wearing a product's items, for the store preview. */
+function preview(base: Appearance, p: Product): Appearance | null {
+  const items = (p.grants.cosmetics ?? []).map((id) => COSMETICS.find((c) => c.id === id)).filter(Boolean);
+  if (!items.length) return null;
+  const a: Appearance = { ...base };
+  for (const c of items) {
+    if (c!.slot === "outfit") a.premiumOutfit = c!.id;
+    else a.premiumAccessory = c!.id;
+  }
+  return a;
+}
+
 export function StoreApp() {
   const profile = useSession((s) => s.profile);
+  const look = useGame((s) => s.game?.player.appearance);
   const { cosmetics, supporterUntil, orders, refresh, enabled: paymentsEnabled } = useShop();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -53,7 +66,13 @@ export function StoreApp() {
       <div className="grid gap-2">
         {PRODUCTS.filter((p) => kinds.includes(p.kind) && !p.teacherOnly).map((p) => (
           <div key={p.id} className="rounded-2xl bg-[var(--card-2)] p-3 flex items-center gap-3">
-            <span className="text-3xl">{p.emoji}</span>
+            {look && preview(look, p) ? (
+              <span className="rounded-xl bg-[var(--card)] shrink-0" title={`Preview: you in ${p.name}`}>
+                <Avatar a={preview(look, p)!} size={48} />
+              </span>
+            ) : (
+              <span className="text-3xl">{p.emoji}</span>
+            )}
             <div className="min-w-0 flex-1">
               <div className="font-bold text-sm">{p.name}</div>
               <div className="text-[11px] text-[var(--ink-2)]">{p.blurb}</div>
@@ -88,7 +107,8 @@ export function StoreApp() {
       {err && <p className="text-sm text-[var(--coral)] px-1">{err}</p>}
 
       {section("⭐ Support ModeQuest", ["supporter"])}
-      {section("👕 Style", ["cosmetic", "bundle"], "Look good. No gameplay advantage. Wear them from the Style app.")}
+      {section("🎁 Bundles", ["bundle"], "Save money by buying a set.")}
+      {section("👕 Style", ["cosmetic"], "Look good. No gameplay advantage. Wear them from the Style app. Previews show your own character.")}
       {section("💰 Game money", ["topup"], "Bought game money doesn't count on wealth leaderboards — those rank what you earn.")}
 
       <div className="card p-4">

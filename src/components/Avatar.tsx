@@ -21,8 +21,8 @@ export default function Avatar({ a, size = 96, className }: { a: Appearance; siz
     <svg viewBox="0 0 100 120" width={size} height={(size * 120) / 100} className={className} aria-hidden>
       {po && <PremiumOutfitPattern id={`po-${uid}`} outfit={po} />}
       {/* body */}
-      {po === "outfit_agbada" ? (
-        <path d="M6 120 C8 94 30 82 50 82 C70 82 92 94 94 120 Z" fill={bodyFill} stroke="#d4a017" strokeWidth="2" />
+      {po === "outfit_agbada" || po === "outfit_carnival" ? (
+        <path d="M6 120 C8 94 30 82 50 82 C70 82 92 94 94 120 Z" fill={bodyFill} stroke={po === "outfit_carnival" ? "#14c8c0" : "#d4a017"} strokeWidth="2" />
       ) : po === "outfit_gown" ? (
         <path d="M14 120 C14 90 30 82 50 82 C70 82 86 90 86 120 Z" fill={bodyFill} />
       ) : (
@@ -31,6 +31,29 @@ export default function Avatar({ a, size = 96, className }: { a: Appearance; siz
       {po === "outfit_jersey" && <rect x="44" y="84" width="12" height="36" fill="#ffffff" />}
       {po === "outfit_gown" && <path d="M36 84 L50 100 L64 84" fill="#ffffff" />}
       {po === "outfit_agbada" && <path d="M38 86 C44 96 56 96 62 86" fill="none" stroke="#d4a017" strokeWidth="2.5" />}
+      {po === "outfit_senator" && <path d="M50 86 L50 120 M44 90 L50 96 L56 90" fill="none" stroke="#e2b93b" strokeWidth="1.8" />}
+      {po === "outfit_kaftan" && (
+        <g fill="none" stroke="#d4a017" strokeWidth="1.6">
+          <path d="M40 84 L50 102 L60 84" />
+          <path d="M43 86 L50 98 L57 86" strokeDasharray="1.5 1.5" />
+        </g>
+      )}
+      {po === "outfit_chef" && (
+        <g fill="#c8ccd6">
+          {[92, 100, 108, 116].map((y) => (
+            <g key={y}>
+              <circle cx="44" cy={y} r="1.4" />
+              <circle cx="56" cy={y} r="1.4" />
+            </g>
+          ))}
+        </g>
+      )}
+      {po === "outfit_carnival" && (
+        <g>
+          <path d="M8 104 L2 92 L14 100 Z M92 104 L98 92 L86 100 Z" fill="#ffd166" />
+          <path d="M38 84 C44 92 56 92 62 84" fill="none" stroke="#ffd166" strokeWidth="2.5" />
+        </g>
+      )}
       <path d="M40 82 L50 96 L60 82" fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="3" strokeLinejoin="round" />
       {/* neck */}
       <rect x="43" y="68" width="14" height="16" rx="6" fill={skin} />
@@ -111,6 +134,40 @@ export default function Avatar({ a, size = 96, className }: { a: Appearance; siz
           <circle cx="50" cy="18" r="2.6" fill="#e0457b" />
           <circle cx="38" cy="22" r="2" fill="#2e86ff" />
           <circle cx="62" cy="22" r="2" fill="#0f9d58" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_gele" && (
+        <g transform="translate(0 6)">
+          <path d="M20 36 C14 10 40 -2 52 6 C66 -4 92 8 82 32 C74 22 30 22 20 36 Z" fill="#e0a526" stroke="#a0731a" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M30 20 C40 12 60 12 72 20 M26 28 C40 20 62 20 78 28" fill="none" stroke="#a0731a" strokeWidth="1.2" />
+          <path d="M70 8 C82 0 92 10 86 18" fill="#f2c14e" stroke="#a0731a" strokeWidth="1.2" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_red_cap" && (
+        <g>
+          <path d="M30 30 C30 12 70 12 70 30 Z" fill="#c8102e" />
+          <path d="M30 30 L70 30" stroke="#8a0a1f" strokeWidth="2.5" />
+          <path d="M66 16 C76 12 82 18 78 24" fill="none" stroke="#c8102e" strokeWidth="3" strokeLinecap="round" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_zanna" && (
+        <g>
+          <path d="M31 30 L33 8 C40 2 60 2 67 8 L69 30 Z" fill="#f4ecd8" stroke="#b9a27a" strokeWidth="1.2" />
+          <path d="M34 12 H66 M34 18 H66 M34 24 H67" stroke="#2f7d4a" strokeWidth="1.2" strokeDasharray="2 1.5" />
+          <path d="M50 6 L53 12 L50 18 L47 12 Z" fill="#c8102e" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_coral" && (
+        <g fill="#e2572b" stroke="#a83a19" strokeWidth="0.6">
+          {[[38, 80], [42, 84], [46, 86], [50, 87], [54, 86], [58, 84], [62, 80], [40, 90], [45, 93], [50, 94], [55, 93], [60, 90]].map(([x, y]) => (
+            <circle key={`${x}-${y}`} cx={x} cy={y} r="2.1" />
+          ))}
+        </g>
+      )}
+      {a.premiumAccessory === "acc_chef_hat" && (
+        <g transform="translate(0 5)">
+          <path d="M33 30 L35 18 C26 16 26 2 38 4 C40 -4 60 -4 62 4 C74 2 74 16 65 18 L67 30 Z" fill="#ffffff" stroke="#c8ccd6" strokeWidth="1.5" />
+          <path d="M33 28 H67" stroke="#c8ccd6" strokeWidth="1.5" />
         </g>
       )}
       {a.premiumAccessory === "acc_shades" && (
@@ -198,6 +255,64 @@ function PremiumOutfitPattern({ id, outfit }: { id: string; outfit: string }) {
         <defs>
           <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
             <rect width="10" height="10" fill="#1d1530" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_aso_oke":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="9" patternUnits="userSpaceOnUse">
+            <rect width="10" height="9" fill="#5b2a86" />
+            <rect y="3" width="10" height="2.4" fill="#d4a017" />
+            <rect y="6.6" width="10" height="0.8" fill="#f3e5ff" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_senator":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#1f5f3a" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_kaftan":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#8fc9ec" />
+            <path d="M0 10 L10 0" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_isiagu":
+      return (
+        <defs>
+          <pattern id={id} width="14" height="14" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill="#141414" />
+            <circle cx="7" cy="7" r="3.2" fill="#d4a017" />
+            <circle cx="7" cy="7" r="1.6" fill="#141414" />
+            <path d="M7 1.5 V3 M7 11 V12.5 M1.5 7 H3 M11 7 H12.5" stroke="#d4a017" strokeWidth="1.2" />
+            <circle cx="1" cy="1" r="0.9" fill="#c8102e" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_carnival":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#ff3d9a" />
+            <circle cx="3" cy="3" r="1.5" fill="#14c8c0" />
+            <circle cx="8" cy="8" r="1.5" fill="#14c8c0" />
+            <path d="M8 1 L9.5 3 L8 5 L6.5 3 Z" fill="#ffd166" />
+          </pattern>
+        </defs>
+      );
+    case "outfit_chef":
+      return (
+        <defs>
+          <pattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#fdfdfd" />
           </pattern>
         </defs>
       );
