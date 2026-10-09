@@ -14,6 +14,7 @@ import { bankFrozen, debtTotal, investmentsTotal, level, netWorth, price, SKILL_
 import { useGame } from "@/game/store";
 import { dayOf, formatClock, formatNaira, WEEKDAYS, weekdayOf } from "@/game/util";
 import { Empty, SectionTitle } from "../ui";
+import SchoolOffice from "./SchoolOffice";
 
 function AmountInput({ value, onChange, presets }: { value: string; onChange: (v: string) => void; presets: number[] }) {
   return (
@@ -241,6 +242,7 @@ export function BusinessApp() {
                 Sell
               </button>
             </div>
+            {def.school && <SchoolOffice b={b} def={def} />}
           </div>
         );
       })}
@@ -263,6 +265,7 @@ export function BusinessApp() {
               <span className="chip">Skill: {SKILL_NAMES[d.skill]}</span>
               <span className={`chip ${d.volatility > 0.5 ? "chip-bad" : ""}`}>Risk {d.volatility > 0.5 ? "high" : "moderate"}</span>
               {d.requires && <span className={`chip ${locked ? "chip-bad" : "chip-good"}`}>Needs {SKILL_NAMES[d.requires[0]]} {d.requires[1]}</span>}
+              {d.school && <span className="chip chip-info">🏫 You run it: fees, teachers, exams</span>}
             </div>
             <button className="btn btn-primary btn-sm mt-3" disabled={!!locked} onClick={() => confirm(`Start a ${d.name} for ${formatNaira(cost)}?`) && dispatch({ type: "buyBusiness", businessId: d.id })}>
               Start business

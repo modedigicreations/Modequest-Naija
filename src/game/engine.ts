@@ -39,6 +39,7 @@ import {
   transportIn,
 } from "./data/world";
 import { ACHIEVEMENTS, dreamProgress } from "./goals";
+import { chaseFees, holdExams, newSchool, schoolWeek, setSchool } from "./school";
 import {
   addFriendship,
   addNeeds,
@@ -1023,6 +1024,14 @@ function weekly(s: GameState) {
   for (const b of s.businesses) {
     const def = getBusiness(b.id)!;
     const neglected = dayOf(s.time) - b.lastManagedDay > 14;
+    if (def.school) {
+      // Schools are run by the player: fees in, salaries and running costs out.
+      b.school ??= newSchool(s, def);
+      const profit = schoolWeek(s, b, def, neglected);
+      b.weeklyHistory = [...b.weeklyHistory.slice(-7), profit];
+      lines.push(`${def.emoji} ${profit >= 0 ? "+" : ""}${formatNaira(profit)}${neglected ? " (owner absent!)" : ""}`);
+      continue;
+    }
     const levelMult = 1 + 0.6 * (b.level - 1);
     const skillMult = 0.8 + 0.06 * level(s, def.skill);
     let profit = def.weekly * levelMult * skillMult * (1 + def.volatility * gaussian(s)) * s.world.priceIndex;
@@ -1348,8 +1357,14 @@ function apply(s: GameState, cmd: Command): string | void {
       if (def.requires && level(s, def.requires[0]) < def.requires[1]) return `Needs ${SKILL_NAMES[def.requires[0]]} ${def.requires[1]}.`;
       const cost = price(s, def.price, false);
       if (!charge(s, cost, `Started ${def.name}`)) return "Can't afford it.";
-      s.businesses.push({ id: def.id, level: 1, boughtOnDay: dayOf(s.time), lastManagedDay: dayOf(s.time), weeklyHistory: [] });
-      log(s, "good", `${def.emoji} You opened a ${def.name}! Profits arrive every Monday.`);
+      s.businesses.push({ id: def.id, level: 1, boughtOnDay: dayOf(s.time), lastManagedDay: dayOf(s.time), weeklyHistory: [], ...(def.school ? { school: newSchool(s, def) } : {}) });
+      log(
+        s,
+        "good",
+        def.school
+          ? `${def.emoji} You opened ${def.name}! Run it from the Business app: set fees, hire teachers, chase unpaid fees and hold exams each term.`
+          : `${def.emoji} You opened a ${def.name}! Profits arrive every Monday.`,
+      );
       return;
     }
 
@@ -1382,6 +1397,18 @@ function apply(s: GameState, cmd: Command): string | void {
       if (isBusy(s)) return "You're busy.";
       startRun(s, { activityId: `manage:${b.id}`, start: s.time, end: s.time + actionMinutes(120) });
       return;
+    }
+
+    case "schoolSet":
+    case "schoolChase":
+    case "schoolExam": {
+      const b = s.businesses.find((x) => x.id === cmd.businessId);
+      const def = getBusiness(cmd.businessId);
+      if (!b || !def?.school) return "You don't run this school.";
+      b.school ??= newSchool(s, def);
+      if (cmd.type === "schoolSet") return setSchool(s, b, def, cmd);
+      if (cmd.type === "schoolChase") return chaseFees(s, b, def, cmd.method);
+      return holdExams(s, b, def);
     }
 
     case "takeLoan": {

@@ -249,6 +249,8 @@ export interface BusinessDef {
   volatility: number; // 0-1
   requires?: [SkillKey, number];
   blurb: string;
+  /** A school you run yourself: places per building level and the usual fee per term. */
+  school?: { capacity: number[]; fee: number };
 }
 
 // Listed cheapest first.
@@ -273,7 +275,8 @@ export const BUSINESSES: BusinessDef[] = ([
   { id: "print_press", name: "Printing & Branding Press", emoji: "🖨️", price: 1200000, weekly: 100000, skill: "creativity", volatility: 0.3, requires: ["business", 4], blurb: "Banners, flyers, branded shirts — every election and wedding needs you." },
   { id: "solar_co", name: "Solar Installation Co.", emoji: "🔆", price: 1800000, weekly: 160000, skill: "business", volatility: 0.3, requires: ["business", 5], blurb: "Everyone wants light. You sell it." },
   { id: "event_centre", name: "Event Centre", emoji: "🎉", price: 4500000, weekly: 380000, skill: "business", volatility: 0.35, requires: ["business", 7], blurb: "Owambe headquarters. Weekends fully booked." },
-  { id: "private_school", name: "Private School", emoji: "🏫", price: 6000000, weekly: 480000, skill: "business", volatility: 0.2, requires: ["business", 8], blurb: "Nursery and primary school. Parents pay termly — if your results are good." },
+  { id: "private_school", name: "Private School", emoji: "🏫", price: 6000000, weekly: 480000, skill: "business", volatility: 0.2, requires: ["business", 8], blurb: "A big nursery, primary and secondary school. You run admissions, fees, teachers and exams.", school: { capacity: [120, 200, 300, 400], fee: 25000 } },
+  { id: "nursery_school", name: "Community Nursery & Primary", emoji: "🧒🏾", price: 900000, weekly: 70000, skill: "business", volatility: 0.2, requires: ["business", 3], blurb: "A small school in your area. You run admissions, fees, teachers and exams.", school: { capacity: [40, 70, 100, 140], fee: 12000 } },
 ] as BusinessDef[]).sort((a, b) => a.price - b.price);
 export const BUSINESS_MAX_LEVEL = 4;
 

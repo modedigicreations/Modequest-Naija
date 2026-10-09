@@ -39,6 +39,13 @@ function randomCommand(s: GameState, r: () => number): Command {
   if (roll < 0.72) return { type: "divest", productId: pick(INVESTMENTS).id };
   if (roll < 0.74) return { type: pick(["buyBusiness", "upgradeBusiness", "sellBusiness", "manageBusiness"] as const), businessId: pick(BUSINESSES).id };
   if (roll < 0.76) return { type: pick(["takeLoan", "repayLoan"] as const), loanId: pick(LOANS).id };
+  if (roll < 0.78) {
+    const id = pick(["nursery_school", "private_school"]);
+    const k = r();
+    if (k < 0.4) return { type: "schoolSet", businessId: id, fee: Math.floor(r() * 80000), teachers: Math.floor(r() * 20), teacherLevel: pick([0, 1, 2] as const), scholarships: r() < 0.5 };
+    if (k < 0.7) return { type: "schoolChase", businessId: id, method: pick(["remind", "send_home"] as const) };
+    return { type: "schoolExam", businessId: id };
+  }
   if (roll < 0.8) {
     const m = s.messages.find((x) => x.choices && !x.resolved);
     if (m) return { type: "replyMessage", messageId: m.id, choiceId: pick(m.choices!).id };

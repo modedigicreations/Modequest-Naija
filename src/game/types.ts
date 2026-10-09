@@ -81,6 +81,23 @@ export interface OwnedBusiness {
   boughtOnDay: number;
   lastManagedDay: number;
   weeklyHistory: number[]; // last few weekly profits
+  /** Schools are run by the player (see game/school.ts). */
+  school?: SchoolState;
+}
+
+export interface SchoolState {
+  term: number;
+  week: number; // week of the term, 1..TERM_WEEKS
+  fee: number; // naira per pupil per term
+  pupils: number;
+  teachers: number;
+  teacherLevel: 0 | 1 | 2; // basic, good, excellent
+  reputation: number; // 0-100
+  owed: number; // unpaid fees
+  scholarships: boolean;
+  examDone: boolean;
+  lastPassRate: number | null;
+  lastChaseDay: number;
 }
 
 export interface Loan {
@@ -251,6 +268,9 @@ export type Command =
   | { type: "upgradeBusiness"; businessId: string }
   | { type: "sellBusiness"; businessId: string }
   | { type: "manageBusiness"; businessId: string }
+  | { type: "schoolSet"; businessId: string; fee?: number; teachers?: number; teacherLevel?: 0 | 1 | 2; scholarships?: boolean }
+  | { type: "schoolChase"; businessId: string; method: "remind" | "send_home" }
+  | { type: "schoolExam"; businessId: string }
   | { type: "takeLoan"; loanId: string }
   | { type: "repayLoan"; loanId: string }
   | { type: "talk"; npcId: string; interaction: string }
