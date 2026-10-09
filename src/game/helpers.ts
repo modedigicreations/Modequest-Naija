@@ -187,7 +187,7 @@ export function netWorth(s: GameState): number {
     const def = getBusiness(b.id);
     return a + (def ? def.price * (0.6 + 0.3 * (b.level - 1)) : 0);
   }, 0);
-  return Math.round(s.cash + s.bank + investmentsTotal(s) + items + biz - debtTotal(s));
+  return Math.round(s.cash + s.bank + investmentsTotal(s) + (s.pension ?? 0) + items + biz - debtTotal(s));
 }
 
 export const pantryCapacity = (s: GameState) => (hasItem(s, "fridge") ? PANTRY_SIZE_FRIDGE : PANTRY_SIZE);

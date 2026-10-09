@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description:
     "Live your Naija story in Lagos, Abuja, Port Harcourt, Enugu, Aba, Kaduna or Calabar — hustle, learn and level up. A free life-sim that teaches money smarts, scam awareness and coding. By Mode Digital Creations.",
   applicationName: "ModeQuest",
+  appleWebApp: { capable: true, title: "ModeQuest", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://modequest.stream"),
   // How shared links look in WhatsApp, X, Facebook, etc.
   openGraph: {
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
     url: "/",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "ModeQuest: Naija — free life-sim game",
     description: "Hustle, dodge scams, beat NEPA and grow your money in 7 Nigerian cities. Free in your browser.",
   },

@@ -26,7 +26,7 @@ import {
   setChatEnabled,
   type TClass,
   type TMessage,
-} from "@/online/teacher";
+ classStruggles } from "@/online/teacher";
 import { Empty, Modal, SectionTitle } from "../ui";
 import { PLANS, PRODUCTS } from "@/shop/catalog";
 import { buy, useShop } from "@/shop/client";
@@ -395,6 +395,11 @@ function StudentsTab({ cls, roster, assignedIds, onChanged }: { cls: TClass; ros
                   <tr key={r.student_id}>
                     <td className="py-2 pr-3">
                       <b>{r.real_name}</b>
+                      {s?.flagged && (
+                        <span className="chip chip-bad ml-1.5" title={`Removed from leaderboards: ${s.flagged}. If this is a mistake, contact support.`}>
+                          ⚠️ check
+                        </span>
+                      )}
                       <div className="text-[11px] text-[var(--muted)]">
                         {r.username} · {r.nickname}
                       </div>
@@ -497,8 +502,10 @@ function LessonsTab({ cls, assigned, roster, onChanged }: { cls: TClass; assigne
         {LESSONS.map((l) => {
           const on = isOn(l.id);
           const passed = roster?.filter((r) => (r.save?.lesson_scores?.[l.id] ?? 0) >= 60).length ?? 0;
+          const struggles = roster ? classStruggles(roster, l.id) : [];
           return (
-            <label key={l.id} className={`flex items-center gap-3 rounded-2xl border-2 p-3 cursor-pointer ${on ? "border-[var(--green)] bg-[var(--green-soft)]" : "border-[var(--line)]"}`}>
+            <div key={l.id} className={`rounded-2xl border-2 p-3 ${on ? "border-[var(--green)] bg-[var(--green-soft)]" : "border-[var(--line)]"}`}>
+            <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={on}
@@ -519,6 +526,19 @@ function LessonsTab({ cls, assigned, roster, onChanged }: { cls: TClass; assigne
                 </span>
               </span>
             </label>
+            {struggles.length > 0 && (
+              <div className="mt-2 pl-9 text-[11px] text-[var(--ink-2)]">
+                <b>Most missed:</b>
+                <ul className="mt-0.5 space-y-0.5">
+                  {struggles.map((x) => (
+                    <li key={x.question}>
+                      • {x.question} <span className="text-[var(--coral)] font-bold">({x.students} {x.students === 1 ? "student" : "students"})</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            </div>
           );
         })}
       </div>

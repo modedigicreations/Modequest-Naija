@@ -197,6 +197,10 @@ export interface GameState {
   logSeq: number;
   transactions: Transaction[];
   lessons: Record<string, number>; // lesson id -> best score (0-100)
+  /** Retirement savings (locked). Grows weekly. */
+  pension?: number;
+  /** Questions answered wrong: lesson id -> question text -> times missed (for teachers). */
+  quizMisses?: Record<string, Record<string, number>>;
   achievements: string[];
   stats: {
     scamsAvoided: number;
@@ -208,6 +212,7 @@ export interface GameState {
     evictions: number;
     /** In-game naira bought with real money (kept off wealth leaderboards). */
     toppedUp?: number;
+    taxPaid?: number;
   };
   world: WorldState;
   flags: Record<string, number>;
@@ -252,7 +257,7 @@ export type Command =
   | { type: "resolveEvent"; choiceId: string }
   | { type: "replyMessage"; messageId: string; choiceId: string }
   | { type: "markMessagesRead" }
-  | { type: "completeLesson"; lessonId: string; score: number }
+  | { type: "completeLesson"; lessonId: string; score: number; missed?: string[] }
   | { type: "sendGift"; to: string; amount: number }
   | { type: "receiveGift"; from: string; amount: number; note?: string }
   | { type: "topUp"; amount: number; ref: string }

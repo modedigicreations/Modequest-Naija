@@ -6,6 +6,7 @@ import {
   DIVEST_FEE,
   GENERATOR_COST_PER_HOUR,
   INFLATION_WEEKLY,
+  PENSION_WEEKLY_GROWTH,
   SAVINGS_WEEKLY_RATE,
   WORK_STYLES,
   getBackground,
@@ -14,6 +15,7 @@ import {
   getInvestment,
   getItem,
   getLoanDef,
+  payslip,
 } from "./data/economy";
 import { EVENTS, MESSAGE_CHANCE_PER_HOUR, MESSAGE_TEMPLATES } from "./data/events";
 import { DELIVERY_FEE, DELIVERY_HOURS, DELIVERY_PRICE_LEVEL, getFood } from "./data/food";
@@ -633,10 +635,9 @@ function finishShift(s: GameState, run: ActivityRun, cancelled: boolean, fractio
   if (run.late) pay *= 0.9;
 
   if (cancelled) {
-    pay = pay * fraction * 0.5;
+    const slip = paySalary(s, pay * fraction * 0.5, def.days.length, "Partial shift pay");
     career.performance = clamp(career.performance - 6);
-    earn(s, Math.round(pay), "Partial shift pay", "bank");
-    log(s, "bad", `You left work early. Half pay for hours worked: ${formatNaira(pay)}.`);
+    log(s, "bad", `You left work early. Half pay for hours worked: ${formatNaira(slip.net)} take-home.`);
     return;
   }
 
@@ -648,9 +649,24 @@ function finishShift(s: GameState, run: ActivityRun, cancelled: boolean, fractio
   career.shiftsAtLevel += 1;
   career.missedStreak = 0;
   s.stats.shiftsWorked += 1;
-  earn(s, Math.round(pay), `Salary: ${lvl.title}`, "bank");
-  log(s, "money", `Shift done! +${formatNaira(pay)} paid to your bank.${run.taskBonus ? " (+15% task bonus)" : ""}`);
+  const slip = paySalary(s, pay, def.days.length, `Salary: ${lvl.title}`);
+  log(
+    s,
+    "money",
+    `Shift done!${run.taskBonus ? " (+15% task bonus)" : ""} Payslip: ${formatNaira(slip.gross)} gross − ${formatNaira(slip.tax)} PAYE tax − ${formatNaira(slip.pension)} pension = ${formatNaira(slip.net)} to your bank.`,
+  );
   tryPromotion(s);
+}
+
+/** Pay a salary into the bank after PAYE tax and pension, like a real payslip. */
+function paySalary(s: GameState, gross: number, shiftsPerWeek: number, label: string) {
+  const slip = payslip(gross, shiftsPerWeek);
+  earn(s, slip.gross, label, "bank");
+  if (slip.tax) earn(s, -slip.tax, "PAYE income tax", "bank");
+  if (slip.pension) earn(s, -slip.pension, "Pension (8%)", "bank");
+  s.pension = (s.pension ?? 0) + slip.pension + slip.employerPension;
+  s.stats.taxPaid = (s.stats.taxPaid ?? 0) + slip.tax;
+  return slip;
 }
 
 /** Promotions get slower as you climb: 4, 6, 8, 10 shifts. */
@@ -991,6 +1007,9 @@ function weekly(s: GameState) {
       lines.push(`interest +${formatNaira(interest)}`);
     }
   }
+
+  // Pension grows
+  if (s.pension) s.pension = Math.round(s.pension * (1 + PENSION_WEEKLY_GROWTH));
 
   // Investments
   for (const [id, value] of Object.entries(s.investments)) {
@@ -1487,6 +1506,14 @@ function apply(s: GameState, cmd: Command): string | void {
       if (!lesson) return "Unknown lesson.";
       const score = clamp(Math.round(cmd.score));
       const prev = s.lessons[lesson.id] ?? -1;
+      // Remember what was missed (only real questions/cards from this lesson).
+      const known = new Set([...(lesson.questions ?? []).map((q) => q.q), ...(lesson.sort?.cards ?? []).map((c) => c.label)]);
+      const missed = (cmd.missed ?? []).filter((m) => known.has(m));
+      if (missed.length) {
+        s.quizMisses ??= {};
+        const tally = (s.quizMisses[lesson.id] ??= {});
+        for (const m of missed) tally[m] = Math.min(99, (tally[m] ?? 0) + 1);
+      }
       s.lessons[lesson.id] = Math.max(prev, score);
       if (score >= 60 && prev < 60) {
         addSkillXp(s, lesson.skill, lesson.xp);

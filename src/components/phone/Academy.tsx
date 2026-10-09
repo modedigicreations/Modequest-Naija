@@ -71,9 +71,9 @@ function LessonPlayer({ lesson, onExit }: { lesson: Lesson; onExit: () => void }
     return () => hold("lesson", false);
   }, [hold]);
 
-  const finish = (s: number) => {
+  const finish = (s: number, missed: string[] = []) => {
     setScore(s);
-    dispatch({ type: "completeLesson", lessonId: lesson.id, score: s });
+    dispatch({ type: "completeLesson", lessonId: lesson.id, score: s, missed });
     setStage("done");
   };
 
@@ -122,11 +122,12 @@ function LessonPlayer({ lesson, onExit }: { lesson: Lesson; onExit: () => void }
   );
 }
 
-function Quiz({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => void }) {
+function Quiz({ lesson, onDone }: { lesson: Lesson; onDone: (score: number, missed: string[]) => void }) {
   const [qs] = useState(() => buildQuiz(lesson));
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [correct, setCorrect] = useState(0);
+  const [missed, setMissed] = useState<string[]>([]);
   const q = qs[i];
 
   return (
@@ -147,6 +148,7 @@ function Quiz({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => v
               onClick={() => {
                 setPicked(idx);
                 if (idx === q.answer) setCorrect((c) => c + 1);
+                else setMissed((m) => [...m, q.q]);
               }}
             >
               {o}
@@ -166,7 +168,7 @@ function Quiz({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => v
               if (i + 1 < qs.length) {
                 setI(i + 1);
                 setPicked(null);
-              } else onDone(Math.round((correct / qs.length) * 100));
+              } else onDone(Math.round((correct / qs.length) * 100), missed);
             }}
           >
             {i + 1 < qs.length ? "Next" : "Finish"}
@@ -177,18 +179,20 @@ function Quiz({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => v
   );
 }
 
-function Sorter({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) => void }) {
+function Sorter({ lesson, onDone }: { lesson: Lesson; onDone: (score: number, missed: string[]) => void }) {
   const { buckets } = lesson.sort!;
   const [cards] = useState(() => buildSort(lesson));
   const [i, setI] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [correct, setCorrect] = useState(0);
+  const [missed, setMissed] = useState<string[]>([]);
   const card = cards[i];
 
   const choose = (b: 0 | 1) => {
     if (feedback) return;
     const ok = b === card.bucket;
     if (ok) setCorrect((c) => c + 1);
+    else setMissed((m) => [...m, card.label]);
     setFeedback(`${ok ? "✅ Correct" : `❌ It's a ${buckets[card.bucket]}`} — ${card.why}`);
   };
 
@@ -217,7 +221,7 @@ function Sorter({ lesson, onDone }: { lesson: Lesson; onDone: (score: number) =>
             onClick={() => {
               setFeedback(null);
               if (i + 1 < cards.length) setI(i + 1);
-              else onDone(Math.round((correct / cards.length) * 100));
+              else onDone(Math.round((correct / cards.length) * 100), missed);
             }}
           >
             {i + 1 < cards.length ? "Next" : "Finish"}

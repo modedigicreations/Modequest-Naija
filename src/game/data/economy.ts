@@ -278,6 +278,54 @@ export const BUSINESSES: BusinessDef[] = ([
 export const BUSINESS_MAX_LEVEL = 4;
 
 // ---------------------------------------------------------------------------
+// Payslip: pension and PAYE income tax (simplified from Nigerian rules).
+// Employees put 8% into a pension account and employers add 10%; tax bands
+// follow the Nigeria Tax Act 2025 (first ₦800,000 a year tax-free).
+// ---------------------------------------------------------------------------
+
+export const PENSION_EMPLOYEE = 0.08;
+export const PENSION_EMPLOYER = 0.1;
+/** Pension funds invest your money: ~10% a year. */
+export const PENSION_WEEKLY_GROWTH = 0.0018;
+export const TAX_BANDS: [upTo: number, rate: number][] = [
+  [800_000, 0],
+  [3_000_000, 0.15],
+  [12_000_000, 0.18],
+  [25_000_000, 0.21],
+  [50_000_000, 0.23],
+  [Infinity, 0.25],
+];
+
+/** Yearly income tax on a yearly taxable income. */
+export function annualTax(income: number): number {
+  let tax = 0;
+  let floor = 0;
+  for (const [upTo, rate] of TAX_BANDS) {
+    if (income <= floor) break;
+    tax += (Math.min(income, upTo) - floor) * rate;
+    floor = upTo;
+  }
+  return tax;
+}
+
+export interface Payslip {
+  gross: number;
+  pension: number;
+  employerPension: number;
+  tax: number;
+  net: number;
+}
+
+/** Split one shift's pay, taxing it as if earned every shift of the year. */
+export function payslip(gross: number, shiftsPerWeek: number): Payslip {
+  const g = Math.round(gross);
+  const pension = Math.round(g * PENSION_EMPLOYEE);
+  const perYear = Math.max(1, shiftsPerWeek) * 52;
+  const tax = Math.round(annualTax((g - pension) * perYear) / perYear);
+  return { gross: g, pension, employerPension: Math.round(g * PENSION_EMPLOYER), tax, net: g - pension - tax };
+}
+
+// ---------------------------------------------------------------------------
 // Money products.
 // ---------------------------------------------------------------------------
 

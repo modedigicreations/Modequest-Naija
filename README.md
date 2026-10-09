@@ -71,6 +71,7 @@ Without Supabase configured the game is single-player and saves in the browser. 
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. In **SQL Editor**, run every file in `supabase/migrations/` in name order.
+   Economy checks (`20261012000000_economy_checks.sql`): the server re-reads summary numbers from each save and flags implausible ones (kept off leaderboards, ⚠️ for teachers); clear a false alarm with `update saves set flagged = null where user_id = '…'`.
    Invites: every player and teacher gets a referral code (`/invite/CODE`); sign-ups with a code are recorded in `referrals` (see `20261010000000_referrals.sql`). Class accounts never refer or get referred.
 3. In **Authentication → Providers → Email**, keep email confirmation on for player and teacher sign-ups. (Student logins are created confirmed by the server.)
 4. Copy `.env.example` to `.env.local` and fill in values from **Settings → API**:

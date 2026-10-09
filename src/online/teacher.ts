@@ -29,6 +29,10 @@ export interface RosterRow {
     shifts: number | null;
     career: string | null;
     topped_up: number | null;
+    /** From the save itself: lesson id -> question -> times missed. */
+    misses?: Record<string, Record<string, number>> | null;
+    /** Set by the server's economy checks (kept off leaderboards). */
+    flagged?: string | null;
   } | null;
 }
 
@@ -85,10 +89,13 @@ export async function loadRoster(classId: string): Promise<RosterRow[]> {
   if (error) throw new Error(error.message);
   const ids = (members ?? []).map((m) => m.student_id);
   if (ids.length === 0) return [];
-  const [{ data: profiles }, { data: saves }] = await Promise.all([
+  const cols = "user_id, updated_at, city, day, net_worth, lessons_passed, lesson_scores, scams_avoided, scams_fallen, shifts, career, topped_up, misses:state->quizMisses";
+  const [{ data: profiles }, first] = await Promise.all([
     c.from("profiles").select("id, nickname").in("id", ids),
-    c.from("saves").select("user_id, updated_at, city, day, net_worth, lessons_passed, lesson_scores, scams_avoided, scams_fallen, shifts, career, topped_up").in("user_id", ids),
+    c.from("saves").select(`${cols}, flagged`).in("user_id", ids),
   ]);
+  // Before the economy-checks migration there's no "flagged" column: load without it.
+  const saves = first.error ? (await c.from("saves").select(cols).in("user_id", ids)).data : first.data;
   const nick = new Map((profiles ?? []).map((p) => [p.id, p.nickname as string]));
   const save = new Map((saves ?? []).map((s) => [s.user_id, s]));
   return (members ?? []).map((m) => ({ ...m, nickname: nick.get(m.student_id) ?? "?", save: (save.get(m.student_id) as RosterRow["save"]) ?? null }));
@@ -138,6 +145,16 @@ export async function postAsTeacher(classId: string, body: string) {
   const { data: u } = await client().auth.getUser();
   const { error } = await client().from("class_messages").insert({ class_id: classId, author_id: u.user!.id, body });
   if (error) throw new Error(error.message);
+}
+
+/** The questions most students in the class got wrong in a lesson. */
+export function classStruggles(rows: RosterRow[], lessonId: string, top = 3): { question: string; students: number }[] {
+  const count: Record<string, number> = {};
+  for (const r of rows) for (const q of Object.keys(r.save?.misses?.[lessonId] ?? {})) count[q] = (count[q] ?? 0) + 1;
+  return Object.entries(count)
+    .map(([question, students]) => ({ question, students }))
+    .sort((a, b) => b.students - a.students)
+    .slice(0, top);
 }
 
 export function rosterCsv(rows: RosterRow[], lessonIds: string[]): string {

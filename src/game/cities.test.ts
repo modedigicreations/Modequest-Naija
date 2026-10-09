@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ACTIVITIES } from "./data/activities";
+import { annualTax, payslip } from "./data/economy";
 import { CAREERS } from "./data/economy";
 import { ALL_NPCS, CITIES, HOMES, LOCATIONS, ROAD_HOURS, findKind } from "./data/world";
 import type { HomeTier, PlaceKind } from "./data/worldTypes";
@@ -339,5 +340,37 @@ describe("real clock (WAT)", () => {
     const s = newGame({ ...opts("calabar"), now: FRI_940 });
     const later = advance(s, 30 * 1440, "away");
     expect(later.time).toBe(s.time + 30 * 1440);
+  });
+});
+
+describe("payslip: PAYE tax and pension", () => {
+  it("taxes income in bands, first ₦800,000 a year free", () => {
+    expect(annualTax(800_000)).toBe(0);
+    expect(annualTax(3_000_000)).toBeCloseTo(330_000);
+    expect(annualTax(12_000_000)).toBeCloseTo(330_000 + 1_620_000);
+  });
+
+  it("splits a shift's pay into tax, pension and take-home", () => {
+    const p = payslip(10_000, 5);
+    expect(p.pension).toBe(800);
+    expect(p.employerPension).toBe(1000);
+    expect(p.net).toBe(p.gross - p.pension - p.tax);
+    expect(p.tax).toBeGreaterThan(0);
+    expect(payslip(2000, 5).tax).toBe(0); // low pay: under the tax-free amount
+  });
+
+  it("pays the shift net into the bank and builds a pension", () => {
+    let s = newGame(opts("abuja"));
+    s.skills.business = 500;
+    s = dispatch(s, { type: "applyJob", careerId: "trade" }).state;
+    s.location = findKind("abuja", "market")!.id;
+    s.time = s.time - (s.time % 1440) + 8 * 60; // Monday 8am
+    const bank = s.bank;
+    s = dispatch(s, { type: "startShift", workStyle: "steady", taskBonus: false }).state;
+    while (s.activity) s = advance({ ...s, pendingEvent: null }, 5);
+    expect(s.pension ?? 0).toBeGreaterThan(0);
+    const gross = s.transactions.find((t) => t.label.startsWith("Salary"))!.amount;
+    expect(s.bank - bank).toBeLessThan(gross);
+    expect(s.log.at(-1)?.text ?? s.log.map((l) => l.text).join()).toBeDefined();
   });
 });

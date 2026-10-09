@@ -132,7 +132,7 @@ describe("balance", () => {
         s = playDay(s, work);
       }
 
-      const money = s.cash + s.bank;
+      const money = s.cash + s.bank + (s.pension ?? 0);
       if (process.env.BALANCE_LOG) console.log(city.id, { money, shifts: s.stats.shiftsWorked, level: s.career?.level, hosp: s.stats.hospitalVisits, evictions: s.stats.evictions });
       expect(s.stats.evictions).toBe(0);
       expect(s.stats.hospitalVisits).toBeLessThanOrEqual(1);

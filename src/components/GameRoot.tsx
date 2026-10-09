@@ -18,6 +18,10 @@ export default function GameRoot() {
 
   useEffect(() => {
     captureReferral();
+    // Installable app + saved game files (less data, opens offline). Production only.
+    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
     void init().then(() => initSession());
   }, [init, initSession]);
 

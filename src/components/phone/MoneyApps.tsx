@@ -51,6 +51,16 @@ export function BankApp() {
         {frozen && <div className="mt-2 text-xs font-bold bg-black/25 rounded-lg px-2 py-1">🔒 Frozen by investigators</div>}
       </div>
 
+      {(game.pension ?? 0) > 0 && (
+        <div className="card p-4">
+          <SectionTitle right={<span className="chip chip-good">{formatNaira(game.pension ?? 0)}</span>}>🧓 Pension (RSA)</SectionTitle>
+          <p className="text-[11px] text-[var(--ink-2)]">
+            Locked for retirement. Every payslip, you put in 8% and your employer adds 10%; the fund grows each week. It counts in your net worth.
+            {(game.stats.taxPaid ?? 0) > 0 && ` PAYE tax paid so far: ${formatNaira(game.stats.taxPaid ?? 0)} — it funds roads, schools and hospitals.`}
+          </p>
+        </div>
+      )}
+
       <div className="card p-4">
         <SectionTitle>Move money</SectionTitle>
         <AmountInput value={amt} onChange={setAmt} presets={[...new Set([1000, 5000, 20000, Math.floor(game.cash)])].filter((p) => p > 0)} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { CAREERS, CERTIFICATES, DREAMS, ITEMS } from "@/game/data/economy";
+import { CAREERS, CERTIFICATES, DREAMS, ITEMS, payslip } from "@/game/data/economy";
 import { NPCS } from "@/game/data/people";
 import { HOMES, POWER_BANDS, getCity, getLocation } from "@/game/data/world";
 import { useState } from "react";
@@ -27,7 +27,7 @@ export function JobsApp() {
             {cur.emoji} {cur.levels[game.career.level].title}
           </div>
           <div className="text-sm text-[var(--ink-2)]">
-            {formatNaira(cur.levels[game.career.level].pay * wageMultiplier(game))}/shift · {cur.days.map((d) => WEEKDAYS[d]).join(" ")} · clock in {cur.start}:00–{cur.start + 2}:00 · shift takes {actionMinutes(cur.hours * 60)} min · {workplaceFor(game, cur.workplace)?.name ?? `no workplace in ${getCity(game.city).name}`}
+            {formatNaira(cur.levels[game.career.level].pay * wageMultiplier(game))}/shift (≈{formatNaira(payslip(cur.levels[game.career.level].pay * wageMultiplier(game), cur.days.length).net)} take-home after tax &amp; pension) · {cur.days.map((d) => WEEKDAYS[d]).join(" ")} · clock in {cur.start}:00–{cur.start + 2}:00 · shift takes {actionMinutes(cur.hours * 60)} min · {workplaceFor(game, cur.workplace)?.name ?? `no workplace in ${getCity(game.city).name}`}
           </div>
           <div className="mt-3">
             <Meter value={game.career.performance} label="Performance" emoji="📊" />

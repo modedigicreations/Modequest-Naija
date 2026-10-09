@@ -196,7 +196,7 @@ insert into classes (teacher_id, name) values ('11111111-1111-1111-1111-11111111
 select pg_temp.ok((select count(*) from classes) = 2, 'upgraded teacher creates a second class');
 commit;
 
-update saves set earned_worth = 10 where user_id = '55555555-5555-5555-5555-555555555555';
+update saves set topped_up = 119990 where user_id = '55555555-5555-5555-5555-555555555555';
 begin;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', true);
@@ -287,6 +287,54 @@ update saves set day = 4 where user_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 select pg_temp.fails($$update referrals set claimed_at = null$$, 'friends cannot touch referral rows');
 commit;
 select pg_temp.ok((select reward from referrals where referred_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc') = 20000, 'the friend''s own game save triggers the bonus');
+
+-- Economy checks ----------------------------------------------------------------
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('dddddddd-0000-0000-0000-000000000001', 'honest@mail.com', '{"role":"player","nickname":"HonestPal"}'),
+  ('dddddddd-0000-0000-0000-000000000002', 'timecheat@mail.com', '{"role":"player","nickname":"TimeCheat"}'),
+  ('dddddddd-0000-0000-0000-000000000003', 'richcheat@mail.com', '{"role":"player","nickname":"RichCheat"}');
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'dddddddd-0000-0000-0000-000000000001', true);
+-- Honest save, but the client summary lies about lessons, shifts and days.
+insert into saves (user_id, state, net_worth, lessons_passed, shifts, day)
+  values ('dddddddd-0000-0000-0000-000000000001', '{"time": 10500, "flags": {"startDay": 7}, "lessons": {"budget": 80, "ponzi": 40}, "stats": {"shiftsWorked": 1, "scamsAvoided": 2, "scamsFallen": 0}}', 90000, 25, 99, 40);
+commit;
+select pg_temp.ok((select lessons_passed from saves where user_id = 'dddddddd-0000-0000-0000-000000000001') = 1, 'lessons passed comes from the save, not the client');
+select pg_temp.ok((select shifts from saves where user_id = 'dddddddd-0000-0000-0000-000000000001') = 1, 'shifts come from the save');
+select pg_temp.ok((select day from saves where user_id = 'dddddddd-0000-0000-0000-000000000001') = 2, 'days played come from the save (life day)');
+select pg_temp.ok((select flagged from saves where user_id = 'dddddddd-0000-0000-0000-000000000001') is null, 'an honest save is not flagged');
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'dddddddd-0000-0000-0000-000000000002', true);
+insert into saves (user_id, state, net_worth) values ('dddddddd-0000-0000-0000-000000000002', '{"time": 144000, "flags": {"startDay": 1}}', 50000);
+commit;
+select pg_temp.ok((select flagged from saves where user_id = 'dddddddd-0000-0000-0000-000000000002') like 'days played%', 'a brand-new account claiming 101 days is flagged');
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'dddddddd-0000-0000-0000-000000000003', true);
+insert into saves (user_id, state, net_worth) values ('dddddddd-0000-0000-0000-000000000003', '{"time": 600}', 900000000);
+select pg_temp.ok((select count(*) from leaderboard('net_worth') where nickname = 'RichCheat') = 0, 'flagged wealth never reaches the leaderboard');
+update saves set flagged = null, first_saved_at = now() - interval '900 days' where user_id = 'dddddddd-0000-0000-0000-000000000003';
+commit;
+select pg_temp.ok((select flagged from saves where user_id = 'dddddddd-0000-0000-0000-000000000003') like 'wealth%', 'players cannot clear their own flag or backdate their account');
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'dddddddd-0000-0000-0000-000000000001', true);
+update saves set net_worth = 9000000 where user_id = 'dddddddd-0000-0000-0000-000000000001';
+commit;
+select pg_temp.ok((select flagged from saves where user_id = 'dddddddd-0000-0000-0000-000000000001') is not null, 'a huge wealth jump in a day is flagged');
+
+insert into auth.users (id, email, raw_user_meta_data) values ('dddddddd-0000-0000-0000-000000000004', 'guest@mail.com', '{"role":"player","nickname":"GuestFirst"}');
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'dddddddd-0000-0000-0000-000000000004', true);
+insert into saves (user_id, state, net_worth) values ('dddddddd-0000-0000-0000-000000000004', '{"time": 30000, "flags": {"startDay": 1}}', 400000);
+commit;
+select pg_temp.ok((select flagged from saves where user_id = 'dddddddd-0000-0000-0000-000000000004') is null, 'three weeks of guest play brought to a new account is not flagged');
 
 \o
 \echo 'ALL RLS TESTS PASSED'
