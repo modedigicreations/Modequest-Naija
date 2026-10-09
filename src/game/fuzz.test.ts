@@ -26,6 +26,8 @@ function randomCommand(s: GameState, r: () => number): Command {
   const roll = r();
   const cityLocs = LOCATIONS.filter((l) => l.city === s.city);
   if (s.pendingEvent) return { type: "resolveEvent", choiceId: s.pendingEvent.outcome ? "__dismiss" : pick(["ok", "pay", "go", "help", "return", "keep", "mask", "watch", "buy", "refuse", "meter", "argue", "text", "explain", "plain"]) };
+  if (roll < 0.03) return { type: "intercity", to: pick(CITIES).id, mode: pick(["coach", "flight"] as const) };
+  if (roll < 0.035) return { type: "relocate", city: pick(CITIES).id };
   if (roll < 0.25) return { type: "travel", to: pick([...cityLocs.map((l) => l.id), "home"]), mode: pick(["walk", "keke", "bus", "brt", "ride", "car"] as const) };
   if (roll < 0.5) return { type: "startActivity", activityId: pick(ACTIVITIES).id };
   if (roll < 0.55) return { type: "startShift", workStyle: pick(["steady", "hustle", "gist", "easy"] as const), taskBonus: r() < 0.5 };
@@ -79,9 +81,44 @@ function checkInvariants(s: GameState, where: string) {
     expect(getHome(s.homeId).city, `${where} home city`).toBe(s.city);
   }
   for (const n of Object.values(s.pantry)) expect(n).toBeGreaterThanOrEqual(0);
+  expect(Object.values(s.pantry).reduce((a, n) => a + n, 0), `${where} pantry over capacity`).toBeLessThanOrEqual(24);
+  expect(Number.isFinite(s.pension ?? 0) && (s.pension ?? 0) >= 0, `${where} pension`).toBe(true);
+  for (const b of s.businesses) {
+    if (!b.school) continue;
+    const sc = b.school;
+    for (const v of [sc.fee, sc.pupils, sc.teachers, sc.reputation, sc.owed]) expect(Number.isFinite(v), `${where} school number`).toBe(true);
+    expect(sc.pupils, `${where} pupils`).toBeGreaterThanOrEqual(1);
+    expect(sc.pupils, `${where} class size`).toBeLessThanOrEqual(sc.teachers * 25);
+    expect(sc.owed, `${where} owed`).toBeGreaterThanOrEqual(0);
+    expect(sc.week >= 1 && sc.week <= 4, `${where} term week ${sc.week}`).toBe(true);
+  }
+  for (const n of Object.values(s.needs)) expect(n >= 0 && n <= 100, `${where} needs`).toBe(true);
   expect(s.log.length).toBeLessThanOrEqual(120);
   expect(s.messages.length).toBeLessThanOrEqual(60);
 }
+
+describe("fuzz on the real clock (with time away)", () => {
+  for (const city of CITIES) {
+    it(`real-time play in ${city.name} with breaks stays consistent`, () => {
+      const r = rng(city.id.length * 31 + 7);
+      let s = newGame({ city: city.id, name: "Real", pronoun: "they", appearance: { skin: 0, hair: 0, hairColor: 0, outfit: 0, accessory: 0 }, background: "ajebutter", traits: ["thrifty", "foodie"], dream: "smart_money", seed: 5, now: Date.UTC(2026, 9, 9, 8, 40) });
+      s.skills.business = 3000;
+      s.bank += 8_000_000;
+      let steps = 0;
+      while (s.time < s.flags.startDay * 1440 + 45 * 1440 && steps < 5000) {
+        steps++;
+        const cmd = r() < 0.05 ? { type: "buyBusiness" as const, businessId: r() < 0.5 ? "nursery_school" : "private_school" } : randomCommand(s, r);
+        s = dispatch(s, cmd).state;
+        if (s.pendingEvent) s = dispatch(s, { type: "resolveEvent", choiceId: "__dismiss" }).state;
+        // Mostly short live play, sometimes the app is closed for hours or days.
+        const away = r() < 0.08;
+        s = advance(s, away ? Math.floor(r() * 3 * 1440) : Math.floor(r() * 30), away ? "away" : "live");
+        checkInvariants(s, `real step ${steps} after ${cmd.type}`);
+      }
+      expect(() => JSON.parse(JSON.stringify(s))).not.toThrow();
+    });
+  }
+});
 
 describe("fuzz", () => {
   for (const city of CITIES) {

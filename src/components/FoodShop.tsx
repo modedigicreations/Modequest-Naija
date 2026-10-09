@@ -47,7 +47,13 @@ export default function FoodShop({ delivery }: { delivery: boolean }) {
     <div>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {KITS.map((k) => (
-          <button key={k.label} className="chip hover:bg-[var(--bg-2)]" onClick={() => add(k.items)}>
+          <button
+            key={k.label}
+            className="chip hover:bg-[var(--bg-2)] disabled:opacity-40"
+            disabled={inCart + Object.values(k.items).reduce((a, n) => a + n, 0) > space}
+            title={inCart >= space ? "No more room in your pantry" : undefined}
+            onClick={() => add(k.items)}
+          >
             + {k.label}
           </button>
         ))}

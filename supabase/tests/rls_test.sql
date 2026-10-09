@@ -336,5 +336,17 @@ insert into saves (user_id, state, net_worth) values ('dddddddd-0000-0000-0000-0
 commit;
 select pg_temp.ok((select flagged from saves where user_id = 'dddddddd-0000-0000-0000-000000000004') is null, 'three weeks of guest play brought to a new account is not flagged');
 
+-- A flagged friend's save doesn't pay the inviter.
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('eeeeeeee-0000-0000-0000-000000000001', 'cheatpal@mail.com', jsonb_build_object('role', 'player', 'nickname', 'CheatPal', 'ref', (select referral_code from profiles where nickname = 'HonestPal')));
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'eeeeeeee-0000-0000-0000-000000000001', true);
+insert into saves (user_id, state, net_worth) values ('eeeeeeee-0000-0000-0000-000000000001', '{"time": 600}', 900000000);
+update saves set state = '{"time": 6000}' where user_id = 'eeeeeeee-0000-0000-0000-000000000001';
+commit;
+select pg_temp.ok((select flagged from saves where user_id = 'eeeeeeee-0000-0000-0000-000000000001') is not null, 'cheating friend is flagged');
+select pg_temp.ok((select rewarded_at from referrals where referred_id = 'eeeeeeee-0000-0000-0000-000000000001') is null, 'a flagged friend earns the inviter no bonus');
+
 \o
 \echo 'ALL RLS TESTS PASSED'

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getBusiness } from "./data/economy";
-import { advance, dispatch, newGame } from "./engine";
+import { advance, dispatch, migrate, newGame } from "./engine";
 import { marketFee } from "./school";
 import type { GameState } from "./types";
 import { dayOf } from "./util";
@@ -89,5 +89,15 @@ describe("school tycoon", () => {
     expect(dispatch(s, { type: "schoolSet", businessId: "private_school", fee: 10_000_000 }).error).toMatch(/between/);
     expect(dispatch(s, { type: "schoolExam", businessId: "private_school" }).error).toMatch(/end of term/);
     expect(dispatch(s, { type: "schoolExam", businessId: "pos" }).error).toMatch(/don't run/);
+  });
+});
+
+describe("older saves", () => {
+  it("open a school office straight away for schools bought before", () => {
+    const s = start("private_school");
+    const old = JSON.parse(JSON.stringify(s));
+    delete old.businesses[0].school;
+    const m = migrate(old)!;
+    expect(m.businesses[0].school?.pupils).toBeGreaterThan(0);
   });
 });

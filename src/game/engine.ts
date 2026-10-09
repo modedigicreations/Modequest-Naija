@@ -1622,6 +1622,11 @@ export function migrate(raw: unknown): GameState | null {
   }
   if (!CITIES.some((c) => c.id === s.city)) return null;
   if (s.location !== "home" && !getLocation(s.location)) s.location = "home";
+  // Schools bought before schools were player-run: open their school office now.
+  for (const b of s.businesses ?? []) {
+    const def = getBusiness(b.id);
+    if (def?.school && !b.school) b.school = newSchool(s, def);
+  }
   return s;
 }
 
