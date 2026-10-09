@@ -3,7 +3,7 @@ import { ACTIVITIES } from "./data/activities";
 import { CAREERS } from "./data/economy";
 import { ALL_NPCS, CITIES, HOMES, LOCATIONS, ROAD_HOURS, findKind } from "./data/world";
 import type { HomeTier, PlaceKind } from "./data/worldTypes";
-import { advance, dispatch, intercityQuote, migrate, newGame, workplaceFor } from "./engine";
+import { advance, dispatch, foodPrice, intercityQuote, migrate, newGame, workplaceFor } from "./engine";
 import type { GameState, NewGameOptions } from "./types";
 
 const opts = (city: string): NewGameOptions => ({
@@ -139,7 +139,7 @@ describe("multi-city play", () => {
     const s = newGame(opts("lagos")) as Partial<GameState> & Record<string, unknown>;
     const v1 = JSON.parse(JSON.stringify({ ...s, version: 1, city: undefined, travel: { from: "home", to: "beach", mode: "danfo", start: 0, end: 10 } }));
     const m = migrate(v1)!;
-    expect(m.version).toBe(2);
+    expect(m.version).toBe(3);
     expect(m.city).toBe("lagos");
     expect(m.travel?.mode).toBe("bus");
   });
@@ -217,5 +217,67 @@ describe("travel between all cities", () => {
     s.skills.fitness = 100;
     expect(dispatch(s, { type: "applyJob", careerId: "energy" }).error).toBeUndefined();
     expect(workplaceFor(s, "industrial")?.id).toBe("kad_refinery");
+  });
+});
+
+describe("food", () => {
+  it("turns old foodstuff packs into pantry ingredients", () => {
+    const s = newGame(opts("enugu")) as unknown as Record<string, unknown>;
+    const v2 = JSON.parse(JSON.stringify({ ...s, version: 2, pantry: undefined, groceries: 3 }));
+    const m = migrate(v2)!;
+    expect(m.version).toBe(3);
+    expect(m.pantry).toEqual({ rice: 3, tomato_pepper: 3 });
+    expect("groceries" in m).toBe(false);
+  });
+
+  it("buys at a market, cooks a recipe and uses up the ingredients", () => {
+    let s = newGame(opts("lagos"));
+    s.cash = 50000;
+    s.items.push("stove");
+    s.pantry = {};
+    s.location = findKind("lagos", "food_market")!.id;
+    s.time = s.time - (s.time % 1440) + 10 * 60; // 10am, market open
+    const r = dispatch(s, { type: "buyFood", items: { beans: 1, plantain: 1 } });
+    expect(r.error).toBeUndefined();
+    s = r.state;
+    expect(s.pantry).toMatchObject({ beans: 1, plantain: 1 });
+    expect(s.cash).toBeLessThan(50000);
+    s.location = "home";
+    s = dispatch(s, { type: "startActivity", activityId: "cook_beans" }).state;
+    expect(s.activity?.activityId).toBe("cook_beans");
+    expect(s.pantry.beans).toBe(0);
+    expect(s.pantry.plantain).toBe(0);
+  });
+
+  it("explains what a recipe is missing, and needs somewhere to cook", () => {
+    const s = newGame(opts("lagos")); // hustler room: no kitchen
+    s.pantry = { rice: 1 };
+    expect(dispatch(s, { type: "startActivity", activityId: "cook" }).error).toMatch(/stove|gas cooker/);
+    s.items.push("stove");
+    expect(dispatch(s, { type: "startActivity", activityId: "cook" }).error).toMatch(/Tomato/);
+  });
+
+  it("delivers anywhere in the day for a fee, but not at night, and respects pantry space", () => {
+    const s = newGame(opts("kaduna"));
+    s.cash = 100000;
+    s.pantry = {};
+    s.location = "home";
+    s.time = s.time - (s.time % 1440) + 12 * 60;
+    const market = dispatch(s, { type: "buyFood", items: { rice: 1 } });
+    expect(market.error).toMatch(/order delivery/);
+    const d = dispatch(s, { type: "buyFood", items: { rice: 2, eggs: 1 }, delivery: true });
+    expect(d.error).toBeUndefined();
+    expect(d.state.pantry).toMatchObject({ rice: 2, eggs: 1 });
+    expect(d.state.transactions.at(-1)?.label).toMatch(/delivery/i);
+    expect(dispatch(s, { type: "buyFood", items: { rice: 11 }, delivery: true }).error).toMatch(/room/);
+    const night = { ...s, time: s.time - (s.time % 1440) + 23 * 60 };
+    expect(dispatch(night, { type: "buyFood", items: { rice: 1 }, delivery: true }).error).toMatch(/Riders/);
+  });
+
+  it("home cooking is cheaper than eating at the buka", () => {
+    const s = newGame(opts("abuja"));
+    const level = findKind("abuja", "food_market")!.groceryPrice! / 1000;
+    const jollof = foodPrice(s, "rice", level) + foodPrice(s, "tomato_pepper", level);
+    expect(jollof).toBeLessThan(1500);
   });
 });

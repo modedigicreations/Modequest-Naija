@@ -17,9 +17,10 @@ export interface ItemDef {
 export const ITEMS: ItemDef[] = [
   { id: "laptop", name: "Laptop", emoji: "💻", price: 180000, gadget: true, blurb: "Code and freelance from home (needs power)." },
   { id: "tv", name: "Smart TV", emoji: "📺", price: 90000, gadget: true, blurb: "Nollywood nights at home (needs power)." },
-  { id: "gas_cooker", name: "Gas cooker", emoji: "🔥", price: 45000, blurb: "Cook in any home, even without a kitchen." },
+  { id: "stove", name: "Kerosene stove", emoji: "🫕", price: 12000, blurb: "Cheap way to cook in a home without a kitchen." },
+  { id: "gas_cooker", name: "Gas cooker", emoji: "🔥", price: 45000, blurb: "Cook in any home, even without a kitchen. Cleaner than kerosene." },
   { id: "good_bed", name: "Orthopaedic mattress", emoji: "🛏️", price: 70000, blurb: "+15% energy from sleep." },
-  { id: "fridge", name: "Fridge", emoji: "🧊", price: 140000, blurb: "Store up to 12 foodstuff packs (4 without)." },
+  { id: "fridge", name: "Fridge", emoji: "🧊", price: 140000, blurb: "Store up to 24 foodstuffs in your pantry (10 without)." },
   { id: "bookshelf", name: "Money books bookshelf", emoji: "📚", price: 15000, blurb: "Study finance at home." },
   { id: "generator", name: "Generator", emoji: "⛽", price: 110000, blurb: "Power during NEPA outages. Fuel costs ₦700 per hour of use." },
   { id: "solar", name: "Solar + inverter", emoji: "🔆", price: 650000, blurb: "Free, quiet power during outages. Pays for itself over time." },
@@ -250,17 +251,30 @@ export interface BusinessDef {
   blurb: string;
 }
 
-export const BUSINESSES: BusinessDef[] = [
+// Listed cheapest first.
+export const BUSINESSES: BusinessDef[] = ([
+  { id: "recharge", name: "Recharge Card & Data Kiosk", emoji: "📶", price: 60000, weekly: 5200, skill: "business", volatility: 0.2, blurb: "Airtime, data and phone charging by the roadside. Tiny but steady." },
+  { id: "pure_water", name: "Pure Water Distribution", emoji: "💧", price: 120000, weekly: 10500, skill: "business", volatility: 0.25, blurb: "Buy sachet water by the bag from the factory, supply shops and hawkers." },
   { id: "pos", name: "POS Stand", emoji: "🏧", price: 150000, weekly: 13000, skill: "business", volatility: 0.25, blurb: "Cash withdrawals for the neighbourhood. Steady, small." },
   { id: "mama_put", name: "Mama Put Stall", emoji: "🍛", price: 250000, weekly: 22000, skill: "cooking", volatility: 0.3, blurb: "Rice and stew for workers. Better food, more customers." },
+  { id: "tailoring", name: "Tailoring Shop", emoji: "🧵", price: 200000, weekly: 17500, skill: "creativity", volatility: 0.3, blurb: "Native wears, school uniforms and aso-ebi orders. December is madness." },
+  { id: "tutorial", name: "Lesson & Tutorial Centre", emoji: "📝", price: 220000, weekly: 19000, skill: "finance", volatility: 0.2, blurb: "WAEC, JAMB and after-school lessons. Results bring referrals." },
+  { id: "viewing_centre", name: "Football Viewing Centre", emoji: "📺", price: 280000, weekly: 24000, skill: "charisma", volatility: 0.4, blurb: "Premier League weekends pay the bills. NEPA outages mean diesel costs." },
+  { id: "car_wash", name: "Car Wash", emoji: "🚿", price: 300000, weekly: 26000, skill: "fitness", volatility: 0.3, blurb: "Hardworking boys, good soap, busy Saturdays." },
+  { id: "keke", name: "Keke Hire Business", emoji: "🛺", price: 350000, weekly: 30000, skill: "business", volatility: 0.35, blurb: "Buy a keke, give it to a driver on hire-purchase. Daily 'delivery' money." },
   { id: "salon", name: "Barbing & Braids Salon", emoji: "💈", price: 380000, weekly: 32000, skill: "creativity", volatility: 0.3, blurb: "Fresh cuts and knotless braids. Creative stylists win." },
   { id: "phone_shop", name: "Phone Accessories Shop", emoji: "🔌", price: 450000, weekly: 40000, skill: "business", volatility: 0.35, blurb: "Chargers, cases and screen guards at the gadget market." },
+  { id: "fashion_brand", name: "Made-in-Naija Fashion Brand", emoji: "👞", price: 420000, weekly: 36000, skill: "creativity", volatility: 0.45, requires: ["creativity", 3], blurb: "Your own label of shoes and bags, sold on Instagram and in markets." },
+  { id: "poultry", name: "Poultry Farm", emoji: "🐔", price: 500000, weekly: 44000, skill: "business", volatility: 0.55, requires: ["business", 2], blurb: "Eggs and broilers. Good money — until bird flu or feed prices bite." },
   { id: "laundry", name: "Laundry Service", emoji: "🧺", price: 700000, weekly: 58000, skill: "business", volatility: 0.25, requires: ["business", 3], blurb: "Pick-up and delivery. Power costs bite during outages." },
   { id: "tech_startup", name: "Tech Startup", emoji: "🦄", price: 600000, weekly: 26000, skill: "coding", volatility: 0.9, requires: ["coding", 5], blurb: "High risk, high reward. Level 4 = unicorn territory." },
+  { id: "bakery", name: "Bakery", emoji: "🥖", price: 900000, weekly: 76000, skill: "cooking", volatility: 0.3, requires: ["cooking", 3], blurb: "Fresh bread every morning for shops and buka. Flour prices decide your profit." },
+  { id: "dispatch", name: "Dispatch Bike Company", emoji: "🛵", price: 1000000, weekly: 85000, skill: "business", volatility: 0.35, requires: ["business", 4], blurb: "Riders delivering for online shops and restaurants across town." },
+  { id: "print_press", name: "Printing & Branding Press", emoji: "🖨️", price: 1200000, weekly: 100000, skill: "creativity", volatility: 0.3, requires: ["business", 4], blurb: "Banners, flyers, branded shirts — every election and wedding needs you." },
   { id: "solar_co", name: "Solar Installation Co.", emoji: "🔆", price: 1800000, weekly: 160000, skill: "business", volatility: 0.3, requires: ["business", 5], blurb: "Everyone wants light. You sell it." },
   { id: "event_centre", name: "Event Centre", emoji: "🎉", price: 4500000, weekly: 380000, skill: "business", volatility: 0.35, requires: ["business", 7], blurb: "Owambe headquarters. Weekends fully booked." },
-];
-
+  { id: "private_school", name: "Private School", emoji: "🏫", price: 6000000, weekly: 480000, skill: "business", volatility: 0.2, requires: ["business", 8], blurb: "Nursery and primary school. Parents pay termly — if your results are good." },
+] as BusinessDef[]).sort((a, b) => a.price - b.price);
 export const BUSINESS_MAX_LEVEL = 4;
 
 // ---------------------------------------------------------------------------

@@ -6,7 +6,9 @@ import { getCareer, getItem } from "@/game/data/economy";
 import { localActivity } from "@/game/data/activities";
 import { INTERACTIONS, type InteractionId, npcsAt } from "@/game/data/people";
 import { CITIES, getCity, getLocation, transportIn } from "@/game/data/world";
-import { friendshipTier, groceryCapacity, home, price } from "@/game/helpers";
+import { canCook, friendshipTier, home, pantryCapacity, pantryCount, price } from "@/game/helpers";
+import { getFood } from "@/game/data/food";
+import FoodShop from "./FoodShop";
 import { useGame } from "@/game/store";
 import type { NeedKey } from "@/game/types";
 import { WEEKDAYS_LONG, formatClock, formatDuration, formatHour, formatNaira, hourOf, weekOf, weekdayOf } from "@/game/util";
@@ -78,7 +80,9 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
         {loc && <p className="text-sm text-[var(--ink-2)] mt-3">{loc.blurb}</p>}
         {isHome && (
           <div className="flex flex-wrap gap-1.5 mt-3">
-            <span className="chip">🥫 Foodstuff {game.groceries}/{groceryCapacity(game)}</span>
+            <button className="chip chip-info" onClick={() => onOpenPhone("shop")} title="Order foodstuff delivery">
+              🥫 Pantry {pantryCount(game)}/{pantryCapacity(game)} · order food
+            </button>
             <span className={`chip ${rentDue ? "chip-bad" : "chip-good"}`}>
               {h.weeklyRent === 0 ? "No rent" : rentDue ? `Rent due Saturday` : `Rent paid to wk ${game.flags.rentPaidThroughWeek}`}
             </span>
@@ -88,6 +92,18 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
               </span>
             ))}
           </div>
+        )}
+        {isHome && (
+          <p className="text-xs text-[var(--ink-2)] mt-2">
+            <b>In your pantry:</b>{" "}
+            {Object.entries(game.pantry).filter(([, n]) => n > 0).length
+              ? Object.entries(game.pantry)
+                  .filter(([, n]) => n > 0)
+                  .map(([id, n]) => `${getFood(id)?.emoji ?? ""} ${getFood(id)?.name ?? id} ×${n}`)
+                  .join(" · ")
+              : "nothing — buy foodstuff at a market or order delivery from the Shop app."}
+            {!canCook(game) && " No kitchen here: a kerosene stove (Shop app) lets you cook."}
+          </p>
         )}
       </div>
 
@@ -120,17 +136,11 @@ export default function PlacePanel({ onOpenMap, onOpenPhone }: { onOpenMap: () =
       {/* Market */}
       {groceryUnit && (
         <div className="card p-4">
-          <SectionTitle right={<span className="chip">Pantry {game.groceries}/{groceryCapacity(game)}</span>}>🥫 Foodstuff</SectionTitle>
+          <SectionTitle>🧺 Buy foodstuff</SectionTitle>
           <p className="text-xs text-[var(--ink-2)] mb-3">
-            {formatNaira(price(game, groceryUnit))} per pack. Cook at home (or eat bread & tea) — far cheaper than eating out every day.
+            Cheapest way to eat: buy here, cook at home.{!canCook(game) && " You'll need a kerosene stove or gas cooker (Shop app) for the cooked meals."}
           </p>
-          <div className="flex gap-2">
-            {[1, 3].map((n) => (
-              <button key={n} className="btn btn-primary btn-sm flex-1" disabled={!open} onClick={() => dispatch({ type: "buyGroceries", packs: n })}>
-                Buy {n} · {formatNaira(price(game, groceryUnit) * n)}
-              </button>
-            ))}
-          </div>
+          <FoodShop delivery={false} />
         </div>
       )}
       {(kinds.includes("motor_park") || kinds.includes("airport")) && <IntercityCard mode={kinds.includes("airport") ? "flight" : "coach"} open={open} />}

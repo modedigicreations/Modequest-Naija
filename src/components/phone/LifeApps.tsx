@@ -3,7 +3,9 @@
 import { CAREERS, CERTIFICATES, DREAMS, ITEMS } from "@/game/data/economy";
 import { NPCS } from "@/game/data/people";
 import { HOMES, POWER_BANDS, getCity, getLocation } from "@/game/data/world";
-import { kindsHere, promotionBlockers, workplaceFor } from "@/game/engine";
+import { useState } from "react";
+import { atHomeCity, kindsHere, promotionBlockers, workplaceFor } from "@/game/engine";
+import FoodShop from "../FoodShop";
 import { ACHIEVEMENTS, dreamProgress } from "@/game/goals";
 import { friendshipTier, level, price, SKILL_NAMES, wageMultiplier } from "@/game/helpers";
 import { useGame } from "@/game/store";
@@ -83,6 +85,34 @@ export function JobsApp() {
 }
 
 export function ShopApp() {
+  const game = useGame((s) => s.game)!;
+  const [tab, setTab] = useState<"food" | "home">("food");
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-1 bg-[var(--card-2)] rounded-xl p-1">
+        {([
+          ["food", "🧺 Foodstuff"],
+          ["home", "🏠 Home & gadgets"],
+        ] as const).map(([t, label]) => (
+          <button key={t} className={`rounded-lg py-1.5 text-sm font-bold ${tab === t ? "bg-[var(--card)] shadow-sm" : "text-[var(--ink-2)]"}`} onClick={() => setTab(t)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === "food" ? (
+        <div className="card p-4">
+          <p className="text-xs text-[var(--ink-2)] mb-3">Delivered to your home pantry. Cook it at home — much cheaper than eating out.</p>
+          {!atHomeCity(game) && <p className="text-xs text-[var(--coral)] mb-2">You&apos;re away from home: it will be waiting in your pantry when you get back.</p>}
+          <FoodShop delivery />
+        </div>
+      ) : (
+        <ShopItems />
+      )}
+    </div>
+  );
+}
+
+function ShopItems() {
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
   const atVillage = kindsHere(game).includes("gadget_market");

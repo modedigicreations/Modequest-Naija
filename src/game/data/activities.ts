@@ -19,8 +19,9 @@ export interface ActivityDef {
   requires?: {
     item?: string;
     power?: boolean; // needs electricity when done at home
-    kitchen?: boolean; // home kitchen or a gas cooker
-    groceries?: number;
+    kitchen?: boolean; // home kitchen, gas cooker or stove
+    /** Pantry foodstuffs used up (one unit of each). */
+    food?: string[];
     skill?: [SkillKey, number];
     minCash?: number;
     weekdays?: number[];
@@ -37,8 +38,13 @@ export const ACTIVITIES: ActivityDef[] = [
   { id: "sleep", name: "Sleep", emoji: "😴", at: ["home"], duration: 480, needs: { energy: 90, hunger: -12, hygiene: -8 }, sleep: true, health: 6, blurb: "A full night's rest. Bed quality matters." },
   { id: "nap", name: "Quick nap", emoji: "💤", at: ["home"], duration: 120, needs: { energy: 24, hunger: -4 }, sleep: true, blurb: "Recharge a little." },
   { id: "bath", name: "Bath", emoji: "🚿", at: ["home"], duration: 25, needs: { hygiene: 75, fun: 3 }, bath: true, blurb: "Bucket or shower, you go come out fresh." },
-  { id: "cook", name: "Cook a pot of jollof", emoji: "🍛", at: ["home"], duration: 50, needs: { hunger: 60, fun: 4 }, skills: { cooking: 12 }, requires: { kitchen: true, groceries: 1 }, blurb: "Uses 1 foodstuff pack. Cheaper than buying food outside." },
-  { id: "snack", name: "Bread & tea", emoji: "🍞", at: ["home"], duration: 15, needs: { hunger: 25 }, requires: { groceries: 1 }, blurb: "Uses 1 foodstuff pack. No kitchen needed." },
+  { id: "cook", name: "Cook jollof rice", emoji: "🍛", at: ["home"], duration: 50, needs: { hunger: 60, fun: 4 }, skills: { cooking: 12 }, requires: { kitchen: true, food: ["rice", "tomato_pepper"] }, blurb: "Rice + tomato & pepper mix. Much cheaper than eating out." },
+  { id: "cook_beans", name: "Cook beans & dodo", emoji: "🫘", at: ["home"], duration: 70, needs: { hunger: 68, fun: 4 }, skills: { cooking: 14 }, health: 2, requires: { kitchen: true, food: ["beans", "plantain"] }, blurb: "Beans + plantain. Filling and good for you." },
+  { id: "cook_yam", name: "Cook yam & egg sauce", emoji: "🍠", at: ["home"], duration: 40, needs: { hunger: 58, fun: 3 }, skills: { cooking: 10 }, requires: { kitchen: true, food: ["yam", "eggs"] }, blurb: "Yam + eggs. A classic breakfast." },
+  { id: "cook_egusi", name: "Cook egusi soup & eba", emoji: "🥬", at: ["home"], duration: 80, needs: { hunger: 72, fun: 6, social: 3 }, skills: { cooking: 18 }, requires: { kitchen: true, food: ["soup_pack", "garri"] }, blurb: "Egusi soup pack + garri. Big pot, big cooking XP." },
+  { id: "cook_noodles", name: "Noodles & egg", emoji: "🍜", at: ["home"], duration: 15, needs: { hunger: 40 }, skills: { cooking: 3 }, requires: { kitchen: true, food: ["noodles", "eggs"] }, blurb: "Noodles + eggs. Fast when you're tired." },
+  { id: "snack", name: "Bread & tea", emoji: "🍞", at: ["home"], duration: 15, needs: { hunger: 25 }, requires: { food: ["bread"] }, blurb: "Bread. No cooking needed." },
+  { id: "soak_garri", name: "Soak garri", emoji: "🥣", at: ["home"], duration: 10, needs: { hunger: 22, fun: 2 }, requires: { food: ["garri"] }, blurb: "Garri, cold water, sugar and groundnut. Student classic — no cooking." },
   { id: "laptop_study", name: "Code on your laptop", emoji: "👨🏾‍💻", at: ["home"], duration: 120, needs: { fun: -6, energy: -8 }, skills: { coding: 22 }, requires: { item: "laptop", power: true }, blurb: "Online tutorials and side projects. Needs light!" },
   { id: "freelance", name: "Freelance gig", emoji: "🧾", at: ["home"], duration: 180, needs: { energy: -14, fun: -8 }, skills: { coding: 12, business: 4 }, cashGain: [2500, 4500], cashSkill: "coding", requires: { item: "laptop", power: true, skill: ["coding", 2] }, blurb: "Build a small website for a client. Pay grows with your coding level." },
   { id: "tv", name: "Watch Nollywood", emoji: "📺", at: ["home"], duration: 90, needs: { fun: 30, energy: -2 }, requires: { item: "tv", power: true }, blurb: "Big drama, bigger plot twists." },

@@ -64,14 +64,14 @@ function playDay(s: GameState, workplace: string): GameState {
     const m = minuteOfDay(s.time);
 
     if (career && st.workday && s.career!.lastShiftDay !== Math.floor(s.time / 1440) + 1 && m >= career.start * 60 - 150 && m <= career.start * 60 + 60) {
-      if (s.needs.hunger < 60 && s.location === "home" && s.groceries > 0) {
+      if (s.needs.hunger < 60 && s.location === "home" && (s.pantry.bread ?? 0) > 0) {
         s = untilFree(try_(s, { type: "startActivity", activityId: "snack" }));
       }
       s = goTo(s, workplace);
       const now = shiftStatus(s);
       if (now.canStart) {
         s = untilFree(try_(s, { type: "startShift", workStyle: "steady", taskBonus: true }));
-        if (s.groceries < 2) s = try_(s, { type: "buyGroceries", packs: 3 });
+        if ((s.pantry.bread ?? 0) + (s.pantry.garri ?? 0) < 3) s = try_(s, { type: "buyFood", items: { bread: 2, garri: 2 } });
         s = goTo(s, "home");
       } else s = advance(s, 15);
       continue;
@@ -83,7 +83,8 @@ function playDay(s: GameState, workplace: string): GameState {
     }
     if (s.needs.hunger < 45) {
       if (s.location !== "home") s = goTo(s, "home");
-      if (s.groceries > 0) s = untilFree(try_(s, { type: "startActivity", activityId: "snack" }));
+      if ((s.pantry.bread ?? 0) > 0) s = untilFree(try_(s, { type: "startActivity", activityId: "snack" }));
+      else if ((s.pantry.garri ?? 0) > 0) s = untilFree(try_(s, { type: "startActivity", activityId: "soak_garri" }));
       else {
         s = goTo(s, findKind(s.city, "buka")!.id);
         s = untilFree(try_(s, { type: "startActivity", activityId: "amala" }));

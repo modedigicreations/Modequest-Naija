@@ -181,7 +181,8 @@ export interface GameState {
   homeId: string;
   missedRent: number;
   items: string[];
-  groceries: number;
+  /** Foodstuffs at home: food id -> units (one unit per meal). */
+  pantry: Record<string, number>;
   career: CareerState | null;
   certificates: string[];
   courseProgress: Record<string, number>;
@@ -235,7 +236,7 @@ export type Command =
   | { type: "quitJob" }
   | { type: "bankTransfer"; direction: "deposit" | "withdraw"; amount: number }
   | { type: "buyItem"; itemId: string }
-  | { type: "buyGroceries"; packs: number }
+  | { type: "buyFood"; items: Record<string, number>; delivery?: boolean }
   | { type: "moveHouse"; homeId: string }
   | { type: "invest"; productId: string; amount: number }
   | { type: "divest"; productId: string }

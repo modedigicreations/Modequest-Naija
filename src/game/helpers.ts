@@ -1,5 +1,6 @@
 import { getHome } from "./data/world";
 import { getBusiness, getItem } from "./data/economy";
+import { PANTRY_SIZE, PANTRY_SIZE_FRIDGE } from "./data/food";
 import type { GameState, LogKind, Message, NeedKey, SkillKey } from "./types";
 import { NEED_KEYS } from "./types";
 import { clamp, hourOf, skillLevel } from "./util";
@@ -189,4 +190,8 @@ export function netWorth(s: GameState): number {
   return Math.round(s.cash + s.bank + investmentsTotal(s) + items + biz - debtTotal(s));
 }
 
-export const groceryCapacity = (s: GameState) => (hasItem(s, "fridge") ? 12 : 4);
+export const pantryCapacity = (s: GameState) => (hasItem(s, "fridge") ? PANTRY_SIZE_FRIDGE : PANTRY_SIZE);
+export const pantryCount = (s: GameState) => Object.values(s.pantry).reduce((a, n) => a + n, 0);
+export const hasFood = (s: GameState, id: string) => (s.pantry[id] ?? 0) > 0;
+/** Somewhere to cook: a home kitchen, a gas cooker or a kerosene stove. */
+export const canCook = (s: GameState) => home(s).kitchen || hasItem(s, "gas_cooker") || hasItem(s, "stove");

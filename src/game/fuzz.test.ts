@@ -33,7 +33,7 @@ function randomCommand(s: GameState, r: () => number): Command {
   if (roll < 0.6) return { type: "cancelActivity" };
   if (roll < 0.63) return { type: "bankTransfer", direction: pick(["deposit", "withdraw"] as const), amount: Math.floor(r() * 20000) };
   if (roll < 0.65) return { type: "buyItem", itemId: pick(ITEMS).id };
-  if (roll < 0.67) return { type: "buyGroceries", packs: 1 + Math.floor(r() * 3) };
+  if (roll < 0.67) return { type: "buyFood", items: { [["rice", "bread", "garri", "eggs", "nope"][Math.floor(r() * 5)]]: 1 + Math.floor(r() * 3) }, delivery: r() < 0.5 };
   if (roll < 0.69) return { type: "moveHouse", homeId: pick(HOMES).id };
   if (roll < 0.71) return { type: "invest", productId: pick(INVESTMENTS).id, amount: Math.floor(r() * 30000) };
   if (roll < 0.72) return { type: "divest", productId: pick(INVESTMENTS).id };
@@ -71,7 +71,7 @@ function checkInvariants(s: GameState, where: string) {
   } else {
     expect(getHome(s.homeId).city, `${where} home city`).toBe(s.city);
   }
-  expect(s.groceries).toBeGreaterThanOrEqual(0);
+  for (const n of Object.values(s.pantry)) expect(n).toBeGreaterThanOrEqual(0);
   expect(s.log.length).toBeLessThanOrEqual(120);
   expect(s.messages.length).toBeLessThanOrEqual(60);
 }

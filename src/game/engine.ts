@@ -16,6 +16,7 @@ import {
   getLoanDef,
 } from "./data/economy";
 import { EVENTS, MESSAGE_CHANCE_PER_HOUR, MESSAGE_TEMPLATES } from "./data/events";
+import { DELIVERY_FEE, DELIVERY_HOURS, DELIVERY_PRICE_LEVEL, getFood } from "./data/food";
 import { getLesson } from "./data/lessons";
 import { INTERACTIONS, type InteractionId, getNpc, npcsAt } from "./data/people";
 import {
@@ -45,7 +46,10 @@ import {
   earn,
   ensureRelationship,
   forceCharge,
-  groceryCapacity,
+  canCook,
+  hasFood,
+  pantryCapacity,
+  pantryCount,
   hasItem,
   hasTrait,
   home,
@@ -87,7 +91,7 @@ import {
   weekdayOf,
 } from "./util";
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const START_MINUTE = 7 * 60; // Day 1, Monday, 7:00am
 
 // Base need decay per game hour.
@@ -135,7 +139,7 @@ export function newGame(o: NewGameOptions): GameState {
     homeId: cityHome(getCity(o.city).id, bg.homeTier).id,
     missedRent: 0,
     items: [...bg.items],
-    groceries: 2,
+    pantry: { bread: 2, rice: 1, tomato_pepper: 1 },
     career: null,
     certificates: [],
     courseProgress: {},
@@ -460,8 +464,11 @@ export function activityView(s: GameState, def: ActivityDef): ActivityView {
   if (r.weekdays && !r.weekdays.includes(weekdayOf(s.time))) return fail("Not today");
   if (r.hours && (hourOf(s.time) < r.hours[0] || hourOf(s.time) >= r.hours[1])) return fail(`Only ${r.hours[0]}:00–${r.hours[1]}:00`);
   if (r.item && !hasItem(s, r.item)) return fail(`Needs ${getItem(r.item)?.name}`);
-  if (r.kitchen && !home(s).kitchen && !hasItem(s, "gas_cooker")) return fail("No kitchen or gas cooker");
-  if (r.groceries && s.groceries < r.groceries) return fail("No foodstuff — buy at a market");
+  if (r.kitchen && !canCook(s)) return fail("No kitchen — get a stove or gas cooker");
+  if (r.food) {
+    const missing = r.food.filter((id) => !hasFood(s, id));
+    if (missing.length) return fail(`Needs ${missing.map((id) => getFood(id)?.name ?? id).join(" + ")}`);
+  }
   if (r.skill && level(s, r.skill[0]) < r.skill[1]) return fail(`Needs ${SKILL_NAMES[r.skill[0]]} ${r.skill[1]}`);
   if (r.minCash && s.cash < r.minCash) return fail(`Needs ${formatNaira(r.minCash)} cash`);
   if (r.power && s.location === "home" && homePower(s) === "none") return fail("NEPA took light 🕯️");
@@ -1088,7 +1095,7 @@ function apply(s: GameState, cmd: Command): string | void {
       const v = activityView(s, def);
       if (!v.ok) return v.reason;
       if (v.cost && !charge(s, v.cost, def.name)) return "Can't afford it.";
-      if (def.requires?.groceries) s.groceries -= def.requires.groceries;
+      for (const id of def.requires?.food ?? []) s.pantry[id] = Math.max(0, (s.pantry[id] ?? 0) - 1);
       startRun(s, { activityId: def.id, start: s.time, end: s.time + def.duration });
       return;
     }
@@ -1168,17 +1175,33 @@ function apply(s: GameState, cmd: Command): string | void {
       return;
     }
 
-    case "buyGroceries": {
-      const unit = s.location === "home" ? undefined : getLocation(s.location)?.groceryPrice;
-      if (!unit) return "No foodstuff sold here.";
-      if (!locationOpen(s, s.location)) return "The market is closed.";
-      const space = groceryCapacity(s) - s.groceries;
-      const packs = Math.min(cmd.packs, space);
-      if (packs <= 0) return "No storage space. A fridge holds more.";
-      const cost = price(s, unit) * packs;
-      if (!charge(s, cost, `Foodstuff ×${packs}`)) return "Can't afford it.";
-      s.groceries += packs;
-      log(s, "money", `Bought ${packs} foodstuff pack(s) for ${formatNaira(cost)}.`);
+    case "buyFood": {
+      const order = Object.entries(cmd.items)
+        .map(([id, n]) => [getFood(id), Math.floor(n)] as const)
+        .filter(([f, n]) => f && n > 0) as [NonNullable<ReturnType<typeof getFood>>, number][];
+      if (!order.length) return "Pick some foodstuff first.";
+      const units = order.reduce((a, [, n]) => a + n, 0);
+      if (pantryCount(s) + units > pantryCapacity(s)) {
+        return `Your pantry only has room for ${Math.max(0, pantryCapacity(s) - pantryCount(s))} more.${hasItem(s, "fridge") ? "" : " A fridge holds much more."}`;
+      }
+      let level: number;
+      let fee = 0;
+      if (cmd.delivery) {
+        const h = hourOf(s.time);
+        if (h < DELIVERY_HOURS[0] || h >= DELIVERY_HOURS[1]) return `Riders deliver between ${DELIVERY_HOURS[0]}am and ${DELIVERY_HOURS[1] - 12}pm.`;
+        level = DELIVERY_PRICE_LEVEL;
+        fee = price(s, DELIVERY_FEE, false);
+      } else {
+        const lvl = foodPriceLevelHere(s);
+        if (lvl === null) return "No foodstuff sold here. Go to a market, or order delivery from the Shop app.";
+        if (!locationOpen(s, s.location)) return "The market is closed.";
+        level = lvl;
+      }
+      const cost = order.reduce((a, [f, n]) => a + foodPrice(s, f.id, level) * n, 0) + fee;
+      const label = order.map(([f, n]) => `${f.name}${n > 1 ? ` ×${n}` : ""}`).join(", ");
+      if (!charge(s, cost, cmd.delivery ? `Food delivery: ${label}` : `Foodstuff: ${label}`)) return "Can't afford it.";
+      for (const [f, n] of order) s.pantry[f.id] = (s.pantry[f.id] ?? 0) + n;
+      log(s, "money", `${cmd.delivery ? "🛵 Delivered home" : "🧺 Bought"}: ${label} — ${formatNaira(cost)}${fee ? " incl. delivery" : ""}.`);
       return;
     }
 
@@ -1420,6 +1443,16 @@ export function pendingEventView(s: GameState) {
   };
 }
 
+/** Market price level where the player is standing (null if no food sold). */
+export function foodPriceLevelHere(s: GameState): number | null {
+  if (s.location === "home") return null;
+  const g = getLocation(s.location)?.groceryPrice;
+  return g ? g / 1000 : null;
+}
+
+/** Price of one unit of a foodstuff at a given price level. */
+export const foodPrice = (s: GameState, id: string, level = 1) => price(s, (getFood(id)?.price ?? 0) * level);
+
 /** Re-derive state for older saves. Bump SAVE_VERSION and add steps here. */
 export function migrate(raw: unknown): GameState | null {
   if (!raw || typeof raw !== "object") return null;
@@ -1440,6 +1473,7 @@ export function migrate(raw: unknown): GameState | null {
     !Array.isArray(s.messages) ||
     !Array.isArray(s.log) ||
     !Array.isArray(s.items) ||
+    (s.version >= 3 && !isObj(s.pantry)) ||
     !HOMES.some((h) => h.id === s.homeId)
   ) {
     return null;
@@ -1449,6 +1483,13 @@ export function migrate(raw: unknown): GameState | null {
     s.city = "lagos";
     if (s.travel && (s.travel.mode as string) === "danfo") s.travel.mode = "bus";
     s.version = 2;
+  }
+  if (s.version < 3) {
+    // v3: typed pantry. Old generic packs become jollof ingredients.
+    const old = Math.max(0, Math.floor(Number((s as unknown as { groceries?: number }).groceries) || 0));
+    s.pantry = old ? { rice: old, tomato_pepper: old } : {};
+    delete (s as unknown as { groceries?: number }).groceries;
+    s.version = 3;
   }
   if (!CITIES.some((c) => c.id === s.city)) return null;
   if (s.location !== "home" && !getLocation(s.location)) s.location = "home";
