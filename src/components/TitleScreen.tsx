@@ -10,6 +10,7 @@ import { lifeDay } from "@/game/engine";
 import { formatNaira } from "@/game/util";
 import Avatar from "./Avatar";
 import AccountPanel from "./online/AccountPanel";
+import InstallButton from "./InstallApp";
 import ShareCard from "./share/ShareCard";
 import { Modal } from "./ui";
 
@@ -91,6 +92,7 @@ export default function TitleScreen() {
               <button className="text-sm font-bold text-[var(--brand)]" onClick={() => setShareOpen(true)}>
                 📣 Invite friends
               </button>
+              <InstallButton />
               <button className="text-sm font-semibold text-[var(--muted)] underline" onClick={() => setImportOpen(true)}>
                 Import a save code
               </button>

@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   applicationName: "ModeQuest",
   appleWebApp: { capable: true, title: "ModeQuest", statusBarStyle: "default" },
   icons: { apple: "/icons/apple-touch-icon.png" },
+  // Older iPhones still look for the legacy tag to open full-screen from the home screen.
+  other: { "apple-mobile-web-app-capable": "yes" },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://modequest.stream"),
   // How shared links look in WhatsApp, X, Facebook, etc.
   openGraph: {

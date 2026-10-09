@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { exportSave } from "@/game/persistence";
 import { useGame } from "@/game/store";
 import { useSession } from "@/online/session";
+import InstallButton from "../InstallApp";
 import { SectionTitle } from "../ui";
 
 type Theme = "system" | "light" | "dark";
@@ -95,6 +96,12 @@ export default function SettingsApp({ onClose }: { onClose: () => void }) {
             <p className="text-[11px] text-[var(--muted)] mt-1">Import it from the title screen on any device.</p>
           </div>
         )}
+      </div>
+
+      <div className="card p-4">
+        <SectionTitle>📲 App</SectionTitle>
+        <p className="text-xs text-[var(--ink-2)] mb-2">Install ModeQuest on your home screen: full-screen, less data, opens offline.</p>
+        <InstallButton className="btn btn-ghost btn-sm" />
       </div>
 
       <div className="card p-4">
