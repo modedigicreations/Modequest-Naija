@@ -13,7 +13,7 @@ import ShareCard from "./share/ShareCard";
 import { Modal } from "./ui";
 
 const FEATURES = [
-  ["🗺️", "4 real cities", "Lagos, Abuja, Port Harcourt and Enugu — each with its own map, food, people and go-slow."],
+  ["🗺️", "7 real cities", "Lagos, Abuja, Port Harcourt, Enugu, Aba, Kaduna and Calabar — each with its own map, food, people and go-slow."],
   ["💼", "9 careers", "Tech, food, media, trade, banking, logistics, health, civil service, oil & gas."],
   ["🎣", "Beat the scams", "Phishing DMs, Ponzi schemes, fake alerts — learn to spot them."],
   ["📈", "Grow money", "Save, invest, run businesses — and watch inflation bite."],
@@ -60,7 +60,7 @@ export default function TitleScreen() {
               <span className="inline-block bg-[var(--brand)] text-white px-3 rounded-2xl mt-2 -rotate-1">Naija</span>
             </h1>
             <p className="mt-5 text-lg text-[var(--ink-2)] max-w-md">
-              Live your Naija story. Hustle, learn, dodge scams, beat NEPA and build your empire — from Lagos to Abuja, Port Harcourt to Enugu.
+              Live your Naija story. Hustle, learn, dodge scams, beat NEPA and build your empire — from Lagos to Kaduna, Abuja to Calabar, Enugu to Aba and Port Harcourt.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md">

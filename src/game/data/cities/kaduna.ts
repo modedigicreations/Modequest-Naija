@@ -1,0 +1,88 @@
+import type { CityDef } from "../worldTypes";
+
+const WEEKDAYS = [0, 1, 2, 3, 4];
+const ALL = [0, 1, 2, 3, 4, 5, 6];
+const MON_SAT = [0, 1, 2, 3, 4, 5];
+
+export const KADUNA: CityDef = {
+  id: "kaduna",
+  name: "Kaduna",
+  nickname: "Centre of Learning",
+  state: "Kaduna State",
+  emoji: "🐊",
+  blurb: "Old northern capital on the Kaduna River: schools, a refinery, wide avenues and cool harmattan mornings.",
+  nx: 47,
+  ny: 32,
+  zoneCrossMinutes: 0,
+  rushFactor: 1.15,
+  weather: { sunny: 58, cloudy: 22, rain: 16, storm: 4 },
+  transport: {
+    walk: { name: "Trek" },
+    keke: { name: "Keke Napep", blurb: "Yellow kekes on every street. Short hops, fair prices." },
+    bus: { name: "Kaduna bus", emoji: "🚌", blurb: "Shared buses along Ahmadu Bello Way. Cheap and steady." },
+    ride: { name: "Taxi / Ride-hail" },
+    car: { name: "Your Car" },
+  },
+  local: {
+    amala: { name: "Eat masa & miyan taushe", emoji: "🥞", blurb: "Soft rice cakes with pumpkin soup. A Kaduna breakfast favourite." },
+    suya: { name: "Eat kilishi & suya", emoji: "🍢", blurb: "Spicy dried kilishi and fresh suya by the roadside." },
+    canopy: { name: "Stroll round Murtala Square", emoji: "🌳", blurb: "Huge open square, polo fields nearby, evening breeze." },
+    lagoon_front: { name: "Hang out on campus", emoji: "🎓" },
+  },
+  locations: [
+    { id: "kad_tech", name: "Kaduna Tech Hub", area: "Barnawa", emoji: "💻", x: 560, y: 520, zone: "kad", kinds: ["tech_hub"], open: 8, close: 22, blurb: "Young coders building fintech and agritech for the North." },
+    { id: "kad_library", name: "Kaduna State Library", area: "Kaduna Central", emoji: "📚", x: 480, y: 210, zone: "kad", kinds: ["library"], open: 8, close: 18, days: MON_SAT, blurb: "Big reading halls and a strong history section." },
+    { id: "kad_uni", name: "KASU Campus", area: "Tafawa Balewa Way", emoji: "🎓", x: 380, y: 160, zone: "kad", kinds: ["university"], open: 7, close: 20, blurb: "Kaduna State University: sciences, law and business, in the heart of the city." },
+    { id: "kad_phones", name: "Ahmadu Bello Way Phone Plaza", area: "Ahmadu Bello Way", emoji: "📱", x: 560, y: 260, zone: "kad", kinds: ["gadget_market"], open: 9, close: 19, days: MON_SAT, blurb: "Phones, laptops and accessories. Bargain, then test, then pay." },
+    { id: "kad_mall", name: "Ali Akilu Road Mall", area: "Malali", emoji: "🛍️", x: 700, y: 140, zone: "kad", kinds: ["mall"], open: 9, close: 22, groceryPrice: 1250, blurb: "Supermarket, cinema and the food court everyone meets at." },
+    { id: "kad_market", name: "Kaduna Central Market", area: "Kaduna Central", emoji: "🏬", x: 420, y: 290, zone: "kad", kinds: ["market", "food_market"], open: 7, close: 18, days: MON_SAT, groceryPrice: 800, blurb: "Grains, spices, fabrics and everything else. Great food prices." },
+    { id: "kad_buka", name: "Mallama Hauwa's Masa Spot", area: "Kawo", emoji: "🥞", x: 330, y: 230, zone: "kad", kinds: ["buka"], open: 7, close: 22, blurb: "Masa, tuwo and fura da nono. Fast, cheap and filling." },
+    { id: "kad_stadium", name: "Ahmadu Bello Stadium", area: "Kaduna Central", emoji: "⚽", x: 620, y: 340, zone: "kad", kinds: ["stadium"], open: 6, close: 21, blurb: "Big stadium with a running track. Morning joggers welcome." },
+    { id: "kad_arts", name: "Kaduna Arts & Culture Centre", area: "Kaduna Central", emoji: "🎭", x: 700, y: 260, zone: "kad", kinds: ["theatre"], open: 10, close: 22, blurb: "Durbar photos, drama, poetry and Hausa film screenings." },
+    { id: "kad_bank", name: "Yakubu Gowon Way Bank", area: "Yakubu Gowon Way", emoji: "🏦", x: 500, y: 340, zone: "kad", kinds: ["bank"], open: 8, close: 17, days: WEEKDAYS, blurb: "Main banking street of the city." },
+    { id: "kad_cafe", name: "Barnawa Café", area: "Barnawa", emoji: "☕", x: 470, y: 580, zone: "kad", kinds: ["cafe"], open: 8, close: 23, blurb: "Quiet café with good Wi-Fi and spicy chicken." },
+    { id: "kad_hospital", name: "Barau Dikko Teaching Hospital", area: "Kaduna Central", emoji: "🏥", x: 300, y: 330, zone: "kad", kinds: ["hospital"], open: 0, close: 0, blurb: "Teaching hospital, open 24/7." },
+    { id: "kad_square", name: "Murtala Square", area: "Kaduna Central", emoji: "🌳", x: 560, y: 160, zone: "kad", kinds: ["park"], open: 6, close: 20, blurb: "Wide open square for walks, events and big celebrations." },
+    { id: "kad_river", name: "Kaduna River Bank", area: "Kabala", emoji: "🎣", x: 250, y: 430, zone: "kad", kinds: ["waterfront"], open: 6, close: 19, blurb: "Fishermen and canoes on the river the city is named after." },
+    { id: "kad_refinery", name: "Kaduna Refinery", area: "Chikun", emoji: "🛢️", x: 840, y: 600, zone: "kad", kinds: ["industrial"], open: 6, close: 20, blurb: "Big refinery and petrochemical plant. Safety first, always." },
+    { id: "kad_secretariat", name: "Kaduna Secretariat", area: "Kaduna Central", emoji: "🏛️", x: 680, y: 370, zone: "kad", kinds: ["ministry"], open: 8, close: 16, days: WEEKDAYS, blurb: "State ministries, files and civil servants." },
+    { id: "kad_motorpark", name: "Kawo Motor Park", area: "Kawo", emoji: "🚏", x: 250, y: 120, zone: "kad", kinds: ["motor_park"], open: 5, close: 22, blurb: "Buses to Abuja, Kano, Lagos and the East." },
+    { id: "kad_airport", name: "Kaduna Airport", area: "Airport Road", emoji: "✈️", x: 120, y: 60, zone: "kad", kinds: ["airport"], open: 5, close: 21, blurb: "Airport north-west of the city." },
+  ],
+  homes: [
+    { id: "kad_couch", name: "Uncle Sani's Couch", area: "Tudun Wada", x: 170, y: 520, zone: "kad", tier: "couch", weeklyRent: 0, band: "D", sleepQuality: 0.7, hygieneQuality: 0.7, kitchen: false, hidden: true, moveInWeeks: 0, blurb: "Free, with early prayers and strong opinions." },
+    { id: "kad_room", name: "Kawo One-Room", area: "Kawo", x: 220, y: 270, zone: "kad", tier: "room", weeklyRent: 1600, band: "D", sleepQuality: 0.85, hygieneQuality: 0.8, kitchen: false, moveInWeeks: 4, blurb: "Small room near the market. Cheap and central." },
+    { id: "kad_hostel", name: "KASU Hostel", area: "Tafawa Balewa Way", x: 330, y: 110, zone: "kad", tier: "hostel", weeklyRent: 900, band: "C", sleepQuality: 0.85, hygieneQuality: 0.85, kitchen: false, studentOnly: true, moveInWeeks: 4, blurb: "Campus hostel. Scholars only." },
+    { id: "kad_selfcon", name: "Barnawa Self-Contain", area: "Barnawa", x: 600, y: 600, zone: "kad", tier: "selfcon", weeklyRent: 4500, band: "C", sleepQuality: 1, hygieneQuality: 1, kitchen: true, moveInWeeks: 4, blurb: "Your own space in a friendly southern neighbourhood." },
+    { id: "kad_flat", name: "Malali Mini-Flat", area: "Malali", x: 800, y: 180, zone: "kad", tier: "flat", weeklyRent: 9500, band: "B", sleepQuality: 1.1, hygieneQuality: 1.1, kitchen: true, moveInWeeks: 4, blurb: "Quiet estate, good roads, better light." },
+    { id: "kad_luxury", name: "Kaduna GRA Apartment", area: "GRA", x: 660, y: 70, zone: "kad", tier: "luxury", weeklyRent: 30000, band: "A", sleepQuality: 1.2, hygieneQuality: 1.2, kitchen: true, moveInWeeks: 4, blurb: "Tree-lined streets and steady power." },
+    { id: "kad_penthouse", name: "Ungwan Rimi Villa", area: "Ungwan Rimi", x: 860, y: 90, zone: "kad", tier: "penthouse", weeklyRent: 150000, band: "A", sleepQuality: 1.35, hygieneQuality: 1.3, kitchen: true, moveInWeeks: 4, blurb: "Big compound, big gate, big life." },
+  ],
+  npcs: [
+    { id: "hajara", name: "Mallama Hajara", emoji: "👩🏾‍🍳", role: "Masa seller", reliability: 0.95, greeting: "Sannu! Masa is fresh, come and taste.", schedule: [{ days: ALL, from: 7, to: 21, at: "kad_buka" }], advice: ["I save a little from every day's sales in adashe. By December, I have a lump sum.", "Small profit every day is better than big profit once in a while."] },
+    { id: "yusuf", name: "Yusuf", emoji: "🧑🏾‍💻", role: "Fintech developer", reliability: 0.85, greeting: "We're building payments for small traders in the North.", schedule: [{ days: WEEKDAYS, from: 9, to: 18, at: "kad_tech" }, { days: [5], from: 11, to: 14, at: "kad_cafe" }], advice: ["Learn to solve real problems around you. That's how good apps are born.", "Back up your work. A dead laptop shouldn't kill your project."] },
+    { id: "amina", name: "Amina", emoji: "👩🏾‍🎓", role: "KASU law student", reliability: 0.85, greeting: "Read the terms and conditions, my friend. Always!", schedule: [{ days: WEEKDAYS, from: 9, to: 15, at: "kad_uni" }, { days: WEEKDAYS, from: 15, to: 18, at: "kad_library" }], advice: ["If a contract confuses you, ask questions before you sign. After is too late.", "Your rights online matter too. Don't share your BVN with anyone who asks."] },
+    { id: "garba", name: "Alhaji Garba", emoji: "🧔🏾", role: "Grain merchant", reliability: 0.65, greeting: "I buy maize at harvest and sell when prices rise. Patience is profit.", schedule: [{ days: MON_SAT, from: 7, to: 17, at: "kad_market" }], advice: ["Buy when everyone is selling, sell when everyone is buying.", "Store goods well. Rats and damp have eaten many traders' profits."] },
+    { id: "engr_tanko", name: "Engr. Tanko", emoji: "👷🏾", role: "Refinery engineer", reliability: 0.9, greeting: "Hard hat on! Safety is everybody's job.", schedule: [{ days: WEEKDAYS, from: 7, to: 16, at: "kad_refinery" }, { days: [5, 6], from: 7, to: 9, at: "kad_stadium" }], advice: ["Get a safety certificate early. Industrial jobs want people who follow procedure.", "Pension is boring until you need it. Start early."] },
+    { id: "rabiu", name: "Rabiu", emoji: "⚽", role: "Footballer", reliability: 0.55, greeting: "Kaduna United for life! You fit play?", schedule: [{ days: ALL, from: 6, to: 9, at: "kad_stadium" }, { days: ALL, from: 16, to: 20, at: "kad_stadium" }], advice: ["Betting apps are designed so the house wins. Every time.", "Eat well and sleep well. Your body is your first tool."] },
+  ],
+  map: {
+    base: "land",
+    shapes: [
+      { d: "M0 470 C160 430 230 380 300 420 C380 470 420 520 520 470 C620 420 700 470 780 450 C860 430 920 380 1000 360 L1000 392 C920 412 862 462 782 482 C700 502 620 452 522 502 C418 552 374 502 296 452 C226 412 162 462 0 502 Z", fill: "lagoon" },
+      { d: "M500 120 C540 100 610 110 620 160 C630 210 570 220 530 205 C500 190 480 140 500 120 Z", fill: "green" },
+      { d: "M760 540 C820 520 920 540 960 600 C990 650 930 690 860 680 C790 670 740 600 760 540 Z", fill: "land2" },
+      { d: "M0 0 H260 C220 60 140 100 0 110 Z", fill: "land2" },
+    ],
+    roads: [],
+    labels: [
+      { text: "KAWO", x: 220, y: 200, kind: "area" },
+      { text: "KADUNA CENTRAL", x: 470, y: 390, kind: "area" },
+      { text: "MALALI", x: 820, y: 250, kind: "area" },
+      { text: "BARNAWA", x: 520, y: 650, kind: "area" },
+      { text: "TUDUN WADA", x: 160, y: 590, kind: "area" },
+      { text: "KADUNA RIVER", x: 700, y: 445, kind: "water" },
+      { text: "REFINERY", x: 860, y: 660, kind: "feature" },
+    ],
+  },
+};

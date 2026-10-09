@@ -17,7 +17,7 @@ const body = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "ModeQuest: Naija",
   description:
-    "Live your Naija story in Lagos, Abuja, Port Harcourt or Enugu — hustle, learn and level up. A free life-sim that teaches money smarts, scam awareness and coding. By Mode Digital Creations.",
+    "Live your Naija story in Lagos, Abuja, Port Harcourt, Enugu, Aba, Kaduna or Calabar — hustle, learn and level up. A free life-sim that teaches money smarts, scam awareness and coding. By Mode Digital Creations.",
   applicationName: "ModeQuest",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://modequest.stream"),
   // How shared links look in WhatsApp, X, Facebook, etc.
@@ -25,13 +25,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "ModeQuest: Naija",
     title: "ModeQuest: Naija — free life-sim game",
-    description: "Hustle, dodge scams, beat NEPA and grow your money in Lagos, Abuja, Port Harcourt and Enugu. Free in your browser.",
+    description: "Hustle, dodge scams, beat NEPA and grow your money in 7 Nigerian cities, from Lagos to Kaduna to Calabar. Free in your browser.",
     url: "/",
   },
   twitter: {
     card: "summary",
     title: "ModeQuest: Naija — free life-sim game",
-    description: "Hustle, dodge scams, beat NEPA and grow your money in 4 Nigerian cities. Free in your browser.",
+    description: "Hustle, dodge scams, beat NEPA and grow your money in 7 Nigerian cities. Free in your browser.",
   },
 };
 

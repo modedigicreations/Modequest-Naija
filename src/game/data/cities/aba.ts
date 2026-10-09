@@ -1,0 +1,88 @@
+import type { CityDef } from "../worldTypes";
+
+const WEEKDAYS = [0, 1, 2, 3, 4];
+const ALL = [0, 1, 2, 3, 4, 5, 6];
+const MON_SAT = [0, 1, 2, 3, 4, 5];
+
+export const ABA: CityDef = {
+  id: "aba",
+  name: "Aba",
+  nickname: "Enyimba City",
+  state: "Abia State",
+  emoji: "👞",
+  blurb: "Made in Aba: shoes, bags and fabrics built by hand and sold everywhere. Trade capital of the East.",
+  nx: 54,
+  ny: 79,
+  zoneCrossMinutes: 0,
+  rushFactor: 1.3,
+  weather: { sunny: 35, cloudy: 25, rain: 32, storm: 8 },
+  transport: {
+    walk: { name: "Trek" },
+    keke: { name: "Keke", blurb: "Aba runs on keke. Hop on anywhere." },
+    bus: { name: "Shuttle bus", emoji: "🚐", blurb: "Shuttles along Aba-Owerri Road and Faulks Road. Cheap and packed." },
+    ride: { name: "Taxi / Ride-hail" },
+    car: { name: "Your Car" },
+  },
+  local: {
+    amala: { name: "Eat ofe nsala & pounded yam", emoji: "🍲", blurb: "Peppery white soup with catfish. Aba's comfort food." },
+    suya: { name: "Eat suya & roasted corn", emoji: "🌽" },
+    canopy: { name: "Walk the recreation park", emoji: "🌳", blurb: "Shade trees, football on the grass and evening breeze." },
+    lagoon_front: { name: "Hang out on campus", emoji: "🎓" },
+  },
+  locations: [
+    { id: "aba_tech", name: "Made-in-Aba Tech Hub", area: "Aba-Owerri Road", emoji: "💻", x: 560, y: 210, zone: "aba", kinds: ["tech_hub"], open: 8, close: 22, blurb: "Startups building online stores for Aba's shoemakers and tailors." },
+    { id: "aba_library", name: "Aba Public Library", area: "Asa Road", emoji: "📚", x: 470, y: 330, zone: "aba", kinds: ["library"], open: 8, close: 18, days: MON_SAT, blurb: "Quiet reading rooms in the middle of a loud city." },
+    { id: "aba_poly", name: "Abia Poly", area: "Osusu", emoji: "🎓", x: 700, y: 330, zone: "aba", kinds: ["university"], open: 7, close: 20, blurb: "Polytechnic known for business, fashion design and engineering." },
+    { id: "aba_phones", name: "Faulks Road Phone Plaza", area: "Faulks Road", emoji: "📱", x: 380, y: 260, zone: "aba", kinds: ["gadget_market"], open: 9, close: 19, days: MON_SAT, blurb: "Phones, laptops and repairs. Test everything before you pay." },
+    { id: "aba_mall", name: "Aba-Owerri Road Mall", area: "Aba-Owerri Road", emoji: "🛍️", x: 640, y: 130, zone: "aba", kinds: ["mall"], open: 9, close: 22, groceryPrice: 1300, blurb: "Supermarket, cinema and air-con. Weekend hangout spot." },
+    { id: "aba_ariaria", name: "Ariaria International Market", area: "Ariaria", emoji: "👞", x: 250, y: 420, zone: "aba", kinds: ["market", "food_market"], open: 7, close: 18, days: MON_SAT, groceryPrice: 900, blurb: "Thousands of workshops: shoes, bags, belts and clothes made right here — plus a big foodstuff section." },
+    { id: "aba_newmarket", name: "Ahia Ohuru (New Market)", area: "Ehi Road", emoji: "🧺", x: 420, y: 470, zone: "aba", kinds: ["food_market", "market"], open: 7, close: 19, days: MON_SAT, groceryPrice: 840, blurb: "Yams, garri, palm oil and stockfish. The best food prices in town." },
+    { id: "aba_buka", name: "Mama Chika's Kitchen", area: "Asa Road", emoji: "🍲", x: 300, y: 330, zone: "aba", kinds: ["buka"], open: 8, close: 22, blurb: "Ofe nsala, oha soup and swallow. Traders eat here every day." },
+    { id: "aba_stadium", name: "Enyimba International Stadium", area: "Ogbor Hill", emoji: "⚽", x: 600, y: 470, zone: "aba", kinds: ["stadium"], open: 6, close: 21, blurb: "Home of Enyimba, the People's Elephant — two-time African champions." },
+    { id: "aba_hall", name: "Aba Cultural Hall", area: "Ogbor Hill", emoji: "🎭", x: 700, y: 520, zone: "aba", kinds: ["theatre"], open: 10, close: 22, blurb: "Fashion shows, comedy nights and highlife bands." },
+    { id: "aba_bank", name: "Azikiwe Road Bank", area: "Azikiwe Road", emoji: "🏦", x: 500, y: 250, zone: "aba", kinds: ["bank"], open: 8, close: 17, days: WEEKDAYS, blurb: "Busy banking hall full of traders depositing the day's sales." },
+    { id: "aba_cafe", name: "GRA Coffee Spot", area: "GRA", emoji: "☕", x: 780, y: 200, zone: "aba", kinds: ["cafe"], open: 8, close: 23, blurb: "Calm café where designers meet buyers over coffee." },
+    { id: "aba_hospital", name: "Abia Teaching Hospital", area: "Aba-Owerri Road", emoji: "🏥", x: 720, y: 120, zone: "aba", kinds: ["hospital"], open: 0, close: 0, blurb: "Teaching hospital, open 24/7." },
+    { id: "aba_park", name: "Aba Recreation Park", area: "GRA", emoji: "🌳", x: 830, y: 330, zone: "aba", kinds: ["park"], open: 7, close: 19, blurb: "Green space with shade trees and Sunday football." },
+    { id: "aba_river", name: "Aba River Bank", area: "Waterside", emoji: "🎣", x: 150, y: 250, zone: "aba", kinds: ["waterfront"], open: 6, close: 19, blurb: "Fishermen, canoes and the river that gave the city its name." },
+    { id: "aba_motorpark", name: "Asa Road Motor Park", area: "Asa Road", emoji: "🚏", x: 300, y: 520, zone: "aba", kinds: ["motor_park"], open: 5, close: 22, blurb: "Buses to Lagos, Abuja, PH, Enugu and Calabar. Loud and busy from dawn." },
+    { id: "aba_airport", name: "Airport Shuttle Terminal", area: "Aba-PH Expressway", emoji: "✈️", x: 250, y: 630, zone: "aba", kinds: ["airport"], open: 5, close: 21, blurb: "Aba has no airport: shuttles take you to Port Harcourt International to fly." },
+  ],
+  homes: [
+    { id: "aba_couch", name: "Uncle Ikenna's Couch", area: "Ariaria", x: 190, y: 340, zone: "aba", tier: "couch", weeklyRent: 0, band: "D", sleepQuality: 0.7, hygieneQuality: 0.7, kitchen: false, hidden: true, moveInWeeks: 0, blurb: "Free. Uncle wants you in his shop by 7am." },
+    { id: "aba_room", name: "Asa Road One-Room", area: "Asa Road", x: 380, y: 440, zone: "aba", tier: "room", weeklyRent: 1700, band: "D", sleepQuality: 0.85, hygieneQuality: 0.8, kitchen: false, moveInWeeks: 4, blurb: "Cheap and close to the markets. The sewing machines start early." },
+    { id: "aba_hostel", name: "Abia Poly Hostel", area: "Osusu", x: 760, y: 400, zone: "aba", tier: "hostel", weeklyRent: 950, band: "C", sleepQuality: 0.85, hygieneQuality: 0.85, kitchen: false, studentOnly: true, moveInWeeks: 4, blurb: "Campus hostel. Scholars only." },
+    { id: "aba_selfcon", name: "Ogbor Hill Self-Contain", area: "Ogbor Hill", x: 560, y: 560, zone: "aba", tier: "selfcon", weeklyRent: 4600, band: "C", sleepQuality: 1, hygieneQuality: 1, kitchen: true, moveInWeeks: 4, blurb: "Your own space near Enyimba Stadium." },
+    { id: "aba_flat", name: "Abayi Mini-Flat", area: "Abayi", x: 480, y: 120, zone: "aba", tier: "flat", weeklyRent: 10000, band: "B", sleepQuality: 1.1, hygieneQuality: 1.1, kitchen: true, moveInWeeks: 4, blurb: "Quiet estate off the expressway, better light." },
+    { id: "aba_luxury", name: "Aba GRA Duplex Apartment", area: "GRA", x: 860, y: 250, zone: "aba", tier: "luxury", weeklyRent: 32000, band: "A", sleepQuality: 1.2, hygieneQuality: 1.2, kitchen: true, moveInWeeks: 4, blurb: "Big compound, tall gates, steady power." },
+    { id: "aba_penthouse", name: "Aba GRA Mansion", area: "GRA", x: 900, y: 150, zone: "aba", tier: "penthouse", weeklyRent: 160000, band: "A", sleepQuality: 1.35, hygieneQuality: 1.3, kitchen: true, moveInWeeks: 4, blurb: "Where Aba's big manufacturers live. Now you do too." },
+  ],
+  npcs: [
+    { id: "ikenna", name: "Ikenna", emoji: "👞", role: "Shoemaker", reliability: 0.85, greeting: "Every shoe here is hand-made. Feel this leather!", schedule: [{ days: MON_SAT, from: 7, to: 17, at: "aba_ariaria" }, { days: [6], from: 16, to: 19, at: "aba_stadium" }], advice: ["Put your own brand on your work. Without a label, someone else takes the credit and the profit.", "Quality brings repeat customers. One bad batch can cost you a buyer for life."] },
+    { id: "adaeze", name: "Adaeze", emoji: "👩🏾‍🎨", role: "Fashion designer", reliability: 0.9, greeting: "I sell my designs on Instagram — to Lagos, London and Accra!", schedule: [{ days: WEEKDAYS, from: 10, to: 17, at: "aba_tech" }, { days: [5], from: 11, to: 15, at: "aba_cafe" }], advice: ["Take good photos of your products. Online, the picture is the shop.", "Price your time, not just the fabric. Your skill is worth money."] },
+    { id: "mamachika", name: "Mama Chika", emoji: "👩🏾‍🍳", role: "Buka owner", reliability: 0.95, greeting: "Nwa m, sit down! The nsala is hot.", schedule: [{ days: ALL, from: 8, to: 21, at: "aba_buka" }], advice: ["I keep my market money and my house money in two different purses. Mixing them is how businesses die.", "Buy foodstuff in bulk on market day, and you save every week."] },
+    { id: "ugochukwu", name: "Ugo", emoji: "🧑🏾‍💼", role: "Wholesale trader", reliability: 0.6, greeting: "I supply bags to shops in five states. You want to learn?", schedule: [{ days: MON_SAT, from: 8, to: 17, at: "aba_newmarket" }, { days: ALL, from: 18, to: 21, at: "aba_buka" }], advice: ["Never give big goods on credit to someone you just met.", "Write every sale down. Memory is not a record."] },
+    { id: "amarachi", name: "Amarachi", emoji: "👩🏾‍🎓", role: "Abia Poly student", reliability: 0.85, greeting: "Fashion design student. I also code websites for tailors!", schedule: [{ days: WEEKDAYS, from: 9, to: 15, at: "aba_poly" }, { days: WEEKDAYS, from: 15, to: 18, at: "aba_library" }], advice: ["Learn two skills that work together — like sewing and selling online.", "A free online course plus practice beats waiting for the perfect school."] },
+    { id: "nnamdi", name: "Nnamdi", emoji: "⚽", role: "Enyimba supporter", reliability: 0.55, greeting: "Enyimba! The People's Elephant! You don watch our match?", schedule: [{ days: ALL, from: 6, to: 9, at: "aba_stadium" }, { days: ALL, from: 16, to: 20, at: "aba_stadium" }], advice: ["Betting is not a job. My friend lost his shop money in one week.", "Train when nobody is watching. The match is just the exam."] },
+  ],
+  map: {
+    base: "land",
+    shapes: [
+      { d: "M90 0 C120 120 80 220 130 320 C170 400 120 520 160 700 L190 700 C150 520 200 400 160 320 C112 220 152 120 122 0 Z", fill: "lagoon" },
+      { d: "M780 280 C820 260 880 280 880 330 C880 380 820 390 790 370 C760 350 750 300 780 280 Z", fill: "green" },
+      { d: "M0 560 C80 540 200 600 260 700 L0 700 Z", fill: "green" },
+      { d: "M560 430 C600 410 650 430 650 480 C650 520 600 530 570 510 C548 494 540 448 560 430 Z", fill: "land2" },
+    ],
+    roads: [],
+    labels: [
+      { text: "ARIARIA", x: 230, y: 470, kind: "area" },
+      { text: "ASA ROAD", x: 400, y: 410, kind: "area" },
+      { text: "FAULKS ROAD", x: 390, y: 210, kind: "area" },
+      { text: "ABAYI", x: 470, y: 80, kind: "area" },
+      { text: "OGBOR HILL", x: 640, y: 600, kind: "area" },
+      { text: "GRA", x: 860, y: 420, kind: "area" },
+      { text: "ABA RIVER", x: 120, y: 160, kind: "water", rotate: -80 },
+      { text: "TO PORT HARCOURT", x: 140, y: 660, kind: "feature" },
+    ],
+  },
+};

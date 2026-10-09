@@ -1,6 +1,6 @@
 # ModeQuest: Naija
 
-A free browser life-sim set in real Nigerian cities, where hustling teaches real skills. Players live in **Lagos, Abuja, Port Harcourt or Enugu**. They keep their needs up, work shifts, ride danfos and green cabs, dodge scam DMs, survive NEPA outages, save and invest, run businesses and chase a lifetime dream. The learning (budgeting, inflation, compound interest, scam awareness, digital safety, coding logic) is part of the mechanics. It's built for schools, with teacher-managed classes, assignments and progress tracking.
+A free browser life-sim set in real Nigerian cities, where hustling teaches real skills. Players live in **Lagos, Abuja, Port Harcourt, Enugu, Aba, Kaduna or Calabar**. They keep their needs up, work shifts, ride danfos and green cabs, dodge scam DMs, survive NEPA outages, save and invest, run businesses and chase a lifetime dream. The learning (budgeting, inflation, compound interest, scam awareness, digital safety, coding logic) is part of the mechanics. It's built for schools, with teacher-managed classes, assignments and progress tracking.
 
 Built by Mode Digital Creations as the web successor to the ModeQuest Android game.
 

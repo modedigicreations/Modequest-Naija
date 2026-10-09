@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { ACTIVITIES } from "./data/activities";
 import { CAREERS } from "./data/economy";
-import { ALL_NPCS, CITIES, HOMES, LOCATIONS, findKind } from "./data/world";
+import { ALL_NPCS, CITIES, HOMES, LOCATIONS, ROAD_HOURS, findKind } from "./data/world";
 import type { HomeTier, PlaceKind } from "./data/worldTypes";
-import { advance, dispatch, intercityQuote, migrate, newGame } from "./engine";
+import { advance, dispatch, intercityQuote, migrate, newGame, workplaceFor } from "./engine";
 import type { GameState, NewGameOptions } from "./types";
 
 const opts = (city: string): NewGameOptions => ({
@@ -189,5 +189,33 @@ describe("invite bonus", () => {
     expect(r.state.log.at(-1)?.text).toContain("NewPal");
     expect(dispatch(r.state, { type: "referralBonus", amount: 20000, ref: "friend-1", friend: "NewPal" }).error).toMatch(/Already/);
     expect(dispatch(r.state, { type: "referralBonus", amount: 20000, ref: "friend-2", friend: "Pal2" }).state.bank).toBe(bank + 40000);
+  });
+});
+
+describe("travel between all cities", () => {
+  it("has a real road time for every pair of cities", () => {
+    for (const a of CITIES) for (const b of CITIES) if (a.id < b.id) expect(ROAD_HOURS[[a.id, b.id].sort().join("-")], `${a.id}-${b.id}`).toBeGreaterThan(0);
+  });
+
+  it("can reach every other city by bus from anywhere", () => {
+    for (const a of CITIES) {
+      const s = newGame(opts(a.id));
+      for (const b of CITIES) if (b.id !== a.id) expect(intercityQuote(s, b.id, "coach"), `${a.id}→${b.id}`).not.toBeNull();
+    }
+  });
+
+  it("doesn't offer silly short flights, and Aba flights include the PH shuttle", () => {
+    const s = newGame(opts("aba"));
+    expect(intercityQuote(s, "portharcourt", "flight")).toBeNull();
+    const fromAba = intercityQuote(s, "kaduna", "flight")!;
+    const fromEnugu = intercityQuote(newGame(opts("enugu")), "kaduna", "flight")!;
+    expect(fromAba.minutes).toBeGreaterThan(fromEnugu.minutes);
+  });
+
+  it("Kaduna has a refinery for Oil & Gas jobs", () => {
+    const s = newGame(opts("kaduna"));
+    s.skills.fitness = 100;
+    expect(dispatch(s, { type: "applyJob", careerId: "energy" }).error).toBeUndefined();
+    expect(workplaceFor(s, "industrial")?.id).toBe("kad_refinery");
   });
 });

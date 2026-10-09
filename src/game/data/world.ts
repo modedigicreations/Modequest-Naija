@@ -1,6 +1,9 @@
 import type { TransportMode, Weather } from "../types";
+import { ABA } from "./cities/aba";
 import { ABUJA } from "./cities/abuja";
+import { CALABAR } from "./cities/calabar";
 import { ENUGU } from "./cities/enugu";
+import { KADUNA } from "./cities/kaduna";
 import { LAGOS } from "./cities/lagos";
 import { PORT_HARCOURT } from "./cities/portharcourt";
 import type { CityDef, HomeDef, HomeTier, LocationDef, NpcDef } from "./worldTypes";
@@ -8,7 +11,7 @@ import type { CityDef, HomeDef, HomeTier, LocationDef, NpcDef } from "./worldTyp
 export type { CityDef, HomeDef, HomeTier, LocationDef, MapShape, NpcDef, PlaceKind } from "./worldTypes";
 
 /** Every playable city. Add a city by adding a data pack to this list. */
-export const CITIES: CityDef[] = [LAGOS, ABUJA, PORT_HARCOURT, ENUGU];
+export const CITIES: CityDef[] = [LAGOS, ABUJA, PORT_HARCOURT, ENUGU, ABA, KADUNA, CALABAR];
 
 export const LOCATIONS: (LocationDef & { city: string })[] = CITIES.flatMap((c) => c.locations.map((l) => ({ ...l, city: c.id })));
 export const HOMES: (HomeDef & { city: string })[] = CITIES.flatMap((c) => c.homes.map((h) => ({ ...h, city: c.id })));
@@ -76,21 +79,49 @@ export function transportIn(cityId: string, mode: TransportMode): TransportDef &
   return { ...base, name: local?.name ?? base.name, emoji: local?.emoji ?? base.emoji, blurb: local?.blurb ?? base.blurb, available: !!local };
 }
 
-/** Road distance in hours by luxury bus. */
-const ROAD_HOURS: Record<string, number> = {
-  "abuja-lagos": 10,
-  "lagos-portharcourt": 9,
-  "enugu-lagos": 8,
-  "abuja-portharcourt": 9,
-  "abuja-enugu": 5,
-  "enugu-portharcourt": 4,
+/** Road time in hours by luxury bus between every pair of cities. */
+const ROADS: [string, string, number][] = [
+  ["abuja", "lagos", 10],
+  ["lagos", "portharcourt", 9],
+  ["enugu", "lagos", 8],
+  ["abuja", "portharcourt", 9],
+  ["abuja", "enugu", 5],
+  ["enugu", "portharcourt", 4],
+  ["aba", "portharcourt", 1.5],
+  ["aba", "enugu", 3],
+  ["aba", "calabar", 4],
+  ["aba", "abuja", 7],
+  ["aba", "lagos", 9],
+  ["aba", "kaduna", 10],
+  ["abuja", "kaduna", 3],
+  ["enugu", "kaduna", 8],
+  ["kaduna", "lagos", 11],
+  ["kaduna", "portharcourt", 11],
+  ["calabar", "kaduna", 12],
+  ["calabar", "portharcourt", 4],
+  ["calabar", "enugu", 5],
+  ["abuja", "calabar", 9],
+  ["calabar", "lagos", 12],
+];
+const pairKey = (a: string, b: string) => [a, b].sort().join("-");
+export const ROAD_HOURS: Record<string, number> = Object.fromEntries(ROADS.map(([a, b, h]) => [pairKey(a, b), h]));
+
+/** Flights only make sense for longer trips (Aba ↔ PH is a short drive). */
+const MIN_FLIGHT_ROAD_HOURS = 3;
+/** Cities without their own airport use a shuttle to the nearest one. */
+const AIRPORT_SHUTTLE: Record<string, { minutes: number; fare: number }> = {
+  aba: { minutes: 75, fare: 4000 },
 };
 
 export function intercityRoute(from: string, to: string, mode: "coach" | "flight") {
-  const key = [from, to].sort().join("-");
-  const hours = ROAD_HOURS[key] ?? 8;
-  if (mode === "coach") return { minutes: hours * 60 + INTERCITY_MODES.coach.wait, fare: 5000 + hours * 2400 };
-  return { minutes: 75 + INTERCITY_MODES.flight.wait, fare: 85000 + hours * 3000 };
+  const hours = ROAD_HOURS[pairKey(from, to)] ?? 8;
+  if (mode === "coach") return { minutes: Math.round(hours * 60) + INTERCITY_MODES.coach.wait, fare: Math.round(5000 + hours * 2400) };
+  if (hours < MIN_FLIGHT_ROAD_HOURS) return null;
+  const extra = [AIRPORT_SHUTTLE[from], AIRPORT_SHUTTLE[to]].filter(Boolean) as { minutes: number; fare: number }[];
+  return {
+    minutes: 75 + INTERCITY_MODES.flight.wait + extra.reduce((a, x) => a + x.minutes, 0),
+    fare: 85000 + hours * 3000 + extra.reduce((a, x) => a + x.fare, 0),
+  };
 }
 
 export const WEATHER_INFO: Record<Weather, { label: string; emoji: string; travel: number }> = {

@@ -298,6 +298,7 @@ export function intercityQuote(s: GameState, to: string, mode: "coach" | "flight
   if (!arrival) return null;
   const atTerminal = kindsHere(s).includes(kind);
   const route = intercityRoute(s.city, to, mode);
+  if (!route) return null;
   return {
     arrival: arrival.id,
     minutes: route.minutes + (atTerminal ? 0 : TERMINAL_TRANSFER_MINUTES),
