@@ -348,5 +348,32 @@ commit;
 select pg_temp.ok((select flagged from saves where user_id = 'eeeeeeee-0000-0000-0000-000000000001') is not null, 'cheating friend is flagged');
 select pg_temp.ok((select rewarded_at from referrals where referred_id = 'eeeeeeee-0000-0000-0000-000000000001') is null, 'a flagged friend earns the inviter no bonus');
 
+-- Site stats ------------------------------------------------------------------
+begin;
+set local role anon;
+select track_visit('f0000000-0000-0000-0000-000000000001');
+select track_visit('f0000000-0000-0000-0000-000000000001');
+select track_visit('f0000000-0000-0000-0000-000000000002');
+select heartbeat('f1000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 'lagos', true);
+select heartbeat('f1000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000002', 'enugu', false);
+select pg_temp.fails($$select * from visitors$$, 'visitors cannot read visit data');
+select pg_temp.fails($$select stats_overview()$$, 'visitors cannot read the dashboard numbers');
+select pg_temp.fails($$delete from live_sessions$$, 'visitors cannot tamper with live sessions');
+commit;
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-5555-5555-555555555555', true);
+select heartbeat('f1000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000003', 'abuja', true);
+select pg_temp.fails($$select stats_overview()$$, 'signed-in players cannot read the dashboard numbers');
+commit;
+select pg_temp.ok((stats_overview() ->> 'visits_all_time')::int = 3, 'all-time visits counted');
+select pg_temp.ok((stats_overview() ->> 'visitors_all_time')::int = 2, 'unique visitors counted');
+select pg_temp.ok((stats_overview() ->> 'live_playing')::int = 2, 'live players counted');
+select pg_temp.ok((stats_overview() ->> 'live_browsing')::int = 1, 'visitors on the title screen counted separately');
+select pg_temp.ok((stats_overview() ->> 'live_signed_in')::int = 1, 'signed-in live players counted');
+select pg_temp.ok((stats_overview() -> 'live_by_city' ->> 'lagos')::int = 1, 'live players by city');
+update live_sessions set last_seen = now() - interval '5 minutes' where session_id = 'f1000000-0000-0000-0000-000000000001';
+select pg_temp.ok((stats_overview() ->> 'live_playing')::int = 1, 'players who left drop off after 2 minutes');
+
 \o
 \echo 'ALL RLS TESTS PASSED'

@@ -7,6 +7,7 @@
   --brand-dark: #0b2d9e;
   --brand-soft: #e8ecfd;
   --bg: #f5f7ff;
+  --chart: #1447e6;
   --bg-2: #e8ecfd;
   --card: #ffffff;
   --card-2: #eef0fd;
@@ -38,6 +39,7 @@
     --brand-dark: #0a1230;
     --brand-soft: rgba(69, 106, 236, 0.22);
     --bg: #0a1230;
+    --chart: #5a7cf0;
     --bg-2: #111c45;
     --card: #111c45;
     --card-2: #17245a;
@@ -64,6 +66,7 @@
   --brand-dark: #0a1230;
   --brand-soft: rgba(69, 106, 236, 0.22);
   --bg: #0a1230;
+  --chart: #5a7cf0;
   --bg-2: #111c45;
   --card: #111c45;
   --card-2: #17245a;

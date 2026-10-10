@@ -36,6 +36,23 @@ export async function requireTeacherOf(req: Request, classId: string) {
   return { db, teacherId: data.user.id, cls: cls as { id: string; code: string; teacher_id: string } };
 }
 
+/** The site owner(s): emails listed in the ADMIN_EMAILS environment variable. */
+export async function requireAdmin(req: Request) {
+  const db = adminClient();
+  if (!db) throw new HttpError(503, "Online features are not configured.");
+  const admins = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (!admins.length) throw new HttpError(503, "Set ADMIN_EMAILS on the server to use the dashboard.");
+  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  if (!token) throw new HttpError(401, "Sign in first.");
+  const { data, error } = await db.auth.getUser(token);
+  if (error || !data.user) throw new HttpError(401, "Your session has expired. Sign in again.");
+  if (!admins.includes((data.user.email ?? "").toLowerCase())) throw new HttpError(403, "This account isn't allowed to see the dashboard.");
+  return { db, user: data.user };
+}
+
 export function errorResponse(e: unknown) {
   if (e instanceof HttpError) return Response.json({ error: e.message }, { status: e.status });
   console.error(e);

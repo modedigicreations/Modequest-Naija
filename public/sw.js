@@ -28,7 +28,7 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // Supabase, Paystack, fonts CDN: straight to network
-  if (/^\/(api|pay|invite|teacher)(\/|$)/.test(url.pathname)) return;
+  if (/^\/(api|pay|invite|teacher|admin)(\/|$)/.test(url.pathname)) return;
 
   // Pages: always try the network first (so updates arrive), fall back to the saved copy offline.
   if (req.mode === "navigate") {

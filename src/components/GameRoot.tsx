@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useGame } from "@/game/store";
 import { captureReferral } from "@/online/referral";
+import { startSiteStats } from "@/online/stats";
 import { useSession } from "@/online/session";
 import CharacterCreator from "./CharacterCreator";
 import GameScreen from "./GameScreen";
@@ -22,7 +23,9 @@ export default function GameRoot() {
     if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
       void navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
-    void init().then(() => initSession());
+    void init()
+      .then(() => initSession())
+      .then(() => startSiteStats(() => ({ city: useGame.getState().game?.city ?? null, playing: useGame.getState().screen === "play" })));
   }, [init, initSession]);
 
   // Real-time clock
