@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CITIES } from "@/game/data/world";
 import { fetchMyReferral, INVITE_BONUS, INVITE_BONUS_DAY, INVITE_BONUS_MONTHLY_CAP, inviteUrl, type ReferralStats } from "@/online/referral";
 import { formatNaira } from "@/game/util";
 import { useSession } from "@/online/session";
 
 const MESSAGE =
-  "🇳🇬 I'm playing ModeQuest: Naija — a free game where you hustle, dodge scams, beat NEPA and grow your money in 7 Nigerian cities — Lagos, Abuja, PH, Enugu, Aba, Kaduna and Calabar. It plays in your browser. Join me:";
+  `🇳🇬 I'm playing ModeQuest: Naija — a free game where you hustle, dodge scams, beat NEPA and grow your money in ${CITIES.length} real Nigerian cities, from Lagos to Kaduna to Yenagoa. It plays in your browser. Join me:`;
 
 /** Share the game: native share sheet, WhatsApp & co, or copy the link. */
 export default function ShareCard() {

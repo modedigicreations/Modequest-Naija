@@ -1,0 +1,88 @@
+import type { CityDef } from "../worldTypes";
+
+const WEEKDAYS = [0, 1, 2, 3, 4];
+const ALL = [0, 1, 2, 3, 4, 5, 6];
+const MON_SAT = [0, 1, 2, 3, 4, 5];
+
+export const OWERRI: CityDef = {
+  id: "owerri",
+  name: "Owerri",
+  nickname: "The Heartland",
+  state: "Imo State",
+  emoji: "💚",
+  blurb: "Imo's lively capital: ofe Owerri, the Mbari arts centre, two universities and the best nightlife in the East.",
+  nx: 49,
+  ny: 75,
+  zoneCrossMinutes: 0,
+  rushFactor: 1.2,
+  weather: { sunny: 37, cloudy: 25, rain: 31, storm: 7 },
+  transport: {
+    walk: { name: "Trek" },
+    keke: { name: "Keke", blurb: "Kekes rule Owerri's streets. Quick and cheap." },
+    bus: { name: "Shuttle bus", emoji: "🚐", blurb: "Shuttles along Wetheral Road and Douglas Road." },
+    ride: { name: "Taxi / Ride-hail" },
+    car: { name: "Your Car" },
+  },
+  local: {
+    amala: { name: "Eat ofe Owerri & fufu", emoji: "🥬", blurb: "The rich soup Owerri is famous for: ugu, okazi, stockfish and more." },
+    suya: { name: "Eat nkwobi & suya", emoji: "🍢" },
+    canopy: { name: "Stroll round Heroes Square", emoji: "🌳", blurb: "Monuments, open space and evening breeze." },
+    lagoon_front: { name: "Hang out on campus", emoji: "🎓" },
+  },
+  locations: [
+    { id: "owe_tech", name: "Heartland Tech Hub", area: "New Owerri", emoji: "💻", x: 620, y: 240, zone: "owe", kinds: ["tech_hub"], open: 8, close: 22, blurb: "Startups and remote workers in New Owerri." },
+    { id: "owe_library", name: "Imo State Library", area: "Owerri Municipal", emoji: "📚", x: 460, y: 310, zone: "owe", kinds: ["library"], open: 8, close: 18, days: MON_SAT, blurb: "Big reading halls near the city centre." },
+    { id: "owe_uni", name: "IMSU", area: "Owerri North", emoji: "🎓", x: 760, y: 170, zone: "owe", kinds: ["university"], open: 7, close: 20, blurb: "Imo State University: sciences, business and the arts." },
+    { id: "owe_phones", name: "Douglas Road Phone Plaza", area: "Douglas Road", emoji: "📱", x: 380, y: 260, zone: "owe", kinds: ["gadget_market"], open: 9, close: 19, days: MON_SAT, blurb: "Phones and accessories by the dozen. Check before you pay." },
+    { id: "owe_mall", name: "New Owerri Mall", area: "New Owerri", emoji: "🛍️", x: 700, y: 310, zone: "owe", kinds: ["mall"], open: 9, close: 22, groceryPrice: 1300, blurb: "Supermarket, cinema and the food court." },
+    { id: "owe_market", name: "Eke Ukwu Market", area: "Owerri Municipal", emoji: "🧺", x: 330, y: 400, zone: "owe", kinds: ["market", "food_market"], open: 7, close: 18, days: MON_SAT, groceryPrice: 860, blurb: "Owerri's big old market. Fresh produce, fabrics and household goods." },
+    { id: "owe_buka", name: "Mama Chinwe's Ofe Owerri", area: "Wetheral Road", emoji: "🥬", x: 420, y: 470, zone: "owe", kinds: ["buka"], open: 8, close: 22, blurb: "The real ofe Owerri, served with fufu. Expensive soup, fair price." },
+    { id: "owe_stadium", name: "Dan Anyiam Stadium", area: "Owerri Municipal", emoji: "⚽", x: 540, y: 420, zone: "owe", kinds: ["stadium"], open: 6, close: 21, blurb: "Home of Heartland FC. Loud fans, good track." },
+    { id: "owe_mbari", name: "Mbari Cultural Centre", area: "Ikenegbu", emoji: "🎭", x: 600, y: 520, zone: "owe", kinds: ["theatre"], open: 10, close: 22, blurb: "Igbo art, sculpture, dance and drama under one roof." },
+    { id: "owe_bank", name: "Wetheral Road Bank", area: "Wetheral Road", emoji: "🏦", x: 500, y: 250, zone: "owe", kinds: ["bank"], open: 8, close: 17, days: WEEKDAYS, blurb: "Main banking street of the city." },
+    { id: "owe_cafe", name: "Ikenegbu Café", area: "Ikenegbu", emoji: "☕", x: 720, y: 460, zone: "owe", kinds: ["cafe"], open: 8, close: 23, blurb: "Good coffee, good Wi-Fi, good gist." },
+    { id: "owe_hospital", name: "Federal Medical Centre", area: "Orlu Road", emoji: "🏥", x: 290, y: 200, zone: "owe", kinds: ["hospital"], open: 0, close: 0, blurb: "Federal hospital, open 24/7." },
+    { id: "owe_square", name: "Heroes Square", area: "Owerri Municipal", emoji: "🌳", x: 470, y: 380, zone: "owe", kinds: ["park"], open: 6, close: 20, blurb: "Monuments, open space and evening walks." },
+    { id: "owe_river", name: "Otamiri Riverside", area: "Nekede", emoji: "🎣", x: 180, y: 520, zone: "owe", kinds: ["waterfront"], open: 6, close: 19, blurb: "Quiet river walk where fishermen work the Otamiri." },
+    { id: "owe_secretariat", name: "Imo State Secretariat", area: "Port Harcourt Road", emoji: "🏛️", x: 800, y: 400, zone: "owe", kinds: ["ministry"], open: 8, close: 16, days: WEEKDAYS, blurb: "State ministries and civil service offices." },
+    { id: "owe_motorpark", name: "Owerri Main Motor Park", area: "Douglas Road", emoji: "🚏", x: 260, y: 330, zone: "owe", kinds: ["motor_park"], open: 5, close: 22, blurb: "Buses to Lagos, Abuja, PH, Aba and every eastern town." },
+    { id: "owe_airport", name: "Sam Mbakwe Airport", area: "Obiangwu", emoji: "✈️", x: 880, y: 600, zone: "owe", kinds: ["airport"], open: 6, close: 21, blurb: "International airport a short drive from town." },
+  ],
+  homes: [
+    { id: "owe_couch", name: "Aunty Chioma's Couch", area: "Nekede", x: 240, y: 460, zone: "owe", tier: "couch", weeklyRent: 0, band: "D", sleepQuality: 0.7, hygieneQuality: 0.7, kitchen: false, hidden: true, moveInWeeks: 0, blurb: "Free, but Aunty asks about your love life daily." },
+    { id: "owe_room", name: "Douglas Road One-Room", area: "Douglas Road", x: 330, y: 530, zone: "owe", tier: "room", weeklyRent: 1800, band: "D", sleepQuality: 0.85, hygieneQuality: 0.8, kitchen: false, moveInWeeks: 4, blurb: "Small room close to Eke Ukwu Market." },
+    { id: "owe_hostel", name: "IMSU Hostel", area: "Owerri North", x: 820, y: 230, zone: "owe", tier: "hostel", weeklyRent: 950, band: "C", sleepQuality: 0.85, hygieneQuality: 0.85, kitchen: false, studentOnly: true, moveInWeeks: 4, blurb: "Campus hostel. Scholars only." },
+    { id: "owe_selfcon", name: "Ikenegbu Self-Contain", area: "Ikenegbu", x: 660, y: 420, zone: "owe", tier: "selfcon", weeklyRent: 5000, band: "C", sleepQuality: 1, hygieneQuality: 1, kitchen: true, moveInWeeks: 4, blurb: "Your own space in a lively neighbourhood." },
+    { id: "owe_flat", name: "World Bank Estate Mini-Flat", area: "World Bank", x: 820, y: 320, zone: "owe", tier: "flat", weeklyRent: 11000, band: "B", sleepQuality: 1.1, hygieneQuality: 1.1, kitchen: true, moveInWeeks: 4, blurb: "Planned estate, wide roads, better light." },
+    { id: "owe_luxury", name: "New Owerri Apartment", area: "New Owerri", x: 580, y: 170, zone: "owe", tier: "luxury", weeklyRent: 33000, band: "A", sleepQuality: 1.2, hygieneQuality: 1.2, kitchen: true, moveInWeeks: 4, blurb: "Modern block with steady power." },
+    { id: "owe_penthouse", name: "Owerri GRA Villa", area: "GRA", x: 720, y: 100, zone: "owe", tier: "penthouse", weeklyRent: 160000, band: "A", sleepQuality: 1.35, hygieneQuality: 1.3, kitchen: true, moveInWeeks: 4, blurb: "Big compound, big gate, big life." },
+  ],
+  npcs: [
+    { id: "chinwe", name: "Mama Chinwe", emoji: "👩🏾‍🍳", role: "Ofe Owerri queen", reliability: 0.95, greeting: "My ofe Owerri has twelve ingredients. Taste and see!", schedule: [{ days: ALL, from: 8, to: 21, at: "owe_buka" }], advice: ["Good soup costs money to make. Price it properly or you'll cook at a loss.", "I keep a notebook of every naira in and out. That's how I know I'm winning."] },
+    { id: "ikechukwu", name: "Ikechukwu", emoji: "🧑🏾‍💻", role: "Remote developer", reliability: 0.85, greeting: "I work for a company in Lagos from right here in Owerri.", schedule: [{ days: WEEKDAYS, from: 9, to: 18, at: "owe_tech" }, { days: [5], from: 11, to: 14, at: "owe_cafe" }], advice: ["Good internet and good skills: you can earn Lagos money from anywhere.", "Learn to write clearly. Remote work is mostly writing."] },
+    { id: "chiamaka", name: "Chiamaka", emoji: "👩🏾‍🎓", role: "IMSU student", reliability: 0.85, greeting: "Accounting student. I keep my friends' budgets in check!", schedule: [{ days: WEEKDAYS, from: 9, to: 15, at: "owe_uni" }, { days: WEEKDAYS, from: 15, to: 18, at: "owe_library" }], advice: ["Write down every naira for a month. You'll be shocked where it goes.", "Save before you spend, not after."] },
+    { id: "obiora", name: "Obiora", emoji: "🧑🏾‍💼", role: "Eke Ukwu trader", reliability: 0.65, greeting: "Fabrics, wrappers, lace — I have the best prices in Imo!", schedule: [{ days: MON_SAT, from: 7, to: 17, at: "owe_market" }], advice: ["Buy at the right time: before festive seasons, prices jump.", "A customer who comes back is worth ten who buy once."] },
+    { id: "ebuka", name: "Ebuka", emoji: "🎷", role: "Highlife musician", reliability: 0.7, greeting: "Highlife never dies! Come to Mbari tonight.", schedule: [{ days: [2, 3, 4, 5, 6], from: 16, to: 22, at: "owe_mbari" }, { days: WEEKDAYS, from: 10, to: 13, at: "owe_square" }], advice: ["Register your songs so you get paid when they're played.", "Every gig is an audition for the next one."] },
+    { id: "dr_ugo", name: "Dr. Ugo", emoji: "👨🏾‍⚕️", role: "Doctor", reliability: 0.9, greeting: "Drink water, rest well, and wash your hands!", schedule: [{ days: ALL, from: 8, to: 17, at: "owe_hospital" }], advice: ["Health insurance is cheaper than one emergency.", "Don't buy drugs from roadside sellers. Fake medicine is real."] },
+  ],
+  map: {
+    base: "land",
+    shapes: [
+      { d: "M0 560 C120 540 180 470 230 520 C280 570 260 640 320 700 H0 Z", fill: "green" },
+      { d: "M90 0 C120 140 160 260 150 380 C140 470 200 540 160 700 L184 700 C226 540 166 470 176 380 C186 260 146 140 116 0 Z", fill: "lagoon" },
+      { d: "M440 340 C470 320 520 330 520 370 C520 410 480 420 455 405 C432 390 420 356 440 340 Z", fill: "green" },
+      { d: "M520 400 C560 380 600 400 590 440 C582 470 540 470 524 452 C512 438 508 414 520 400 Z", fill: "land2" },
+      { d: "M900 0 V700 H960 C940 560 980 420 950 280 C930 180 960 80 940 0 Z", fill: "lagoon" },
+    ],
+    roads: [],
+    labels: [
+      { text: "OTAMIRI RIVER", x: 120, y: 220, kind: "water", rotate: -82 },
+      { text: "NWAORIE", x: 912, y: 420, kind: "water", rotate: 85 },
+      { text: "OWERRI MUNICIPAL", x: 400, y: 560, kind: "area" },
+      { text: "NEW OWERRI", x: 640, y: 120, kind: "area" },
+      { text: "IKENEGBU", x: 700, y: 560, kind: "area" },
+      { text: "DOUGLAS RD", x: 300, y: 140, kind: "area" },
+      { text: "WORLD BANK", x: 830, y: 280, kind: "area" },
+    ],
+  },
+};

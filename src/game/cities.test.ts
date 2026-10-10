@@ -374,3 +374,18 @@ describe("payslip: PAYE tax and pension", () => {
     expect(s.log.at(-1)?.text ?? s.log.map((l) => l.text).join()).toBeDefined();
   });
 });
+
+describe("Asaba, Owerri and Yenagoa", () => {
+  it("Yenagoa has oil & gas work; Asaba's film village hires creatives", () => {
+    const y = newGame(opts("yenagoa"));
+    expect(workplaceFor(y, "industrial")?.id).toBe("yen_oil");
+    const a = newGame(opts("asaba"));
+    expect(workplaceFor(a, "theatre")?.id).toBe("asa_film");
+  });
+
+  it("no flights between neighbours a short drive apart", () => {
+    expect(intercityQuote(newGame(opts("asaba")), "enugu", "flight")).toBeNull();
+    expect(intercityQuote(newGame(opts("owerri")), "aba", "flight")).toBeNull();
+    expect(intercityQuote(newGame(opts("yenagoa")), "kaduna", "flight")).not.toBeNull();
+  });
+});

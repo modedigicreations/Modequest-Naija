@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { CITIES } from "@/game/data/world";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display",
@@ -17,7 +18,7 @@ const body = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "ModeQuest: Naija",
   description:
-    "Live your Naija story in Lagos, Abuja, Port Harcourt, Enugu, Aba, Kaduna or Calabar — hustle, learn and level up. A free life-sim that teaches money smarts, scam awareness and coding. By Mode Digital Creations.",
+    `Live your Naija story in ${CITIES.length} real Nigerian cities, from Lagos to Kaduna to Yenagoa — hustle, learn and level up. A free life-sim that teaches money smarts, scam awareness and coding. By Mode Digital Creations.`,
   applicationName: "ModeQuest",
   appleWebApp: { capable: true, title: "ModeQuest", statusBarStyle: "default" },
   icons: { apple: "/icons/apple-touch-icon.png" },
@@ -29,13 +30,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "ModeQuest: Naija",
     title: "ModeQuest: Naija — free life-sim game",
-    description: "Hustle, dodge scams, beat NEPA and grow your money in 7 Nigerian cities, from Lagos to Kaduna to Calabar. Free in your browser.",
+    description: `Hustle, dodge scams, beat NEPA and grow your money in ${CITIES.length} Nigerian cities, from Lagos to Kaduna to Calabar. Free in your browser.`,
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
     title: "ModeQuest: Naija — free life-sim game",
-    description: "Hustle, dodge scams, beat NEPA and grow your money in 7 Nigerian cities. Free in your browser.",
+    description: `Hustle, dodge scams, beat NEPA and grow your money in ${CITIES.length} Nigerian cities. Free in your browser.`,
   },
 };
 

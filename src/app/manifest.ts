@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
+import { CITIES } from "@/game/data/world";
 
 /** Lets players install ModeQuest to their home screen like an app. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "ModeQuest: Naija",
     short_name: "ModeQuest",
-    description: "Hustle, learn, dodge scams and grow your money in 7 real Nigerian cities. Free.",
+    description: `Hustle, learn, dodge scams and grow your money in ${CITIES.length} real Nigerian cities. Free.`,
     start_url: "/",
     scope: "/",
     display: "standalone",

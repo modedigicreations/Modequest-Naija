@@ -1,0 +1,88 @@
+import type { CityDef } from "../worldTypes";
+
+const WEEKDAYS = [0, 1, 2, 3, 4];
+const ALL = [0, 1, 2, 3, 4, 5, 6];
+const MON_SAT = [0, 1, 2, 3, 4, 5];
+
+export const ASABA: CityDef = {
+  id: "asaba",
+  name: "Asaba",
+  nickname: "Nollywood on the Niger",
+  state: "Delta State",
+  emoji: "🎬",
+  blurb: "Delta's capital on the River Niger. Film sets on every street, the Niger Bridge to Onitsha, and a calm, growing city.",
+  nx: 40,
+  ny: 68,
+  zoneCrossMinutes: 0,
+  rushFactor: 1.15,
+  weather: { sunny: 40, cloudy: 25, rain: 29, storm: 6 },
+  transport: {
+    walk: { name: "Trek" },
+    keke: { name: "Keke", blurb: "Kekes everywhere in Asaba. Cheap short hops." },
+    bus: { name: "Shuttle bus", emoji: "🚐", blurb: "Shuttles along Nnebisi Road and Okpanam Road." },
+    ride: { name: "Taxi / Ride-hail" },
+    car: { name: "Your Car" },
+  },
+  local: {
+    amala: { name: "Eat banga soup & starch", emoji: "🍲", blurb: "Palm-fruit soup with fresh fish and starch. A Delta favourite." },
+    suya: { name: "Eat roasted fish & yam by the river", emoji: "🐟" },
+    canopy: { name: "Walk the park", emoji: "🌳", blurb: "Shade, birds and a breeze off the Niger." },
+    lagoon_front: { name: "Hang out on campus", emoji: "🎓" },
+  },
+  locations: [
+    { id: "asa_tech", name: "Anioma Tech Hub", area: "Okpanam Road", emoji: "💻", x: 590, y: 120, zone: "asa", kinds: ["tech_hub"], open: 8, close: 22, blurb: "Coders, film editors and VFX artists working side by side." },
+    { id: "asa_library", name: "Asaba Public Library", area: "GRA", emoji: "📚", x: 560, y: 360, zone: "asa", kinds: ["library"], open: 8, close: 18, days: MON_SAT, blurb: "Quiet reading rooms and a good film-studies shelf." },
+    { id: "asa_uni", name: "DELSU Anwai Campus", area: "Anwai", emoji: "🎓", x: 820, y: 230, zone: "asa", kinds: ["university"], open: 7, close: 20, blurb: "Delta State University's Asaba campus: business, law and media." },
+    { id: "asa_phones", name: "Nnebisi Road Phone Plaza", area: "Nnebisi Road", emoji: "📱", x: 470, y: 280, zone: "asa", kinds: ["gadget_market"], open: 9, close: 19, days: MON_SAT, blurb: "Phones and laptops. Many cross from Onitsha to buy here." },
+    { id: "asa_mall", name: "Nnebisi Road Mall", area: "Nnebisi Road", emoji: "🛍️", x: 560, y: 230, zone: "asa", kinds: ["mall"], open: 9, close: 22, groceryPrice: 1350, blurb: "Supermarket, cinema and the city's weekend hangout." },
+    { id: "asa_market", name: "Ogbeogonogo Market", area: "Asaba Town", emoji: "🧺", x: 360, y: 420, zone: "asa", kinds: ["market", "food_market"], open: 7, close: 18, days: MON_SAT, groceryPrice: 900, blurb: "Asaba's big market: foodstuff, fabrics and everything in between." },
+    { id: "asa_buka", name: "Mama Ejiro's Banga Spot", area: "Asaba Town", emoji: "🍲", x: 300, y: 360, zone: "asa", kinds: ["buka"], open: 8, close: 22, blurb: "Banga soup, starch and fresh fish. Traders' favourite." },
+    { id: "asa_stadium", name: "Stephen Keshi Stadium", area: "Okwe", emoji: "⚽", x: 680, y: 470, zone: "asa", kinds: ["stadium"], open: 6, close: 21, blurb: "Named after the Big Boss himself. Track and pitch." },
+    { id: "asa_film", name: "Nollywood Film Village", area: "Cable Point", emoji: "🎬", x: 330, y: 230, zone: "asa", kinds: ["theatre"], open: 9, close: 23, blurb: "Film sets, auditions and premieres. Asaba is Nollywood's second home." },
+    { id: "asa_bank", name: "Summit Road Bank", area: "Summit Road", emoji: "🏦", x: 640, y: 330, zone: "asa", kinds: ["bank"], open: 8, close: 17, days: WEEKDAYS, blurb: "Busy banking hall near Government House." },
+    { id: "asa_cafe", name: "Okpanam Road Café", area: "Okpanam Road", emoji: "☕", x: 720, y: 150, zone: "asa", kinds: ["cafe"], open: 8, close: 23, blurb: "Screenwriters' favourite: Wi-Fi, small chops and quiet corners." },
+    { id: "asa_hospital", name: "Federal Medical Centre", area: "Nnebisi Road", emoji: "🏥", x: 460, y: 160, zone: "asa", kinds: ["hospital"], open: 0, close: 0, blurb: "Federal hospital, open 24/7." },
+    { id: "asa_park", name: "Asaba Recreation Park", area: "GRA", emoji: "🌳", x: 760, y: 380, zone: "asa", kinds: ["park"], open: 7, close: 19, blurb: "Green space for walks, games and picnics." },
+    { id: "asa_river", name: "Niger Riverbank", area: "Cable Point", emoji: "⛴️", x: 220, y: 290, zone: "asa", kinds: ["waterfront"], open: 6, close: 20, blurb: "Watch boats and the Niger Bridge. Fishermen sell the morning catch." },
+    { id: "asa_secretariat", name: "Delta State Secretariat", area: "Summit Road", emoji: "🏛️", x: 720, y: 300, zone: "asa", kinds: ["ministry"], open: 8, close: 16, days: WEEKDAYS, blurb: "State ministries and civil service offices." },
+    { id: "asa_motorpark", name: "Head Bridge Motor Park", area: "Head Bridge", emoji: "🚏", x: 230, y: 470, zone: "asa", kinds: ["motor_park"], open: 5, close: 22, blurb: "Buses across the Niger Bridge to the East, and west to Benin and Lagos." },
+    { id: "asa_airport", name: "Asaba Airport", area: "Ibusa Road", emoji: "✈️", x: 880, y: 560, zone: "asa", kinds: ["airport"], open: 6, close: 21, blurb: "International airport south of the city." },
+  ],
+  homes: [
+    { id: "asa_couch", name: "Uncle Chukwudi's Couch", area: "Okwe", x: 560, y: 520, zone: "asa", tier: "couch", weeklyRent: 0, band: "D", sleepQuality: 0.7, hygieneQuality: 0.7, kitchen: false, hidden: true, moveInWeeks: 0, blurb: "Free. Uncle watches Nollywood at full volume." },
+    { id: "asa_room", name: "Asaba Town One-Room", area: "Asaba Town", x: 420, y: 470, zone: "asa", tier: "room", weeklyRent: 2000, band: "D", sleepQuality: 0.85, hygieneQuality: 0.8, kitchen: false, moveInWeeks: 4, blurb: "Small room near Ogbeogonogo Market." },
+    { id: "asa_hostel", name: "DELSU Anwai Hostel", area: "Anwai", x: 880, y: 300, zone: "asa", tier: "hostel", weeklyRent: 1000, band: "C", sleepQuality: 0.85, hygieneQuality: 0.85, kitchen: false, studentOnly: true, moveInWeeks: 4, blurb: "Campus hostel. Scholars only." },
+    { id: "asa_selfcon", name: "Okpanam Road Self-Contain", area: "Okpanam Road", x: 680, y: 220, zone: "asa", tier: "selfcon", weeklyRent: 5500, band: "C", sleepQuality: 1, hygieneQuality: 1, kitchen: true, moveInWeeks: 4, blurb: "Your own space on a busy road full of film crews." },
+    { id: "asa_flat", name: "Summit Road Mini-Flat", area: "Summit Road", x: 600, y: 420, zone: "asa", tier: "flat", weeklyRent: 12000, band: "B", sleepQuality: 1.1, hygieneQuality: 1.1, kitchen: true, moveInWeeks: 4, blurb: "Quiet street, good light, near the stadium." },
+    { id: "asa_luxury", name: "Asaba GRA Apartment", area: "GRA", x: 520, y: 420, zone: "asa", tier: "luxury", weeklyRent: 36000, band: "A", sleepQuality: 1.2, hygieneQuality: 1.2, kitchen: true, moveInWeeks: 4, blurb: "Leafy GRA, steady power, close to everything." },
+    { id: "asa_penthouse", name: "Riverview Villa", area: "Cable Point", x: 260, y: 160, zone: "asa", tier: "penthouse", weeklyRent: 170000, band: "A", sleepQuality: 1.35, hygieneQuality: 1.3, kitchen: true, moveInWeeks: 4, blurb: "Views of the Niger and the bridge. Film stars live next door." },
+  ],
+  npcs: [
+    { id: "nneka", name: "Nneka", emoji: "🎬", role: "Nollywood actress", reliability: 0.75, greeting: "We're shooting a new film this week — want to be an extra?", schedule: [{ days: [1, 2, 3, 4, 5], from: 10, to: 18, at: "asa_film" }, { days: [6], from: 12, to: 15, at: "asa_cafe" }], advice: ["Every star started as an extra. Show up early and learn everything on set.", "Get your payment terms in writing before the shoot, not after."] },
+    { id: "onyeka", name: "Onyeka", emoji: "🧑🏾‍💻", role: "Film editor & coder", reliability: 0.85, greeting: "I edit films by day and build apps by night.", schedule: [{ days: WEEKDAYS, from: 9, to: 18, at: "asa_tech" }], advice: ["Back up your files in two places. A dead hard drive has ended careers.", "Learn the tools that pay: editing, design, code. Then charge for your time."] },
+    { id: "ejiro", name: "Mama Ejiro", emoji: "👩🏾‍🍳", role: "Buka owner", reliability: 0.95, greeting: "My banga will make you forget your troubles. Sit!", schedule: [{ days: ALL, from: 8, to: 21, at: "asa_buka" }], advice: ["I buy palm fruit in season when it's cheap, and save for the dry months.", "Treat every customer well — Asaba is small, word travels fast."] },
+    { id: "ossai", name: "Mr. Ossai", emoji: "👨🏾‍💼", role: "Civil servant", reliability: 0.9, greeting: "Government work is steady. Steady is good, my friend.", schedule: [{ days: WEEKDAYS, from: 8, to: 16, at: "asa_secretariat" }, { days: [5, 6], from: 9, to: 12, at: "asa_library" }], advice: ["A steady salary plus a side skill is a strong combination.", "Read your payslip. Know what tax and pension take out — it's your money."] },
+    { id: "ifeyinwa", name: "Ifeyinwa", emoji: "👩🏾‍🎓", role: "DELSU student", reliability: 0.85, greeting: "Mass communication student. I review films on YouTube!", schedule: [{ days: WEEKDAYS, from: 9, to: 15, at: "asa_uni" }, { days: WEEKDAYS, from: 15, to: 18, at: "asa_library" }], advice: ["Post your work online consistently. Your portfolio is your CV.", "Don't buy views or followers. Real fans are worth more."] },
+    { id: "kene", name: "Kene", emoji: "⚽", role: "Footballer", reliability: 0.55, greeting: "Stephen Keshi was a legend. I want to play like him!", schedule: [{ days: ALL, from: 6, to: 9, at: "asa_stadium" }, { days: ALL, from: 16, to: 20, at: "asa_stadium" }], advice: ["Betting apps are designed so the house wins. Every time.", "Train smart: rest days are part of the plan."] },
+  ],
+  map: {
+    base: "land",
+    shapes: [
+      { d: "M0 0 H170 C140 120 190 240 150 360 C120 450 170 560 130 700 H0 Z", fill: "lagoon" },
+      { d: "M0 300 H160 V316 H0 Z", fill: "land2" },
+      { d: "M720 340 C760 320 820 340 820 390 C820 440 760 450 730 430 C700 410 690 360 720 340 Z", fill: "green" },
+      { d: "M640 450 C680 430 730 450 720 500 C712 540 660 540 640 515 C626 496 622 466 640 450 Z", fill: "land2" },
+    ],
+    roads: [],
+    labels: [
+      { text: "RIVER NIGER", x: 70, y: 200, kind: "water", rotate: -80 },
+      { text: "NIGER BRIDGE", x: 80, y: 290, kind: "feature" },
+      { text: "CABLE POINT", x: 250, y: 190, kind: "area" },
+      { text: "ASABA TOWN", x: 360, y: 530, kind: "area" },
+      { text: "OKPANAM ROAD", x: 640, y: 110, kind: "area" },
+      { text: "GRA", x: 560, y: 470, kind: "area" },
+      { text: "ANWAI", x: 880, y: 190, kind: "area" },
+      { text: "OKWE", x: 640, y: 600, kind: "area" },
+    ],
+  },
+};

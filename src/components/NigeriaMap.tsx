@@ -5,7 +5,10 @@ import { CITIES } from "@/game/data/world";
 // Cities in the crowded south-east get labels beside or below their dot.
 const LABEL_AT: Record<string, { dx: number; dy: number; anchor: "start" | "middle" | "end" }> = {
   portharcourt: { dx: 0, dy: 6.8, anchor: "middle" },
-  aba: { dx: -3.6, dy: 1.2, anchor: "end" },
+  aba: { dx: 0, dy: 6.8, anchor: "middle" },
+  asaba: { dx: -3.6, dy: 1.2, anchor: "end" },
+  owerri: { dx: -3.6, dy: 1.2, anchor: "end" },
+  yenagoa: { dx: -3.6, dy: 1.2, anchor: "end" },
   calabar: { dx: 3.6, dy: 1.2, anchor: "start" },
 };
 

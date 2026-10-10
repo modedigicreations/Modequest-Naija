@@ -1,17 +1,20 @@
 import type { TransportMode, Weather } from "../types";
 import { ABA } from "./cities/aba";
 import { ABUJA } from "./cities/abuja";
+import { ASABA } from "./cities/asaba";
 import { CALABAR } from "./cities/calabar";
 import { ENUGU } from "./cities/enugu";
 import { KADUNA } from "./cities/kaduna";
 import { LAGOS } from "./cities/lagos";
+import { OWERRI } from "./cities/owerri";
 import { PORT_HARCOURT } from "./cities/portharcourt";
+import { YENAGOA } from "./cities/yenagoa";
 import type { CityDef, HomeDef, HomeTier, LocationDef, NpcDef } from "./worldTypes";
 
 export type { CityDef, HomeDef, HomeTier, LocationDef, MapShape, NpcDef, PlaceKind } from "./worldTypes";
 
 /** Every playable city. Add a city by adding a data pack to this list. */
-export const CITIES: CityDef[] = [LAGOS, ABUJA, PORT_HARCOURT, ENUGU, ABA, KADUNA, CALABAR];
+export const CITIES: CityDef[] = [LAGOS, ABUJA, PORT_HARCOURT, ENUGU, ABA, KADUNA, CALABAR, ASABA, OWERRI, YENAGOA];
 
 export const LOCATIONS: (LocationDef & { city: string })[] = CITIES.flatMap((c) => c.locations.map((l) => ({ ...l, city: c.id })));
 export const HOMES: (HomeDef & { city: string })[] = CITIES.flatMap((c) => c.homes.map((h) => ({ ...h, city: c.id })));
@@ -102,6 +105,30 @@ const ROADS: [string, string, number][] = [
   ["calabar", "enugu", 5],
   ["abuja", "calabar", 9],
   ["calabar", "lagos", 12],
+  ["asaba", "lagos", 7],
+  ["abuja", "asaba", 7],
+  ["asaba", "portharcourt", 4],
+  ["asaba", "enugu", 2],
+  ["aba", "asaba", 3],
+  ["asaba", "kaduna", 9],
+  ["asaba", "calabar", 6],
+  ["asaba", "owerri", 2],
+  ["asaba", "yenagoa", 4],
+  ["lagos", "owerri", 8],
+  ["abuja", "owerri", 7],
+  ["owerri", "portharcourt", 2],
+  ["enugu", "owerri", 2.5],
+  ["aba", "owerri", 1.5],
+  ["kaduna", "owerri", 9],
+  ["calabar", "owerri", 4],
+  ["owerri", "yenagoa", 3],
+  ["lagos", "yenagoa", 9],
+  ["abuja", "yenagoa", 9],
+  ["portharcourt", "yenagoa", 2],
+  ["enugu", "yenagoa", 5],
+  ["aba", "yenagoa", 3],
+  ["kaduna", "yenagoa", 11],
+  ["calabar", "yenagoa", 5],
 ];
 const pairKey = (a: string, b: string) => [a, b].sort().join("-");
 export const ROAD_HOURS: Record<string, number> = Object.fromEntries(ROADS.map(([a, b, h]) => [pairKey(a, b), h]));
