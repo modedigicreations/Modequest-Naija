@@ -24,7 +24,15 @@ export const COSMETICS: CosmeticDef[] = [
   { id: "outfit_isiagu", name: "Isi-agu Top", slot: "outfit", emoji: "🦁" },
   { id: "outfit_carnival", name: "Calabar Carnival Costume", slot: "outfit", emoji: "🎉" },
   { id: "outfit_chef", name: "Chef's Whites", slot: "outfit", emoji: "👨🏾‍🍳" },
+  { id: "outfit_akwa_ocha", name: "Akwa Ocha", slot: "outfit", emoji: "🤍" },
+  { id: "outfit_premiere_tux", name: "Nollywood Premiere Tux", slot: "outfit", emoji: "🎬" },
+  { id: "outfit_uli", name: "Uli Art Print", slot: "outfit", emoji: "🖌️" },
+  { id: "outfit_etibo", name: "Etibo", slot: "outfit", emoji: "👔" },
+  { id: "outfit_george", name: "George Wrapper", slot: "outfit", emoji: "🟥" },
   { id: "acc_crown", name: "Gold Crown", slot: "accessory", emoji: "👑" },
+  { id: "acc_beret", name: "Director's Beret", slot: "accessory", emoji: "🎥" },
+  { id: "acc_fedora", name: "Highlife Fedora", slot: "accessory", emoji: "🎷" },
+  { id: "acc_resha", name: "Resha Hat", slot: "accessory", emoji: "🎩" },
   { id: "acc_gele", name: "Gele Headwrap", slot: "accessory", emoji: "🎀" },
   { id: "acc_red_cap", name: "Okpu (Red Cap)", slot: "accessory", emoji: "🧢" },
   { id: "acc_zanna", name: "Zanna Cap", slot: "accessory", emoji: "🎩" },
@@ -68,6 +76,8 @@ export interface Product {
   };
   /** Only teacher accounts can buy (school plans). */
   teacherOnly?: boolean;
+  /** City collection this belongs to (shown grouped by city in the store). */
+  city?: string;
 }
 
 export const PRODUCTS: Product[] = [
@@ -85,7 +95,19 @@ export const PRODUCTS: Product[] = [
   { id: "c_senator", kind: "cosmetic", name: "Senator Wear", emoji: "🧥", priceNaira: 700, blurb: "Deep green senator with gold embroidery. Boardroom ready.", grants: { cosmetics: ["outfit_senator"] } },
   { id: "c_kaftan", kind: "cosmetic", name: "Embroidered Kaftan", emoji: "🪡", priceNaira: 600, blurb: "Sky-blue kaftan with a gold-stitched neckline.", grants: { cosmetics: ["outfit_kaftan"] } },
   { id: "c_isiagu", kind: "cosmetic", name: "Isi-agu Top", emoji: "🦁", priceNaira: 700, blurb: "The proud lion-head print of Igbo chiefs and celebrations.", grants: { cosmetics: ["outfit_isiagu"] } },
-  { id: "c_carnival", kind: "cosmetic", name: "Calabar Carnival Costume", emoji: "🎉", priceNaira: 800, blurb: "Sequins, feathers and colour from Africa's biggest street party.", grants: { cosmetics: ["outfit_carnival"] } },
+  { id: "c_carnival", kind: "cosmetic", name: "Calabar Carnival Costume", emoji: "🎉", priceNaira: 800, blurb: "Sequins, feathers and colour from Africa's biggest street party.", grants: { cosmetics: ["outfit_carnival"] }, city: "calabar" },
+  // City collections
+  { id: "c_akwa_ocha", kind: "cosmetic", name: "Akwa Ocha", emoji: "🤍", priceNaira: 700, blurb: "The white hand-woven cloth of the Anioma people, draped with pride.", grants: { cosmetics: ["outfit_akwa_ocha"] }, city: "asaba" },
+  { id: "c_premiere_tux", kind: "cosmetic", name: "Nollywood Premiere Tux", emoji: "🎬", priceNaira: 800, blurb: "Red-carpet ready: black tux, bow tie and pocket square.", grants: { cosmetics: ["outfit_premiere_tux"] }, city: "asaba" },
+  { id: "c_beret", kind: "cosmetic", name: "Director's Beret", emoji: "🎥", priceNaira: 400, blurb: "Lights, camera, action! For Asaba's film makers.", grants: { cosmetics: ["acc_beret"] }, city: "asaba" },
+  { id: "c_uli", kind: "cosmetic", name: "Uli Art Print", emoji: "🖌️", priceNaira: 700, blurb: "Flowing Igbo uli motifs, like the art of Owerri's Mbari houses.", grants: { cosmetics: ["outfit_uli"] }, city: "owerri" },
+  { id: "c_fedora", kind: "cosmetic", name: "Highlife Fedora", emoji: "🎷", priceNaira: 400, blurb: "Owerri nights, highlife music, a sharp hat.", grants: { cosmetics: ["acc_fedora"] }, city: "owerri" },
+  { id: "c_etibo", kind: "cosmetic", name: "Etibo", emoji: "👔", priceNaira: 700, blurb: "The Ijaw gentleman's long collarless shirt with gold buttons.", grants: { cosmetics: ["outfit_etibo"] }, city: "yenagoa" },
+  { id: "c_george", kind: "cosmetic", name: "George Wrapper", emoji: "🟥", priceNaira: 700, blurb: "Bright checked George fabric, a Niger Delta classic for big occasions.", grants: { cosmetics: ["outfit_george"] }, city: "yenagoa" },
+  { id: "c_resha", kind: "cosmetic", name: "Resha Hat", emoji: "🎩", priceNaira: 400, blurb: "The Ijaw bowler hat. Completes the etibo look.", grants: { cosmetics: ["acc_resha"] }, city: "yenagoa" },
+  { id: "b_asaba", kind: "bundle", name: "Asaba Pack", emoji: "🎬", priceNaira: 1500, blurb: "Akwa ocha, premiere tux and director's beret. Save ₦400.", grants: { cosmetics: ["outfit_akwa_ocha", "outfit_premiere_tux", "acc_beret"] }, city: "asaba" },
+  { id: "b_owerri", kind: "bundle", name: "Owerri Pack", emoji: "💚", priceNaira: 900, blurb: "Uli art print and highlife fedora. Save ₦200.", grants: { cosmetics: ["outfit_uli", "acc_fedora"] }, city: "owerri" },
+  { id: "b_yenagoa", kind: "bundle", name: "Yenagoa Pack", emoji: "🛶", priceNaira: 1400, blurb: "Etibo, George wrapper and resha hat. Save ₦400.", grants: { cosmetics: ["outfit_etibo", "outfit_george", "acc_resha"] }, city: "yenagoa" },
   { id: "c_chef", kind: "cosmetic", name: "Chef's Whites", emoji: "👨🏾‍🍳", priceNaira: 500, blurb: "For the jollof champions.", grants: { cosmetics: ["outfit_chef"] } },
   { id: "c_gele", kind: "cosmetic", name: "Gele Headwrap", emoji: "🎀", priceNaira: 500, blurb: "A tall, gold gele. Owambe ready.", grants: { cosmetics: ["acc_gele"] } },
   { id: "c_red_cap", kind: "cosmetic", name: "Okpu (Red Cap)", emoji: "🧢", priceNaira: 400, blurb: "The red cap of honour from the East.", grants: { cosmetics: ["acc_red_cap"] } },

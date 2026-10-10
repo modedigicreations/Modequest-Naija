@@ -42,3 +42,10 @@ describe("store artwork and fair pricing", () => {
     for (const p of PRODUCTS.filter((x) => !x.teacherOnly)) expect(p.priceNaira).toBeLessThanOrEqual(PLAYER_MONTHLY_CAP_NAIRA);
   });
 });
+
+describe("city collections", () => {
+  it("only use real game cities", async () => {
+    const { CITIES } = await import("../game/data/world");
+    for (const p of PRODUCTS.filter((x) => x.city)) expect(CITIES.some((c) => c.id === p.city), p.id).toBe(true);
+  });
+});

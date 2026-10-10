@@ -184,6 +184,34 @@ export default function Avatar({ a, size = 96, className }: { a: Appearance; siz
           <path d="M33 25 H67 V30 H33 Z" fill="#f1f3f8" stroke="#c8ccd6" strokeWidth="1.2" />
         </g>
       )}
+      {a.premiumAccessory === "acc_beret" && (
+        <g>
+          {/* tilted director's beret with a stalk */}
+          <path d="M26 32 C22 18 44 8 62 12 C78 15 80 26 74 30 C60 34 40 34 26 32 Z" fill="#7a1022" />
+          <path d="M30 30 C44 31 60 31 72 28" fill="none" stroke="#5a0b18" strokeWidth="1.6" />
+          <path d="M40 16 C48 12 58 12 64 14" fill="none" stroke="#a01a32" strokeWidth="1.4" opacity="0.8" />
+          <path d="M52 10 L53 6" stroke="#5a0b18" strokeWidth="2" strokeLinecap="round" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_fedora" && (
+        <g>
+          {/* brown fedora with a pinched crown and band */}
+          <ellipse cx="50" cy="30" rx="30" ry="5" fill="#6b4226" />
+          <path d="M33 30 C33 16 38 10 50 12 C62 10 67 16 67 30 Z" fill="#8a5a36" />
+          <path d="M44 14 C47 18 53 18 56 14" fill="none" stroke="#6b4226" strokeWidth="1.4" />
+          <path d="M33 25 H67 V30 H33 Z" fill="#1d1530" />
+          <path d="M60 25 L64 21 L65 25 Z" fill="#f2a900" />
+        </g>
+      )}
+      {a.premiumAccessory === "acc_resha" && (
+        <g>
+          {/* Ijaw resha: a black bowler with a narrow brim */}
+          <ellipse cx="50" cy="30" rx="25" ry="4" fill="#111" />
+          <path d="M31 30 C31 12 69 12 69 30 Z" fill="#1c1c22" />
+          <path d="M31 26 H69 V30 H31 Z" fill="#3a3a46" />
+          <path d="M38 18 C42 14 50 13 56 14" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.6" strokeLinecap="round" />
+        </g>
+      )}
       {a.premiumAccessory === "acc_shades" && (
         <g>
           <path d="M30 44 H70" stroke="#111" strokeWidth="1.6" />
@@ -319,6 +347,52 @@ function OutfitDetails({ outfit }: { outfit: string }) {
           ))}
         </g>
       );
+    case "outfit_akwa_ocha":
+      return (
+        <g>
+          {/* the akwa ocha cloth draped over one shoulder */}
+          <path d="M58 83 C70 86 78 96 80 108 L80 120 L60 120 C58 108 56 96 50 88 Z" fill="#fffdf6" stroke="#1d1530" strokeWidth="0.8" />
+          <path d="M62 92 L76 106 M60 100 L76 116 M66 88 L80 102" stroke="#1d1530" strokeWidth="0.7" strokeDasharray="2 1.5" />
+          <path d="M58 112 h20" stroke="#c8102e" strokeWidth="1.4" />
+          <path d="M41 83 C44 88 56 88 59 83" fill="none" stroke="#1d1530" strokeWidth="1.2" />
+        </g>
+      );
+    case "outfit_premiere_tux":
+      return (
+        <g>
+          {/* white shirt, satin lapels, bow tie and pocket square */}
+          <path d="M42 83 L50 104 L58 83 Z" fill="#ffffff" />
+          <path d="M42 83 L50 104 L44 120 M58 83 L50 104 L56 120" fill="none" stroke="#3a3a46" strokeWidth="2.2" />
+          <path d="M45 86 L50 89 L45 92 Z M55 86 L50 89 L55 92 Z" fill="#111" />
+          <circle cx="50" cy="89" r="1.1" fill="#111" />
+          {[96, 101].map((y) => (
+            <circle key={y} cx="50" cy={y} r="0.8" fill="#111" />
+          ))}
+          <path d="M33 101 L38 99 L39 103 L34 104 Z" fill="#c8102e" />
+        </g>
+      );
+    case "outfit_uli":
+      return <path d="M40 83 C44 89 56 89 60 83" fill="none" stroke="#1d1530" strokeWidth="2" strokeLinecap="round" />;
+    case "outfit_etibo":
+      return (
+        <g>
+          {/* collarless neckline, gold buttons and the front pleat */}
+          <path d="M43 83 C46 86 54 86 57 83" fill="none" stroke="#e2b93b" strokeWidth="1.6" />
+          <path d="M50 86 L50 104" stroke="rgba(0,0,0,0.25)" strokeWidth="1.4" />
+          {[89, 94, 99].map((y) => (
+            <circle key={y} cx="52.5" cy={y} r="1.3" fill="#e2b93b" />
+          ))}
+          <path d="M34 100 C36 104 38 106 42 106 M66 100 C64 104 62 106 58 106" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+        </g>
+      );
+    case "outfit_george":
+      return (
+        <g>
+          {/* wrapper tied at the shoulder over a plain top */}
+          <path d="M40 83 C44 89 56 89 60 83" fill="none" stroke="#f5c518" strokeWidth="2" />
+          <path d="M60 86 C64 90 66 94 64 98 C62 96 60 92 60 86 Z" fill="#f5c518" stroke="#8a0a1f" strokeWidth="0.6" />
+        </g>
+      );
     case "outfit_chef":
       return (
         <g>
@@ -423,6 +497,40 @@ function PremiumOutfitPattern({ id, outfit }: { id: string; outfit: string }) {
       </>);
     case "outfit_chef":
       return p(10, 10, <rect width="10" height="10" fill="#fdfdfd" />);
+    case "outfit_akwa_ocha":
+      // White woven cloth with fine dark geometric weave.
+      return p(12, 12, <>
+        <rect width="12" height="12" fill="#fbf8ef" />
+        <path d="M6 1 L11 6 L6 11 L1 6 Z" fill="none" stroke="#2a2433" strokeWidth="0.6" />
+        <path d="M0 0 L2 0 L0 2 Z M12 12 L10 12 L12 10 Z" fill="#2a2433" />
+        <circle cx="6" cy="6" r="0.9" fill="#c8102e" />
+      </>);
+    case "outfit_premiere_tux":
+      return p(10, 10, <>
+        <rect width="10" height="10" fill="#15151c" />
+        <path d="M0 10 L10 0" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+      </>);
+    case "outfit_uli":
+      // Uli: flowing black lines and spirals on cream.
+      return p(18, 18, <>
+        <rect width="18" height="18" fill="#f1e4c8" />
+        <path d="M3 9 C3 4 9 4 9 9 C9 12 6 12 6 9" fill="none" stroke="#1d1530" strokeWidth="1" />
+        <path d="M12 2 C16 5 16 9 12 12 M0 15 C5 13 13 13 18 15" fill="none" stroke="#1d1530" strokeWidth="0.8" />
+        <circle cx="14.5" cy="7" r="0.8" fill="#9a3b1b" />
+      </>);
+    case "outfit_etibo":
+      return p(10, 10, <>
+        <rect width="10" height="10" fill="#0f6e7c" />
+        <path d="M0 5 H10" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+      </>);
+    case "outfit_george":
+      // George madras: bright checks of red, gold, green and black.
+      return p(14, 14, <>
+        <rect width="14" height="14" fill="#c8102e" />
+        <rect x="0" y="5" width="14" height="4" fill="#f5c518" opacity="0.85" />
+        <rect x="5" y="0" width="4" height="14" fill="#0f7a3c" opacity="0.65" />
+        <path d="M0 2 H14 M0 12 H14 M2 0 V14 M12 0 V14" stroke="#1d1530" strokeWidth="0.6" opacity="0.6" />
+      </>);
     default:
       return null;
   }

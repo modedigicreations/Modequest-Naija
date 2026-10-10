@@ -6,6 +6,7 @@ import { buy, reconcilePayments, useShop } from "@/shop/client";
 import { useGame } from "@/game/store";
 import type { Appearance } from "@/game/types";
 import { useSession } from "@/online/session";
+import { getCity } from "@/game/data/world";
 import Avatar, { ACCESSORIES, HAIR_COLORS, HAIR_STYLES, OUTFITS, SKIN_TONES } from "../Avatar";
 import { Empty, SectionTitle } from "../ui";
 
@@ -26,6 +27,7 @@ function preview(base: Appearance, p: Product): Appearance | null {
 export function StoreApp() {
   const profile = useSession((s) => s.profile);
   const look = useGame((s) => s.game?.player.appearance);
+  const hereCity = useGame((s) => s.game?.city);
   const { cosmetics, supporterUntil, orders, refresh, enabled: paymentsEnabled } = useShop();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -59,12 +61,12 @@ export function StoreApp() {
     }
   };
 
-  const section = (title: string, kinds: Product["kind"][], note?: string) => (
+  const section = (title: string, kinds: Product["kind"][], note?: string, city?: string) => (
     <div className="card p-4">
       <SectionTitle>{title}</SectionTitle>
       {note && <p className="text-[11px] text-[var(--ink-2)] mb-2">{note}</p>}
       <div className="grid gap-2">
-        {PRODUCTS.filter((p) => kinds.includes(p.kind) && !p.teacherOnly).map((p) => (
+        {PRODUCTS.filter((p) => kinds.includes(p.kind) && !p.teacherOnly && (city === undefined ? !p.city : p.city === city)).map((p) => (
           <div key={p.id} className="rounded-2xl bg-[var(--card-2)] p-3 flex items-center gap-3">
             {look && preview(look, p) ? (
               <span className="rounded-xl bg-[var(--card)] shrink-0" title={`Preview: you in ${p.name}`}>
@@ -108,6 +110,13 @@ export function StoreApp() {
 
       {section("⭐ Support ModeQuest", ["supporter"])}
       {section("🎁 Bundles", ["bundle"], "Save money by buying a set.")}
+      <div className="px-1 pt-1">
+        <div className="font-display font-bold text-[15px]">🏙️ City collections</div>
+        <p className="text-[11px] text-[var(--ink-2)]">Traditional and local looks from our cities.</p>
+      </div>
+      {[...new Set(PRODUCTS.filter((p) => p.city).map((p) => p.city!))].sort((a, b) => Number(b === hereCity) - Number(a === hereCity)).map((c) => (
+        <div key={c}>{section(`${getCity(c).emoji} ${getCity(c).name}`, ["bundle", "cosmetic"], getCity(c).nickname, c)}</div>
+      ))}
       {section("👕 Style", ["cosmetic"], "Look good. No gameplay advantage. Wear them from the Style app. Previews show your own character.")}
       {section("💰 Game money", ["topup"], "Bought game money doesn't count on wealth leaderboards — those rank what you earn.")}
 
