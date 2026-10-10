@@ -9,7 +9,7 @@ import { useSession } from "@/online/session";
 type Tab = "signin" | "signup" | "student";
 
 export default function AccountPanel() {
-  const { ready, enabled, user, profile, myClass, teacherName, signIn, signUpPlayer, signInStudent, signOut } = useSession();
+  const { ready, enabled, user, profile, myClass, teacherName, isAdmin, signIn, signUpPlayer, signInStudent, signOut } = useSession();
   // Arrived from a friend's invite link? Start on sign-up with their code filled in.
   const [ref, setRef] = useState(() => storedReferral());
   const [tab, setTab] = useState<Tab>(() => (storedReferral() ? "signup" : "student"));
@@ -42,6 +42,11 @@ export default function AccountPanel() {
             {profile.role === "teacher" && (
               <Link href="/teacher" className="btn btn-primary btn-sm">
                 Teacher dashboard
+              </Link>
+            )}
+            {isAdmin && (
+              <Link href="/admin" className="btn btn-primary btn-sm">
+                📊 Admin dashboard
               </Link>
             )}
             <button className="btn btn-ghost btn-sm" onClick={() => void signOut()}>

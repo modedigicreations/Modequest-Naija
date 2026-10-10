@@ -12,10 +12,11 @@ import { ClassApp, OnlineApp } from "./phone/OnlineApps";
 import { StoreApp, StyleApp } from "./phone/StoreApps";
 import TravelApp from "./phone/TravelApp";
 import ShareCard from "./share/ShareCard";
+import AdminApp from "./phone/AdminApp";
 import { useShop } from "@/shop/client";
 import { useSession } from "@/online/session";
 
-export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class" | "store" | "style" | "travel" | "share";
+export type AppId = "messages" | "bank" | "invest" | "jobs" | "business" | "shop" | "homes" | "academy" | "skills" | "goals" | "contacts" | "settings" | "online" | "class" | "store" | "style" | "travel" | "share" | "admin";
 
 const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "messages", name: "Messages", emoji: "💬", color: "#0f9d58" },
@@ -35,10 +36,11 @@ const APPS: { id: AppId; name: string; emoji: string; color: string }[] = [
   { id: "settings", name: "Settings", emoji: "⚙️", color: "#64748b" },
 ];
 
-const ONLINE_APPS: { id: AppId; name: string; emoji: string; color: string; studentOnly?: boolean; noStudents?: boolean }[] = [
+const ONLINE_APPS: { id: AppId; name: string; emoji: string; color: string; studentOnly?: boolean; noStudents?: boolean; adminOnly?: boolean }[] = [
   { id: "online", name: "Online", emoji: "🌍", color: "#0891b2" },
   { id: "class", name: "My Class", emoji: "🏫", color: "#16a34a", studentOnly: true },
   { id: "store", name: "Store", emoji: "🛍️", color: "#7b4dff", noStudents: true },
+  { id: "admin", name: "Admin", emoji: "📊", color: "#0b2d9e", adminOnly: true },
 ];
 
 /**
@@ -49,6 +51,7 @@ export default function Phone({ app, setApp, docked = false }: { app: AppId | "h
   const game = useGame((s) => s.game)!;
   const dispatch = useGame((s) => s.dispatch);
   const profile = useSession((s) => s.profile);
+  const isAdmin = useSession((s) => s.isAdmin);
   const storeOpen = useShop((s) => s.enabled);
   const loadStoreStatus = useShop((s) => s.loadStatus);
   useEffect(() => {
@@ -57,7 +60,7 @@ export default function Phone({ app, setApp, docked = false }: { app: AppId | "h
   const apps = [
     ...APPS,
     ...(profile
-      ? ONLINE_APPS.filter((a) => (!a.studentOnly || profile.role === "student") && (!a.noStudents || profile.role !== "student") && (a.id !== "store" || !!storeOpen))
+      ? ONLINE_APPS.filter((a) => (!a.studentOnly || profile.role === "student") && (!a.noStudents || profile.role !== "student") && (a.id !== "store" || !!storeOpen) && (!a.adminOnly || isAdmin))
       : []),
   ];
 
@@ -139,6 +142,7 @@ export default function Phone({ app, setApp, docked = false }: { app: AppId | "h
           {app === "style" && <StyleApp />}
           {app === "travel" && <TravelApp onBooked={() => setApp(null)} />}
           {app === "share" && <ShareCard />}
+          {app === "admin" && isAdmin && <AdminApp />}
         </div>
       </div>
   );

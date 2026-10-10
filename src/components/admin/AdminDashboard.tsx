@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { getCity } from "@/game/data/world";
 import { sb } from "@/online/client";
@@ -82,6 +83,9 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/" className="btn btn-ghost btn-sm">
+            ← Back to the game
+          </Link>
           <button className="btn btn-ghost btn-sm" onClick={() => void load()} disabled={refreshing}>
             ↻ Refresh
           </button>

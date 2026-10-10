@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { LocalSaveAdapter } from "@/game/persistence";
 import { useGame } from "@/game/store";
+import { checkAdmin } from "./admin";
 import { CloudSaveAdapter } from "./cloud";
 import { loadOnlineConfig, sb } from "./client";
 import { cleanRef, forgetReferral, REF_RE } from "./referral";
@@ -36,6 +37,8 @@ interface Session {
   myClass: ClassInfo | null;
   teacherName: string | null;
   assignments: { lesson_id: string; due_date: string | null }[];
+  /** Site owner (listed in ADMIN_EMAILS on the server). */
+  isAdmin: boolean;
 
   init(): Promise<void>;
   refresh(): Promise<void>;
@@ -85,6 +88,7 @@ export const useSession = create<Session>((set, get) => ({
   myClass: null,
   teacherName: null,
   assignments: [],
+  isAdmin: false,
 
   async init() {
     if (started) return;
@@ -121,9 +125,10 @@ export const useSession = create<Session>((set, get) => ({
     const client = sb();
     const user = get().user;
     if (!client || !user) {
-      set({ profile: null, myClass: null, assignments: [], teacherName: null });
+      set({ profile: null, myClass: null, assignments: [], teacherName: null, isAdmin: false });
       return;
     }
+    void checkAdmin().then((isAdmin) => set({ isAdmin }));
     const { data: profile } = await client.from("profiles").select("id, role, nickname, display_name, school, city").eq("id", user.id).maybeSingle();
     let myClass: ClassInfo | null = null;
     let teacherName: string | null = null;
