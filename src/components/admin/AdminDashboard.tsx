@@ -28,6 +28,8 @@ interface Stats {
 
 const n = (v: number) => Math.round(v).toLocaleString("en-NG");
 const naira = (kobo: number) => `₦${n(kobo / 100)}`;
+/** "1 visit", "2 visits". */
+const count = (v: number, one: string, many: string) => `${n(v)} ${v === 1 ? one : many}`;
 
 /** Owner dashboard: live players, player totals and all-time visits. */
 export default function AdminDashboard() {
@@ -99,10 +101,10 @@ export default function AdminDashboard() {
               label="Playing right now"
               value={n(stats.live_playing)}
               live
-              note={`${n(stats.live_signed_in)} signed in · ${n(stats.live_playing - stats.live_signed_in)} guests · ${n(stats.live_browsing)} more on the start screen`}
+              note={`${n(stats.live_signed_in)} signed in · ${count(stats.live_playing - stats.live_signed_in, "guest", "guests")} · ${n(stats.live_browsing)} more on the start screen`}
             />
-            <Hero label="Registered players" value={n(stats.players_total + stats.students_total)} note={`${n(stats.players_total)} players · ${n(stats.students_total)} students · ${n(stats.teachers_total)} teachers`} />
-            <Hero label="All-time visits" value={n(stats.visits_all_time)} note={`${n(stats.visitors_all_time)} unique visitors · ${n(stats.visits_today)} visits today`} />
+            <Hero label="Registered players" value={n(stats.players_total + stats.students_total)} note={`${count(stats.players_total, "player", "players")} · ${count(stats.students_total, "student", "students")} · ${count(stats.teachers_total, "teacher", "teachers")}`} />
+            <Hero label="All-time visits" value={n(stats.visits_all_time)} note={`${count(stats.visitors_all_time, "unique visitor", "unique visitors")} · ${count(stats.visits_today, "visit", "visits")} today`} />
           </section>
 
           <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
