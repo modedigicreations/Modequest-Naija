@@ -202,11 +202,11 @@ function VisitsChart({ daily }: { daily: Stats["daily"] }) {
   // Fill in days with no visits so gaps show as zero.
   const byDay = new Map(daily.map((d) => [d.day, d]));
   const days: { day: string; visits: number; new: number }[] = [];
-  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
+  // Today's date in Nigeria as YYYY-MM-DD (en-CA formats dates that way), then step back day by day.
+  const todayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const base = Date.parse(`${todayKey}T12:00:00Z`);
   for (let i = 29; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const key = new Date(base - i * 86_400_000).toISOString().slice(0, 10);
     days.push(byDay.get(key) ?? { day: key, visits: 0, new: 0 });
   }
   const max = Math.max(1, ...days.map((d) => d.visits));

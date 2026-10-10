@@ -24,6 +24,9 @@ function stableId(storage: Storage, key: string): string | null {
 export function startSiteStats(now: () => { city: string | null; playing: boolean }) {
   if (started || typeof window === "undefined") return;
   started = true;
+  // Local copies (development and tests) talk to the live database too:
+  // never let them count as real visits.
+  if (/^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(window.location.hostname)) return;
   const client = sb();
   if (!client) return;
   const visitor = stableId(localStorage, "modequest:vid");

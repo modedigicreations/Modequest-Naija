@@ -128,7 +128,8 @@ export const useSession = create<Session>((set, get) => ({
       set({ profile: null, myClass: null, assignments: [], teacherName: null, isAdmin: false });
       return;
     }
-    void checkAdmin().then((isAdmin) => set({ isAdmin }));
+    // Ignore a late answer if someone else has signed in (or out) meanwhile.
+    void checkAdmin().then((isAdmin) => get().user?.id === user.id && set({ isAdmin }));
     const { data: profile } = await client.from("profiles").select("id, role, nickname, display_name, school, city").eq("id", user.id).maybeSingle();
     let myClass: ClassInfo | null = null;
     let teacherName: string | null = null;
